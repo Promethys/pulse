@@ -10,8 +10,10 @@ use App\Digest\Sources\FetchException;
 use App\Enums\SourceType;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterval;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class FeedFetcherTest extends TestCase
@@ -123,6 +125,40 @@ class FeedFetcherTest extends TestCase
         $this->expectExceptionMessage('HTTP 500');
 
         $this->fetch(since: '2026-10-15 07:00:00');
+    }
+
+    public function test_waits_for_retry_after_on_429_then_succeeds(): void
+    {
+        Sleep::fake();
+        Http::fake([self::URL => Http::sequence()
+            ->push('slow down', 429, ['Retry-After' => '3'])
+            ->push((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml')))]);
+
+        $this->assertCount(1, $this->fetch(since: '2026-10-15 07:00:00'));
+        Sleep::assertSlept(fn (CarbonInterval $duration) => (int) $duration->totalMilliseconds === 5000, times: 1);
+    }
+
+    public function test_waits_for_reddit_ratelimit_reset_on_429(): void
+    {
+        Sleep::fake();
+        Http::fake([self::URL => Http::sequence()
+            ->push('slow down', 429, ['x-ratelimit-remaining' => '0.0', 'x-ratelimit-reset' => '7'])
+            ->push((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml')))]);
+
+        $this->assertCount(1, $this->fetch(since: '2026-10-15 07:00:00'));
+        Sleep::assertSlept(fn (CarbonInterval $duration) => (int) $duration->totalMilliseconds === 9000, times: 1);
+    }
+
+    public function test_caps_the_wait_at_sixty_seconds(): void
+    {
+        Sleep::fake();
+        Http::fake([self::URL => Http::sequence()
+            ->push('slow down', 429, ['Retry-After' => '600'])
+            ->push((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml')))]);
+
+        $this->fetch(since: '2026-10-15 07:00:00');
+
+        Sleep::assertSlept(fn (CarbonInterval $duration) => (int) $duration->totalMilliseconds === 60000, times: 1);
     }
 
     private function fakeFeed(string $fixture): void

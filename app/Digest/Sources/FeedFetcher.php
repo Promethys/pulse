@@ -8,6 +8,7 @@ use App\Digest\Support\Text;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
@@ -19,6 +20,8 @@ final class FeedFetcher implements SourceFetcher
     public const USER_AGENT = 'pulse-digest/1.0 (+personal use)';
 
     private const EXCERPT_LENGTH = 300;
+
+    private const MAX_RATE_LIMIT_WAIT = 60;
 
     public function fetch(Source $source, CarbonImmutable $since): array
     {
@@ -37,7 +40,7 @@ final class FeedFetcher implements SourceFetcher
     private function load(string $url): SimpleXMLElement
     {
         try {
-            $response = Http::timeout(10)->retry(2, 500, throw: false)->withUserAgent(self::USER_AGENT)->get($url);
+            $response = Http::timeout(10)->retry(3, $this->backoff(...), throw: false)->withUserAgent(self::USER_AGENT)->get($url);
         } catch (ConnectionException $e) {
             throw new FetchException("Connection failed: {$e->getMessage()}", previous: $e);
         }
@@ -56,6 +59,22 @@ final class FeedFetcher implements SourceFetcher
         }
 
         return $xml;
+    }
+
+    /** Milliseconds before retrying: on 429, Retry-After or Reddit's x-ratelimit-reset (anonymous: ~1 request/min), else 500 ms. */
+    private function backoff(int $attempt, Throwable $exception): int
+    {
+        $response = $exception instanceof RequestException ? $exception->response : null;
+
+        if ($response?->status() === 429) {
+            $wait = $response->header('Retry-After') ?: $response->header('x-ratelimit-reset');
+
+            if (is_numeric($wait)) {
+                return min((int) ceil((float) $wait) + 2, self::MAX_RATE_LIMIT_WAIT) * 1000;
+            }
+        }
+
+        return 500;
     }
 
     /**

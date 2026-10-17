@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -26,8 +25,8 @@ use Illuminate\Support\Carbon;
  * @property ItemStatus $status
  * @property string|null $summary
  * @property int|null $post_id
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  */
 #[Fillable(['source_slug', 'url', 'url_normalized', 'title', 'excerpt', 'links', 'published_at', 'status', 'summary', 'post_id'])]
 class Item extends Model

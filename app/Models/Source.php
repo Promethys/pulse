@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\SourceType;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -20,11 +20,11 @@ use Illuminate\Support\Carbon;
  * @property int $max_items
  * @property int $position
  * @property bool $enabled
- * @property Carbon|null $last_fetched_at
- * @property Carbon|null $last_success_at
+ * @property CarbonImmutable|null $last_fetched_at
+ * @property CarbonImmutable|null $last_success_at
  * @property string|null $last_error
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  */
 #[Fillable(['slug', 'name', 'type', 'url', 'tag', 'max_items', 'position', 'enabled', 'last_fetched_at', 'last_success_at', 'last_error'])]
 class Source extends Model
