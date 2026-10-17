@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\LearningKind;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -19,8 +19,8 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $body
  * @property list<array{title: string, url: string}> $links
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  */
 #[Fillable(['post_id', 'kind', 'learning_topic_id', 'title', 'body', 'links'])]
 class LearningPost extends Model
