@@ -28,16 +28,6 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'gemini' => [
-        'key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL'),
-    ],
-
-    'anthropic' => [
-        'key' => env('ANTHROPIC_API_KEY'),
-        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-5-5'),
-    ],
-
     'discord' => [
         'token' => env('DISCORD_BOT_TOKEN'),
         'news_forum' => env('DISCORD_NEWS_FORUM_ID'),

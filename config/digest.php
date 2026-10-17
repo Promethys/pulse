@@ -14,4 +14,9 @@ return [
 
     'profile' => env('DIGEST_PROFILE', ''),
 
+    // Ordered failover chain, any provider from config/ai.php: "gemini:<model>,anthropic:<model>"
+    'ai_providers' => env('DIGEST_AI_PROVIDERS', ''),
+
+    'ai_timeout' => (int) env('DIGEST_AI_TIMEOUT', 120),
+
 ];
