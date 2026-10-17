@@ -1,0 +1,17 @@
+{
+  "object": "email",
+  "id": "email-new",
+  "to": ["digest@pulse.test"],
+  "from": "Laravel Shift <news@laravelshift.com>",
+  "created_at": "2026-10-16 06:15:00.000000+00",
+  "subject": "Shifty Bits #212: Laravel 13 upgrade notes",
+  "html": "<html><body><p>Hi there,</p><p>This week: <a href=\"https://laravelshift.com/blog/laravel-13-upgrade-notes\">Laravel 13 upgrade notes</a> and <a href='https://github.com/laravel/framework/pull/9999'>a PR worth reading</a>.</p><p>Also see https://laravelshift.com/blog/laravel-13-upgrade-notes again.</p><img src=\"https://laravelshift.com/open/abc.gif\" width=\"1\"><p><a href=\"https://laravelshift.com/unsubscribe?u=1\">Unsubscribe</a> · <a href=\"mailto:jason@laravelshift.com\">Reply</a> · <a href=\"https://us1.list-manage.com/track/click?u=2\">tracked</a></p></body></html>",
+  "html_format": "html",
+  "text": null,
+  "headers": {},
+  "bcc": [],
+  "cc": [],
+  "reply_to": [],
+  "message_id": "<new@laravelshift.com>",
+  "attachments": []
+}

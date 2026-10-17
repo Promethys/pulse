@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Digest\Sources;
 
+use App\Digest\Support\Text;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
@@ -105,7 +106,7 @@ final class FeedFetcher implements SourceFetcher
 
     private function candidate(Source $source, string $title, string $url, string $html, string $date): ?Candidate
     {
-        $title = $this->text($title);
+        $title = Text::plain($title);
         $url = trim($url);
 
         if ($title === '' || ! preg_match('#^https?://#i', $url)) {
@@ -116,17 +117,10 @@ final class FeedFetcher implements SourceFetcher
             sourceSlug: $source->slug,
             title: $title,
             url: $url,
-            excerpt: Str::limit($this->text($html), self::EXCERPT_LENGTH - 1, '…'),
+            excerpt: Str::limit(Text::plain($html), self::EXCERPT_LENGTH - 1, '…'),
             publishedAt: $this->date($date),
             links: [$url],
         );
-    }
-
-    private function text(string $html): string
-    {
-        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 
     private function date(string $value): ?CarbonImmutable
