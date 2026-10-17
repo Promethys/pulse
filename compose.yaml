@@ -1,0 +1,49 @@
+# Dev environment: the Dockerfile's `dev` stage with the source mounted, plus Postgres.
+# Every command runs inside it: `docker compose exec app php artisan ...`
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    # Run as the WSL user so files created in the container (vendor, migrations...) stay yours.
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      SERVER_NAME: ":8000"
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp/.config
+      XDG_DATA_HOME: /tmp/.local/share
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: pulse
+      DB_USERNAME: pulse
+      DB_PASSWORD: pulse
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: pulse
+      POSTGRES_DB: pulse
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    # 5433 on the host: a local Postgres already listens on 5432.
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse -d pulse"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:
