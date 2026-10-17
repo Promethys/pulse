@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Hacker News: Front Page</title>
+        <link>https://news.ycombinator.com/</link>
+        <atom:link href="https://hnrss.org/frontpage?points=200" rel="self" type="application/rss+xml"/>
+        <item>
+            <title>Show HN: A tiny SQLite-backed queue</title>
+            <description><![CDATA[<p>Article URL: <a href="https://example.dev/sqlite-queue">https://example.dev/sqlite-queue</a></p><p>Points: 412</p>]]></description>
+            <pubDate>Fri, 16 Oct 2026 03:12:00 +0000</pubDate>
+            <link>https://example.dev/sqlite-queue</link>
+            <dc:creator>someone</dc:creator>
+            <comments>https://news.ycombinator.com/item?id=4242</comments>
+            <guid isPermaLink="false">https://news.ycombinator.com/item?id=4242</guid>
+        </item>
+    </channel>
+</rss>

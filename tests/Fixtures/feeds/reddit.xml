@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+    <title>top scoring links : laravel</title>
+    <entry>
+        <author><name>/u/someone</name></author>
+        <content type="html">&lt;p&gt;We moved our &lt;b&gt;queue&lt;/b&gt; workers to FrankenPHP.&lt;/p&gt;</content>
+        <id>t3_abc</id>
+        <link href="https://www.reddit.com/r/laravel/comments/abc/frankenphp_workers/"/>
+        <updated>2026-10-16T05:30:00+00:00</updated>
+        <published>2026-10-16T05:00:00+00:00</published>
+        <title>FrankenPHP workers in production: 6 months later</title>
+    </entry>
+    <entry>
+        <content type="html">&lt;p&gt;Second post&lt;/p&gt;</content>
+        <link rel="alternate" href="https://www.reddit.com/r/laravel/comments/def/second/"/>
+        <updated>2026-10-16T04:00:00+00:00</updated>
+        <title>Second post</title>
+    </entry>
+</feed>
