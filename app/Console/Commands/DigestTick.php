@@ -40,8 +40,10 @@ class DigestTick extends Command
             }
         }
 
+        // Undated skipped items are kept: they always pass the date filter, so they are the only record they were seen.
         $pruned = Item::query()
             ->where('status', ItemStatus::Skipped)
+            ->whereNotNull('published_at')
             ->where('created_at', '<', $now->subDays(self::PRUNE_SKIPPED_AFTER_DAYS))
             ->delete();
 
