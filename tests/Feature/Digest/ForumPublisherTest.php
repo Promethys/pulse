@@ -14,6 +14,7 @@ use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
@@ -52,7 +53,31 @@ class ForumPublisherTest extends TestCase
             && $r['message']['content'] === 'Part 1'
             && $r['applied_tags'] === ['11', '12']);
         Http::assertSent(fn (Request $r) => $r->url() === self::API.'/channels/thread-1/messages' && $r['content'] === 'Part 3');
-        $this->assertSame('12', Tag::query()->where('slug', 'laravel')->value('discord_tag_id'));
+    }
+
+    public function test_matches_tags_by_name_in_each_forum(): void
+    {
+        Http::fake(function (Request $request) {
+            return match (true) {
+                $request->method() === 'GET' && str_ends_with($request->url(), '/channels/forum-news') => Http::response(['available_tags' => [['id' => '11', 'name' => 'AI']]]),
+                $request->method() === 'GET' && str_ends_with($request->url(), '/channels/forum-learning') => Http::response(['available_tags' => [['id' => '21', 'name' => 'AI']]]),
+                str_ends_with($request->url(), '/threads') => Http::response(['id' => 'thread-'.(str_contains($request->url(), 'news') ? 'n' : 'l')]),
+                default => Http::response('unexpected', 404),
+            };
+        });
+
+        app(ForumPublisher::class)->publish($this->makePost(['News'], ['ai']), 'forum-news');
+        app(ForumPublisher::class)->publish($this->makePost(['Learning'], ['ai'], kind: PostKind::Learning), 'forum-learning');
+        app(ForumPublisher::class)->publish($this->makePost(['News again'], ['ai'], date: '2026-10-17'), 'forum-news');
+
+        Http::assertNotSent(fn (Request $r) => $r->method() === 'PATCH');
+        Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/channels/forum-news/threads') && $r['applied_tags'] === ['11'] && $r['message']['content'] === 'News again');
+        Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/channels/forum-learning/threads') && $r['applied_tags'] === ['21']);
+    }
+
+    public function test_tags_no_longer_store_a_discord_id(): void
+    {
+        $this->assertFalse(Schema::hasColumn('tags', 'discord_tag_id'));
     }
 
     public function test_creates_missing_forum_tags_up_to_twenty(): void
@@ -177,11 +202,11 @@ class ForumPublisherTest extends TestCase
      * @param  list<string>  $messages
      * @param  list<string>  $tagSlugs
      */
-    private function makePost(array $messages, array $tagSlugs, string $title = '📰 Tech digest — Fri 16 Oct'): Post
+    private function makePost(array $messages, array $tagSlugs, string $title = '📰 Tech digest — Fri 16 Oct', PostKind $kind = PostKind::News, string $date = '2026-10-16'): Post
     {
         return Post::query()->create([
-            'date' => '2026-10-16',
-            'kind' => PostKind::News,
+            'date' => $date,
+            'kind' => $kind,
             'status' => PostStatus::Generated,
             'rendered' => (new RenderedPost($title, $messages, $tagSlugs))->toArray(),
         ]);

@@ -26,14 +26,13 @@ class TagTableSeederTest extends TestCase
     public function test_reseeding_never_changes_existing_rows(): void
     {
         $this->seed(TagTableSeeder::class);
-        Tag::query()->where('slug', 'ai')->update(['name' => 'Artificial Intelligence', 'discord_tag_id' => '123']);
+        Tag::query()->where('slug', 'ai')->update(['name' => 'Artificial Intelligence']);
         Tag::query()->create(['slug' => 'rust', 'name' => 'Rust']);
 
         $this->seed(TagTableSeeder::class);
 
         $ai = Tag::query()->where('slug', 'ai')->firstOrFail();
         $this->assertSame('Artificial Intelligence', $ai->name);
-        $this->assertSame('123', $ai->discord_tag_id);
         $this->assertSame(7, Tag::query()->count());
     }
 
