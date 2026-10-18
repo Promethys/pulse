@@ -74,16 +74,16 @@ class NewsRendererTest extends TestCase
 
     public function test_failure_footer(): void
     {
-        $post = $this->render([$this->item('A', ['ai'])], failures: ['Railway Blog' => 'HTTP 500', 'r/laravel' => 'HTTP 429']);
+        $post = $this->render([$this->item('A', ['ai'])], failures: ['Example Blog' => 'HTTP 500', 'r/laravel' => 'HTTP 429']);
 
-        $this->assertStringEndsWith('⚠️ Not fetched: Railway Blog, r/laravel', $post->messages[array_key_last($post->messages)]);
+        $this->assertStringEndsWith('⚠️ Not fetched: Example Blog, r/laravel', $post->messages[array_key_last($post->messages)]);
     }
 
     public function test_quiet_night_keeps_the_footer(): void
     {
-        $post = $this->render([], failures: ['Railway Blog' => 'HTTP 500']);
+        $post = $this->render([], failures: ['Example Blog' => 'HTTP 500']);
 
-        $this->assertSame(["Quiet night: nothing notable.\n\n⚠️ Not fetched: Railway Blog"], $post->messages);
+        $this->assertSame(["Quiet night: nothing notable.\n\n⚠️ Not fetched: Example Blog"], $post->messages);
     }
 
     public function test_headlines_only_note_and_lines(): void
