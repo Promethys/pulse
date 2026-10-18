@@ -43,7 +43,8 @@ final class MessageSplitter
     }
 
     /**
-     * A block that fits stays whole; a bigger one is split on lines, and a line longer than the limit is cut.
+     * A block that fits stays whole; a bigger one is split on lines (each continuation of a "## " section
+     * repeats its heading as "## … (continued)" when it fits), and a line longer than the limit is cut.
      *
      * @return list<string>
      */
@@ -53,10 +54,13 @@ final class MessageSplitter
             return [$block];
         }
 
+        $lines = explode("\n", $block);
+        $continued = str_starts_with($lines[0], '## ') ? "{$lines[0]} (continued)" : null;
+
         $pieces = [];
         $current = '';
 
-        foreach (explode("\n", $block) as $line) {
+        foreach ($lines as $line) {
             foreach (mb_strlen($line) > $limit ? mb_str_split($line, max(1, $limit)) : [$line] as $part) {
                 $joined = $current === '' ? $part : "{$current}\n{$part}";
 
@@ -64,7 +68,8 @@ final class MessageSplitter
                     $current = $joined;
                 } else {
                     $pieces[] = $current;
-                    $current = $part;
+                    $withHeading = "{$continued}\n{$part}";
+                    $current = $continued !== null && mb_strlen($withHeading) <= $limit ? $withHeading : $part;
                 }
             }
         }

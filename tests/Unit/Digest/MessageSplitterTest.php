@@ -47,6 +47,25 @@ class MessageSplitterTest extends TestCase
         $this->assertSame(["## AI\naaaaaaaa", 'bbbbbbbb'], (new MessageSplitter)->split([$block], limit: 15));
     }
 
+    public function test_repeats_the_heading_on_continuations(): void
+    {
+        $block = implode("\n", ['## AI', str_repeat('a', 20), str_repeat('b', 20), str_repeat('c', 20)]);
+
+        $this->assertSame(
+            ['## AI'."\n".str_repeat('a', 20), "## AI (continued)\n".str_repeat('b', 20), "## AI (continued)\n".str_repeat('c', 20)],
+            (new MessageSplitter)->split([$block], limit: 40),
+        );
+    }
+
+    public function test_drops_the_continuation_heading_when_it_would_not_fit(): void
+    {
+        $block = implode("\n", ['## AI', str_repeat('a', 30), str_repeat('b', 30)]);
+
+        $messages = (new MessageSplitter)->split([$block], limit: 40);
+
+        $this->assertSame(str_repeat('b', 30), $messages[1]);
+    }
+
     public function test_hard_cuts_a_single_line_longer_than_the_limit(): void
     {
         $this->assertSame(['aaaaa', 'aaaaa', 'aa'], (new MessageSplitter)->split([str_repeat('a', 12)], limit: 5));

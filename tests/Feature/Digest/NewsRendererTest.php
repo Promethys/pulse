@@ -116,6 +116,8 @@ class NewsRendererTest extends TestCase
         foreach ($post->messages as $message) {
             $this->assertLessThanOrEqual(2000, mb_strlen($message));
         }
+        $this->assertStringStartsWith("## AI\n", $post->messages[0]);
+        $this->assertStringStartsWith("## AI (continued)\n", $post->messages[1]);
     }
 
     public function test_rendered_post_round_trips_through_an_array(): void
