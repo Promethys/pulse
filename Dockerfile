@@ -4,7 +4,7 @@
 # - base: PHP runtime (FrankenPHP) shared by every stage
 # - dev:  base + Node and Composer; compose.yaml mounts the source here
 # - build: installs dependencies and compiles the Vite assets
-# - prod: what Railway runs (web later, `php artisan digest:tick` for the cron)
+# - prod: the production image (web later, `php artisan digest:tick` for the cron)
 
 FROM dunglas/frankenphp:1-php8.4 AS base
 
