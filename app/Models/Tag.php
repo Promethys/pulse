@@ -15,11 +15,10 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $slug
  * @property string $name
- * @property string|null $discord_tag_id
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
-#[Fillable(['slug', 'name', 'discord_tag_id'])]
+#[Fillable(['slug', 'name'])]
 class Tag extends Model
 {
     /** @use HasFactory<TagFactory> */

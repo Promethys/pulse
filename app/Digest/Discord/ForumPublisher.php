@@ -52,7 +52,8 @@ final class ForumPublisher
     }
 
     /**
-     * Discord ids of the post's tags, creating missing forum tags while the forum has room (20 max).
+     * Discord ids of the post's tags in this forum (each forum has its own ids, so tags are matched by name),
+     * creating missing forum tags while the forum has room (20 max).
      *
      * @param  list<string>  $slugs
      * @return list<string>
@@ -81,10 +82,7 @@ final class ForumPublisher
             $tag = $tags->get($slug);
             $id = $tag === null ? null : $this->findId($forumTags, $tag);
 
-            if ($tag !== null && $id !== null) {
-                if ($tag->discord_tag_id !== $id) {
-                    $tag->update(['discord_tag_id' => $id]);
-                }
+            if ($id !== null) {
                 $ids[] = $id;
             }
         }
@@ -99,7 +97,7 @@ final class ForumPublisher
     {
         foreach ($forumTags as $forumTag) {
             $id = (string) ($forumTag['id'] ?? '');
-            if ($id !== '' && ($id === $tag->discord_tag_id || ($forumTag['name'] ?? null) === $this->forumName($tag))) {
+            if ($id !== '' && ($forumTag['name'] ?? null) === $this->forumName($tag)) {
                 return $id;
             }
         }
