@@ -24,7 +24,7 @@ use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 /** One day's tip + topic post: pick topic → write (AI) → check links → render → publish, resumable. */
-final class LearningPipeline
+class LearningPipeline
 {
     private const RECENT_TIPS = 60;
 

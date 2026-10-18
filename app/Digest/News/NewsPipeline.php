@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /** One day's news post: collect → select (AI) → render → publish, resumable after any failure. */
-final class NewsPipeline
+class NewsPipeline
 {
     public function __construct(
         private readonly SourceCollector $collector,
