@@ -48,7 +48,7 @@ final class ForumPublisher
             $post->update(['messages_sent' => $i + 1]);
         }
 
-        $post->update(['status' => PostStatus::Posted, 'posted_at' => now()]);
+        $post->update(['status' => PostStatus::Posted, 'posted_at' => now(), 'last_error' => null]);
     }
 
     /**
