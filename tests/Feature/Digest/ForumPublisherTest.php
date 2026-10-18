@@ -75,6 +75,20 @@ class ForumPublisherTest extends TestCase
         Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/channels/forum-learning/threads') && $r['applied_tags'] === ['21']);
     }
 
+    public function test_success_clears_the_previous_error(): void
+    {
+        $this->fakeDiscord(availableTags: []);
+        $post = $this->makePost(['Only part'], []);
+        $post->update(['status' => PostStatus::Failed, 'attempts' => 1, 'last_error' => 'Discord HTTP 403: Missing Access']);
+
+        app(ForumPublisher::class)->publish($post, 'forum-1');
+
+        $post->refresh();
+        $this->assertSame(PostStatus::Posted, $post->status);
+        $this->assertNull($post->last_error);
+        $this->assertSame(1, $post->attempts);
+    }
+
     public function test_tags_no_longer_store_a_discord_id(): void
     {
         $this->assertFalse(Schema::hasColumn('tags', 'discord_tag_id'));
