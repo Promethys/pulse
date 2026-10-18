@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Enums;
+
+enum PostStatus: string
+{
+    case Pending = 'pending';
+    case Generated = 'generated';
+    case Posted = 'posted';
+    case Failed = 'failed';
+}
