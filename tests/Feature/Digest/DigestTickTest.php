@@ -87,6 +87,18 @@ class DigestTickTest extends TestCase
         $this->assertModelExists($oldCandidate);
     }
 
+    public function test_keeps_old_skipped_items_without_a_date_so_they_are_not_collected_again(): void
+    {
+        CarbonImmutable::setTestNow('2026-12-01 07:00:00');
+        $this->mock(NewsPipeline::class)->shouldNotReceive('run');
+        $this->mock(LearningPipeline::class)->shouldNotReceive('run');
+        $undated = Item::factory()->create(['status' => ItemStatus::Skipped, 'published_at' => null, 'created_at' => '2026-10-15 07:00:00']);
+
+        $this->artisan('digest:tick')->assertExitCode(0);
+
+        $this->assertModelExists($undated);
+    }
+
     /**
      * @param  class-string  $class
      */
