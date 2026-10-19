@@ -25,6 +25,20 @@ docker compose exec app php artisan test
 
 Pint skips `tmp/`, which is a git-excluded folder for local scratch files.
 
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs three jobs on every push to `main` and every pull request:
+
+- **lint**: Pint (`--test`) and Larastan.
+- **tests**: the PHPUnit suite against a PostgreSQL 18 service (the front-end is built first, since the starter-kit pages need the Vite manifest).
+- **gitleaks**: scans the whole git history for committed secrets (API keys, tokens).
+
+To run the secret scan locally:
+
+```bash
+docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --redact --verbose
+```
+
 ## Live checks
 
 `digest:sources` and `digest:ai` check the real sources and providers without storing anything. They are the quickest way to confirm a change against the outside world.
