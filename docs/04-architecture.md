@@ -138,8 +138,4 @@ Item titles and summaries are plain text; learning bodies are Markdown.
 
 ## AI
 
-AI calls go through the [Laravel AI SDK](https://laravel.com/docs/13.x/ai-sdk) (`laravel/ai`). Each task is an agent class with instructions and a JSON schema, so every provider returns the same structure, and providers fail over in the order of `DIGEST_AI_PROVIDERS`. See [AI providers](ai.md).
-
-## Planned
-
-The remaining steps (selection, rendering, Discord publishing, the news and learning pipelines, the scheduler and the deployment) are listed in [the progress table](index.md#progress).
+AI calls go through the [Laravel AI SDK](https://laravel.com/docs/13.x/ai-sdk) (`laravel/ai`). Each task is an agent class with instructions and a JSON schema, so every provider returns the same structure, and providers fail over in the order of `DIGEST_AI_PROVIDERS`. See [AI providers](06-ai.md).

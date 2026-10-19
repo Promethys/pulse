@@ -21,7 +21,7 @@ Pulse is configured through environment variables in `.env` (copied from `.env.e
 | `DIGEST_AI_TIMEOUT` | HTTP timeout of one AI request, in seconds. | `120` |
 | `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, … | API key of each provider you list. The full list is in `config/ai.php`. | empty |
 
-See [AI providers](ai.md).
+See [AI providers](06-ai.md).
 
 ## Sources
 
@@ -29,7 +29,7 @@ See [AI providers](ai.md).
 |---|---|---|
 | `RESEND_API_KEY` | Reads the newsletters received on your Resend receiving address (source `newsletters`). | empty (that source then fails with a clear message) |
 
-The sources themselves are rows in the database, not configuration. See [Sources](sources.md).
+The sources themselves are rows in the database, not configuration. See [Sources](05-sources.md).
 
 ## Delivery
 

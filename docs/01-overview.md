@@ -9,28 +9,7 @@ Pulse turns the tech sources you follow into two short daily posts: the news (09
 3. **Learning**: pick the next software-engineering topic, ask the AI model for a tip and an explanation, post them.
 4. Everything (items, tags, posts) is stored in PostgreSQL.
 
-See [Architecture](architecture.md) for the details.
-
-## Progress
-
-The MVP is built task by task on the `feat/tech-digest` branch.
-
-| # | Task | Status |
-|---|---|---|
-| 0 | Docker setup (FrankenPHP, Postgres) | Done |
-| 1 | Tests on PostgreSQL | Done |
-| 2 | Configuration, schema, models, seeders | Done |
-| 3 | URL normalization and RSS/Atom feeds | Done |
-| 4 | GitHub trending and newsletter inbox (Resend) | Done |
-| 5 | Collecting from all sources, `digest:sources` | Done |
-| 6 | AI providers (`laravel/ai`), `digest:ai` | Done |
-| 7 | News selection (prompt, validation, tags) | Done |
-| 8 | Rendering the Discord posts | Done |
-| 9 | Discord publisher | Done |
-| 10 | News pipeline, `digest:news` | Done |
-| 11 | Learning pipeline, `digest:learning` | Done |
-| 12 | Scheduler, `digest:tick` | Done |
-| 13 | Deployment and acceptance | Done (acceptance); deployment pending |
+See [Architecture](04-architecture.md) for the details.
 
 ## Scope
 

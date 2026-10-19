@@ -7,7 +7,7 @@ A personal daily digest, built with Laravel. Every morning Pulse reads the tech 
 
 Everything is stored, so the history can be searched by tag later (web app, then Android app).
 
-> Status: MVP, single user. See [docs/index.md](docs/index.md) for what is done.
+> Status: MVP, single user.
 
 ## Quick start
 
@@ -25,13 +25,13 @@ docker compose exec app php artisan digest:sources
 
 ## Documentation
 
-- [Overview and progress](docs/index.md)
-- [Getting started](docs/getting-started.md)
-- [Configuration](docs/configuration.md)
-- [Architecture](docs/architecture.md)
-- [Sources](docs/sources.md)
-- [AI providers](docs/ai.md)
-- [Testing](docs/testing.md)
+- [Overview](docs/01-overview.md)
+- [Getting started](docs/02-getting-started.md)
+- [Configuration](docs/03-configuration.md)
+- [Architecture](docs/04-architecture.md)
+- [Sources](docs/05-sources.md)
+- [AI providers](docs/06-ai.md)
+- [Testing](docs/07-testing.md)
 
 ## License
 

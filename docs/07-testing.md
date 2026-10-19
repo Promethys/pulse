@@ -12,7 +12,7 @@ The suite uses PHPUnit and runs against the `pulse_testing` PostgreSQL database 
 Tests never reach the internet:
 
 - HTTP sources are faked with `Http::fake()` and `Http::preventStrayRequests()`, using sample files in `tests/Fixtures/` (an RSS feed, a Reddit Atom feed, an hnrss feed, a broken feed, a GitHub trending page, Resend API responses).
-- AI agents are faked with the AI SDK (`HealthCheck::fake(...)`), see [AI providers](ai.md#tests).
+- AI agents are faked with the AI SDK (`HealthCheck::fake(...)`), see [AI providers](06-ai.md#tests).
 - Waits (rate-limit backoff) are faked with `Sleep::fake()`.
 
 ## Before committing
