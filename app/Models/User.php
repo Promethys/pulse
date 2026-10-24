@@ -6,7 +6,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,6 +32,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read DigestSettings|null $digestSettings
+ * @property-read Collection<int, Interest> $interests
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'is_admin', 'uses_instance_ai'])]
@@ -60,5 +63,13 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function digestSettings(): HasOne
     {
         return $this->hasOne(DigestSettings::class);
+    }
+
+    /**
+     * @return BelongsToMany<Interest, $this>
+     */
+    public function interests(): BelongsToMany
+    {
+        return $this->belongsToMany(Interest::class)->withTimestamps();
     }
 }
