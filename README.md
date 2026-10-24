@@ -33,6 +33,10 @@ docker compose exec app php artisan digest:sources
 - [AI providers](docs/06-ai.md)
 - [Testing](docs/07-testing.md)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-MIT. The `LICENSE` file is added before the repository goes public.
+MIT, see [LICENSE](LICENSE).
