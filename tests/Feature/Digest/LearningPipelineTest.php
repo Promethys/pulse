@@ -8,6 +8,7 @@ use App\Ai\Agents\LearningWriter;
 use App\Digest\Ai\AiUnavailableException;
 use App\Digest\Discord\DiscordException;
 use App\Digest\Learning\LearningPipeline;
+use App\Digest\Learning\LinkChecker;
 use App\Enums\LearningKind;
 use App\Enums\PostKind;
 use App\Enums\PostStatus;
@@ -42,6 +43,7 @@ class LearningPipelineTest extends TestCase
             'services.discord.learning_forum' => 'forum-learning',
         ]);
         $this->topic = LearningTopic::query()->create(['title' => 'Idempotency keys', 'category' => 'distributed-systems']);
+        $this->app->instance(LinkChecker::class, new LinkChecker(fn () => ['93.184.216.34']));
     }
 
     public function test_posts_tip_and_topic(): void
