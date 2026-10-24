@@ -19,7 +19,7 @@ Pulse is a Laravel 13 app used from the command line. The Vue/Inertia starter ki
 `SourceCollector::collect($since)` walks the enabled sources in priority order (`Source::query()->enabled()`):
 
 1. The source's `type` (`SourceType` enum) names its fetcher, resolved from the container:
-   - `FeedFetcher`: RSS 2.0 and Atom (blogs, hnrss.org, Reddit, GitHub releases).
+   - `FeedFetcher`: RSS 2.0 and Atom (blogs, hnrss.org, GitHub releases).
    - `GithubTrendingFetcher`: reads the GitHub trending page (there is no API or feed).
    - `ResendInboxFetcher`: newsletters received through Resend Receiving.
 2. A fetcher returns `Candidate` objects: title, URL, plain-text excerpt (300 characters, 3,000 for newsletters), publication date, and the `links` the AI model is allowed to cite for it.
