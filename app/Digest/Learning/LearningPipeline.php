@@ -72,6 +72,11 @@ class LearningPipeline
         } catch (Throwable $e) {
             $post->update(['status' => PostStatus::Failed, 'attempts' => $post->attempts + 1, 'last_error' => $e->getMessage()]);
 
+            if ($post->attempts >= (int) config('digest.max_attempts')) {
+                // the day is lost: let the topic be picked again on another day
+                LearningTopic::query()->whereDate('last_used_on', $today->toDateString())->update(['last_used_on' => null]);
+            }
+
             throw $e;
         }
 

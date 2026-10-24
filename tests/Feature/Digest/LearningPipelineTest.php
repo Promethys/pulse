@@ -123,6 +123,24 @@ class LearningPipelineTest extends TestCase
         $this->assertSame('Idempotency keys', $post->learningPosts()->where('kind', LearningKind::Topic)->value('title'));
     }
 
+    public function test_last_failed_attempt_frees_the_topic_for_another_day(): void
+    {
+        config(['digest.max_attempts' => 2]);
+        LearningWriter::fake(fn () => throw new ProviderOverloadedException('overloaded'));
+        $this->fakeHttp();
+
+        foreach ([1, 2] as $attempt) {
+            try {
+                app(LearningPipeline::class)->run($this->today);
+                $this->fail('Expected AiUnavailableException');
+            } catch (AiUnavailableException) {
+            }
+
+            $expected = $attempt === 1 ? '2026-10-16' : null;
+            $this->assertSame($expected, $this->topic->refresh()->last_used_on?->toDateString());
+        }
+    }
+
     public function test_discord_failure_keeps_rendered_and_the_retry_only_publishes(): void
     {
         LearningWriter::fake([$this->answer()]);
