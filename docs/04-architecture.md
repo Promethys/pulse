@@ -32,7 +32,7 @@ Pulse is a Laravel 13 app used from the command line. The Vue/Inertia starter ki
 
 1. Sends the candidates to the `NewsCurator` agent through the provider chain. If no provider answers, it throws `AiUnavailableException` and changes nothing, so the pipeline can post a headlines-only version instead.
 2. `SelectionValidator` keeps only what the model may legitimately return, and drops (never repairs) the rest:
-   - the `candidate_id` must be one of the candidates;
+   - the `candidate_id` must be one of the candidates (an integer, or a string of digits like `"12"`, which some providers send);
    - the `url` must be one of that candidate's own `links` (compared after normalization): no invented links;
    - titles are cut to 80 characters and summaries to 160;
    - tags are turned into slugs, deduplicated and capped at 3; with none left, the source's default tag is used;
@@ -95,9 +95,9 @@ docker compose exec app php artisan digest:news --force    # post today's news a
 
 `LearningPipeline::run($today)` builds and posts the 09:30 tip + topic, with the same resumable steps as the news pipeline (`posts` row of kind `learning`, publishing to `DISCORD_LEARNING_FORUM_ID`).
 
-1. **Topic**: `TopicPicker` returns the topic already picked today (so retries and `--force` keep the same topic), else a never-used topic, else the least recently used one, avoiding the previous day's category when another category is available. The topics are seeded by `LearningTopicTableSeeder` (66 intermediate-to-advanced topics in 11 categories; idempotent).
+1. **Topic**: `TopicPicker` returns the topic already picked today (so retries and `--force` keep the same topic), else a never-used topic, else the least recently used one, avoiding the previous day's category when another category is available. If the post still fails after its last attempt, the topic is marked unused again, so it comes back on another day. The topics are seeded by `LearningTopicTableSeeder` (66 intermediate-to-advanced topics in 11 categories; idempotent).
 2. **Writing**: the `LearningWriter` agent receives the profile, the existing tags and the last 60 tip titles (so tips don't repeat). It returns a tip (title, Markdown body, tags) and the topic (Markdown body, an "In Laravel" paragraph, 1–2 reference links, tags). Its instructions require an intermediate-to-advanced level, never basics. If no provider answers, the post fails and is retried later; there is no fallback text.
-3. **Links**: each suggested link is checked (`HEAD`, or `GET` when `HEAD` is refused) and dropped if it doesn't answer with a non-error status; at most 2 are kept.
+3. **Links**: each suggested link is checked (`HEAD`, or `GET` when `HEAD` is refused) and dropped if it doesn't answer with a non-error status; at most 2 are kept. Only public addresses are requested: a link whose host resolves to a private, loopback or reserved address is dropped without being fetched, and redirects (at most 3) are followed one by one with the same check.
 4. **Storing**: two `learning_posts` rows (tip and topic, tagged). The "In Laravel" paragraph is part of the topic's Markdown body.
 5. **Rendering** (`LearningRenderer`): title `🧠 Tip & topic — Fri 16 Oct`, a `## 💡` section for the tip and a `## 📚` section for the topic with its suggested reading. Titles are escaped; bodies are Markdown and kept as written. Forum tags: the tip's and the topic's tags, at most 5.
 

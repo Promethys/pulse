@@ -8,6 +8,7 @@ use App\Ai\Agents\LearningWriter;
 use App\Digest\Ai\AiUnavailableException;
 use App\Digest\Discord\DiscordException;
 use App\Digest\Learning\LearningPipeline;
+use App\Digest\Learning\LinkChecker;
 use App\Enums\LearningKind;
 use App\Enums\PostKind;
 use App\Enums\PostStatus;
@@ -42,6 +43,7 @@ class LearningPipelineTest extends TestCase
             'services.discord.learning_forum' => 'forum-learning',
         ]);
         $this->topic = LearningTopic::query()->create(['title' => 'Idempotency keys', 'category' => 'distributed-systems']);
+        $this->app->instance(LinkChecker::class, new LinkChecker(fn () => ['93.184.216.34']));
     }
 
     public function test_posts_tip_and_topic(): void
@@ -121,6 +123,24 @@ class LearningPipelineTest extends TestCase
 
         $this->assertSame(PostStatus::Posted, $post->status);
         $this->assertSame('Idempotency keys', $post->learningPosts()->where('kind', LearningKind::Topic)->value('title'));
+    }
+
+    public function test_last_failed_attempt_frees_the_topic_for_another_day(): void
+    {
+        config(['digest.max_attempts' => 2]);
+        LearningWriter::fake(fn () => throw new ProviderOverloadedException('overloaded'));
+        $this->fakeHttp();
+
+        foreach ([1, 2] as $attempt) {
+            try {
+                app(LearningPipeline::class)->run($this->today);
+                $this->fail('Expected AiUnavailableException');
+            } catch (AiUnavailableException) {
+            }
+
+            $expected = $attempt === 1 ? '2026-10-16' : null;
+            $this->assertSame($expected, $this->topic->refresh()->last_used_on?->toDateString());
+        }
     }
 
     public function test_discord_failure_keeps_rendered_and_the_retry_only_publishes(): void

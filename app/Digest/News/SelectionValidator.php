@@ -36,7 +36,8 @@ final class SelectionValidator
                 break;
             }
 
-            $candidate = is_array($entry) && is_int($entry['candidate_id'] ?? null) ? $candidatesById->get($entry['candidate_id']) : null;
+            $candidateId = is_array($entry) ? $this->candidateId($entry['candidate_id'] ?? null) : null;
+            $candidate = $candidateId !== null ? $candidatesById->get($candidateId) : null;
             $url = is_string($entry['url'] ?? null) ? trim($entry['url']) : '';
 
             if ($candidate === null || ! $this->isOwnLink($candidate, $url)) {
@@ -59,6 +60,16 @@ final class SelectionValidator
         }
 
         return $selected;
+    }
+
+    /** Some providers send ids as strings ("12"). */
+    private function candidateId(mixed $id): ?int
+    {
+        return match (true) {
+            is_int($id) => $id,
+            is_string($id) && ctype_digit($id) => (int) $id,
+            default => null,
+        };
     }
 
     private function isOwnLink(Item $candidate, string $url): bool
