@@ -24,6 +24,16 @@ class SelectionValidatorTest extends TestCase
         $this->assertSame([], $this->validate([$this->entry(99, 'https://laravel-news.com/a')]));
     }
 
+    public function test_accepts_a_candidate_id_sent_as_a_numeric_string(): void
+    {
+        $selected = $this->validate([['candidate_id' => '1'] + $this->entry(1, 'https://laravel-news.com/a')]);
+
+        $this->assertCount(1, $selected);
+        $this->assertSame(1, $selected[0]->candidateId);
+        $this->assertSame([], $this->validate([['candidate_id' => '1.0'] + $this->entry(1, 'https://laravel-news.com/a')]));
+        $this->assertSame([], $this->validate([['candidate_id' => '1abc'] + $this->entry(1, 'https://laravel-news.com/a')]));
+    }
+
     public function test_drops_url_not_in_candidate_links(): void
     {
         $this->assertSame([], $this->validate([$this->entry(1, 'https://invented.example.com/story')]));
