@@ -118,7 +118,7 @@ final class DiscordClient
         if ($response->failed()) {
             $message = $response->json('message') ?? mb_substr($response->body(), 0, 200);
 
-            throw new DiscordException("Discord HTTP {$response->status()} on {$method} {$path}: {$message}");
+            throw new DiscordException("Discord HTTP {$response->status()} on {$method} {$path}: {$message}", status: $response->status());
         }
 
         return $response;
