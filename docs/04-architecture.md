@@ -1,18 +1,44 @@
 # Architecture
 
-Pulse is a Laravel 13 app used from the command line. The Vue/Inertia starter kit is kept for the future web app but the digest doesn't depend on it.
+Pulse is a Laravel 13 app with a Vue/Inertia web app for accounts. The digest runs from the command line and does not depend on the web app. Its pipelines still read the instance environment configuration and enabled sources, rather than per-user settings, subscriptions, selections, AI keys or delivery records. `pulse:adopt` imports the existing configuration and history into those records.
 
 ## Code layout
 
 | Path | Responsibility |
 |---|---|
 | `app/Digest/Sources/` | Fetching: one fetcher per source type, URL normalization, the collector |
-| `app/Digest/Ai/` | The AI provider chain read from `DIGEST_AI_PROVIDERS` |
+| `app/Digest/Ai/` | The instance provider chain and per-user `AiChainResolver` |
 | `app/Digest/Support/` | Small shared helpers (HTML to plain text) |
 | `app/Ai/Agents/` | `laravel/ai` agents (prompt + JSON schema) |
-| `app/Console/Commands/` | `digest:*` commands |
+| `app/Actions/` | Account registration and interest selection (`ChooseInterests`) |
+| `app/Http/Controllers/Discord/` | Add to Discord install and callback |
+| `app/Console/Commands/` | `digest:*` commands and `pulse:adopt` |
 | `app/Models/`, `app/Enums/` | Data model |
-| `database/seeders/` | Initial sources and tags (idempotent) |
+| `database/seeders/` | Interests, sources, tags and learning topics |
+
+## Accounts
+
+Registration creates a `digest_settings` row and an enabled `in_app` delivery channel for both news and learning in one transaction. Settings hold the timezone (default `UTC`), profile, news and learning toggles and times (default `09:00` and `09:30`), `max_items` (default 20) and nullable `onboarded_at`. Validation rules accept times in 15-minute steps and `max_items` from 1 to 20.
+
+`users.is_admin` and `users.uses_instance_ai` default to false. Both are excluded from mass assignment and serialization; they are set through Artisan commands (`pulse:adopt` grants both). `User::learningAvailable()` returns true only when the user has at least one interest with `has_learning = true`. The scheduled learning pipeline does not use this check yet.
+
+Personal news selections live in `post_items`, with a copy of each selected item's title, summary, position and tags (`post_item_tag`). The migration backfills existing selections. The digest pipeline still writes selections to `items` and `item_tag`. `learning_topic_usages` records one topic per user and day; the pipeline still uses `learning_topics.last_used_on`.
+
+Delivery channels store a type (`discord_bot`, `discord_webhook`, `email` or `in_app`), accepted post `kinds`, `enabled`, encrypted settings hidden from serialization, and `verified_at`. A `deliveries` row tracks each post/channel pair with status (`pending`, `delivered`, `failed`), attempts, progress, external id, last error and delivery time. These records do not drive publishing yet; the pipeline still uses the post's Discord thread and message progress.
+
+### Add to Discord
+
+Authenticated users with verified email can visit `/discord/install`. The OAuth2 flow requests the `bot` scope and permissions `274877975568`. `/discord/callback` consumes a single-use session state and records the installed guild in `discord_guilds`. The guild comes only from Discord's token response, never the callback's guild query parameter. Installing records the guild; it does not create a delivery channel.
+
+`DiscordClient::forumChannels($guildId)` returns forum channel ids and names, ordered by Discord channel position. See [Configuration](03-configuration.md) for the client credentials and redirect URL.
+
+### `pulse:adopt`
+
+`php artisan pulse:adopt <email> [--dry-run]` imports the instance configuration and history for an existing user. It copies digest settings, selects interests linked to enabled catalog sources and creates subscriptions through `ChooseInterests`. The newsletters source becomes the user's custom source, with the Resend key saved as credentials if credentials are empty.
+
+The command resolves the configured news and learning forums through Discord, records their guilds and creates verified bot delivery channels (one channel when both forum ids match). It grants administrator and instance AI access, assigns posts whose `user_id` is null, imports topic usage from `last_used_on`, backfills delivered records for posted Discord threads, and ensures an in-app channel exists.
+
+The import is idempotent and transactional; `--dry-run` prints counts and rolls back database changes, but still reads Discord. Missing forum ids are skipped with warnings. Re-running reapplies environment settings and Discord destinations. See [Getting started](02-getting-started.md) for commands.
 
 ## Collecting
 
@@ -127,12 +153,29 @@ After running what is due, `digest:tick` deletes `skipped` items older than 30 d
 
 | Table | Holds |
 |---|---|
-| `sources` | Definition (slug, name, type, URL, default tag, max items, priority `position`, `enabled`) and fetch state |
+| `users` | Accounts, with hidden administrator and instance AI flags |
+| `digest_settings` | One settings row per user: timezone, profile, toggles, times, max items and onboarding time |
+| `interests` | Interest catalog: category, icon, position, learning availability and draft/live status |
+| `interest_user` | Each user's chosen interests |
+| `sources` | Catalog or custom source definition, default flag, site URL, encrypted credentials and fetch state |
+| `interest_source` | Links between interests and sources |
+| `source_subscriptions` | One enabled or disabled subscription per user/source pair |
 | `items` | Every candidate and selected item, unique by `url_normalized`; status `candidate` / `selected` / `skipped` |
 | `tags` | Tag slug and display name (`ai` → "AI") |
-| `posts` | One per day and kind (`news` / `learning`): status, attempts, rendered messages, Discord thread, model used |
+| `posts` | One per user, day and kind (`news` / `learning`), with nullable user: status, attempts, rendered messages, Discord thread, model used |
+| `post_items` | Per-post copies of selected item titles, summaries and positions |
+| `post_item_tag` | Tags attached to personal selections |
+| `item_tag` | Tags attached to shared items |
 | `learning_topics` | The rotating list of software-engineering topics |
 | `learning_posts` | The tip and the topic of a learning post (bodies in Markdown) |
+| `learning_post_tag` | Tags attached to tips and topics |
+| `learning_topic_usages` | Per-user topic history, unique by user and day |
+| `delivery_channels` | Per-user destinations, accepted kinds, enabled flag, encrypted settings and verification time |
+| `deliveries` | Delivery status and retry progress, unique by post and channel |
+| `discord_guilds` | Installed guild id and name, unique by user and guild |
+| `ai_keys` | Per-user provider, model, encrypted key, suffix, failover position and consent time |
+
+`posts` is unique on `(user_id, date, kind)` with PostgreSQL `NULLS NOT DISTINCT`, so unowned posts also have at most one row per day and kind.
 
 Item titles and summaries are plain text; learning bodies are Markdown.
 

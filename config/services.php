@@ -30,6 +30,8 @@ return [
 
     'discord' => [
         'token' => env('DISCORD_BOT_TOKEN'),
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
         'news_forum' => env('DISCORD_NEWS_FORUM_ID'),
         'learning_forum' => env('DISCORD_LEARNING_FORUM_ID'),
     ],

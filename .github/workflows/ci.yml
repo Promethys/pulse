@@ -95,6 +95,11 @@ jobs:
       - name: Tests
         run: php artisan test
 
+      - name: JS tests
+        run: npm run test
+        env:
+          LARAVEL_BYPASS_ENV_CHECK: 1
+
   gitleaks:
     runs-on: ubuntu-latest
 

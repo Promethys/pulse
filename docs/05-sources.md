@@ -1,15 +1,33 @@
 # Sources
 
-Sources are rows in the `sources` table, so they can be changed without a deploy (and later from the web app). The initial list is created by `SourceTableSeeder`.
+Sources are rows in the `sources` table, so they can be changed without a deploy. The initial list is created by `SourceTableSeeder`.
+
+## Catalog and subscriptions
+
+A catalog source has `user_id = null`; a custom source belongs to a user. `is_default` marks catalog sources offered automatically for an interest. `site_url` is the website address, separate from the fetch URL. `credentials` is encrypted and hidden from serialization.
+
+`interest_source` links sources to interests. `source_subscriptions` stores each user's enabled or disabled subscriptions. An `enabled = false` subscription records an explicit opt-out and is never automatically re-enabled.
+
+`App\Actions\ChooseInterests::handle($user, $interests)` syncs the user's interests, adds missing subscriptions to enabled default catalog sources, and removes enabled catalog subscriptions no longer covered by the chosen interests. It preserves disabled subscriptions and custom source subscriptions.
+
+The collector and `digest:sources` still fetch all enabled sources, including custom sources, without consulting subscriptions or interests. The newsletter fetcher still uses `RESEND_API_KEY`, rather than stored source credentials.
+
+## Interests
+
+`InterestTableSeeder` creates 53 interests across nine categories, initially `draft`. Each has a `has_learning` flag. `Interest::refreshStatuses()` makes an interest `live` when it has at least three enabled default catalog sources; otherwise it is `draft`. `SourceTableSeeder` runs this refresh after linking sources to interests.
 
 ## The seeders
 
 ```bash
+docker compose exec app php artisan db:seed --class=InterestTableSeeder
 docker compose exec app php artisan db:seed --class=SourceTableSeeder
 docker compose exec app php artisan db:seed --class=TagTableSeeder
+docker compose exec app php artisan db:seed --class=LearningTopicTableSeeder
 ```
 
-Both are idempotent: they only create rows that are missing and never change an existing row. Re-running them is safe on every deploy, and edits made in the database (a new URL, a disabled source) are kept. A deleted source comes back on the next run.
+Run `InterestTableSeeder` before `SourceTableSeeder`. `DatabaseSeeder` uses the order Interest, Source, Tag, LearningTopic.
+
+The table seeders create missing rows and preserve existing definitions, including edited URLs and disabled sources. `SourceTableSeeder` also links known sources that have no interests yet, preserves existing interest links and refreshes interest statuses. A deleted seeded source comes back on the next run, so disable it instead of deleting it.
 
 ## Initial sources
 
@@ -27,7 +45,7 @@ Each source has a default tag (used when the AI model gives none) and a `max_ite
 
 ## Adding, changing or disabling a source
 
-Until the web app exists, use Tinker:
+Use Tinker to manage source definitions:
 
 ```bash
 docker compose exec app php artisan tinker
