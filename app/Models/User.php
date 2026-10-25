@@ -36,6 +36,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property CarbonImmutable|null $updated_at
  * @property-read DigestSettings|null $digestSettings
  * @property-read Collection<int, DeliveryChannel> $deliveryChannels
+ * @property-read Collection<int, AiKey> $aiKeys
  * @property-read Collection<int, DiscordGuild> $discordGuilds
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, SourceSubscription> $sourceSubscriptions
@@ -80,6 +81,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function deliveryChannels(): HasMany
     {
         return $this->hasMany(DeliveryChannel::class);
+    }
+
+    /**
+     * @return HasMany<AiKey, $this>
+     */
+    public function aiKeys(): HasMany
+    {
+        return $this->hasMany(AiKey::class)->orderBy('position');
     }
 
     /**
