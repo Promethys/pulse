@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Digest\Learning;
 
 use App\Ai\Agents\LearningWriter;
+use App\Digest\Ai\AiChainResolver;
 use App\Digest\Ai\AiUnavailableException;
 use App\Digest\Ai\ProviderChain;
+use App\Digest\Delivery\PostDeliverer;
 use App\Digest\Discord\ForumPublisher;
 use App\Digest\Rendering\LearningRenderer;
 use App\Digest\Support\TagResolver;
@@ -17,6 +19,7 @@ use App\Models\LearningPost;
 use App\Models\LearningTopic;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -38,6 +41,8 @@ class LearningPipeline
         private readonly LearningRenderer $renderer,
         private readonly ForumPublisher $publisher,
         private readonly TagResolver $tags,
+        private readonly PostDeliverer $deliverer,
+        private readonly AiChainResolver $ai,
     ) {}
 
     public function run(CarbonImmutable $today, bool $dryRun = false): Post
@@ -83,15 +88,54 @@ class LearningPipeline
         return $post->refresh();
     }
 
-    private function post(CarbonImmutable $today): Post
+    public function runFor(User $user, CarbonImmutable $today, bool $dryRun = false): Post
     {
-        return Post::query()->firstOrCreate(['date' => $today->toDateString(), 'kind' => PostKind::Learning]);
+        if (! $user->learningAvailable()) {
+            throw new LearningUnavailableException('Learning is unavailable for this user.');
+        }
+
+        if ($dryRun) {
+            DB::beginTransaction();
+        }
+
+        try {
+            $post = $this->post($today, $user);
+
+            if ($post->rendered === null) {
+                try {
+                    $this->generate($post, $today, $user);
+                } catch (Throwable $e) {
+                    $post->update(['status' => PostStatus::Failed, 'attempts' => $post->attempts + 1, 'last_error' => $e->getMessage()]);
+
+                    if ($post->attempts >= (int) config('digest.max_attempts')) {
+                        $user->learningTopicUsages()->whereDate('used_on', $today->toDateString())->delete();
+                    }
+
+                    throw $e;
+                }
+            }
+
+            if (! $dryRun) {
+                $this->deliverer->deliver($post);
+            }
+
+            return $post;
+        } finally {
+            if ($dryRun) {
+                DB::rollBack();
+            }
+        }
     }
 
-    private function generate(Post $post, CarbonImmutable $today): void
+    private function post(CarbonImmutable $today, ?User $user = null): Post
     {
-        $topic = $this->topics->next($today);
-        $response = $this->ask($topic);
+        return Post::query()->firstOrCreate(['user_id' => $user?->id, 'date' => $today->toDateString(), 'kind' => PostKind::Learning]);
+    }
+
+    private function generate(Post $post, CarbonImmutable $today, ?User $user = null): void
+    {
+        $topic = $user === null ? $this->topics->next($today) : $this->topics->nextFor($user, $today);
+        $response = $this->ask($topic, $user);
         $answer = $response->toArray();
 
         [$tip, $topicPost] = DB::transaction(function () use ($post, $topic, $answer) {
@@ -112,19 +156,24 @@ class LearningPipeline
         ]);
     }
 
-    private function ask(LearningTopic $topic): StructuredAgentResponse
+    private function ask(LearningTopic $topic, ?User $user = null): StructuredAgentResponse
     {
+        $recentTips = LearningPost::query()->where('learning_posts.kind', LearningKind::Tip);
+        if ($user !== null) {
+            $recentTips->join('posts', 'posts.id', '=', 'learning_posts.post_id')->where('posts.user_id', $user->id);
+        }
+
         $agent = new LearningWriter(
-            profile: (string) config('digest.profile'),
-            recentTipTitles: array_values(array_map(strval(...), LearningPost::query()
-                ->where('kind', LearningKind::Tip)->latest('id')->limit(self::RECENT_TIPS)->pluck('title')->all())),
+            profile: $user === null ? (string) config('digest.profile') : (string) $user->digestSettings?->profile,
+            recentTipTitles: array_values(array_map(strval(...), $recentTips
+                ->latest('learning_posts.id')->limit(self::RECENT_TIPS)->pluck('learning_posts.title')->all())),
             existingTags: array_values(array_map(strval(...), Tag::query()->orderBy('slug')->pluck('slug')->all())),
         );
 
         try {
             $response = $agent->prompt(
                 "Today's topic: {$topic->title} (category: {$topic->category}). Write today's tip and the explanation of this topic.",
-                provider: ProviderChain::fromConfig(),
+                provider: $user === null ? ProviderChain::fromConfig() : $this->ai->for($user),
                 timeout: (int) config('digest.ai_timeout'),
             );
         } catch (Throwable $e) {
@@ -159,9 +208,9 @@ class LearningPipeline
     private function storeTopic(Post $post, LearningTopic $topic, array $topicAnswer): LearningPost
     {
         $body = trim((string) ($topicAnswer['body'] ?? ''));
-        $angle = trim((string) ($topicAnswer['laravel_angle'] ?? ''));
+        $angle = trim((string) ($topicAnswer['stack_angle'] ?? ''));
         if ($angle !== '') {
-            $body .= "\n\n**In Laravel:** {$angle}";
+            $body .= "\n\n**In practice:** {$angle}";
         }
 
         $learningPost = $post->learningPosts()->create([

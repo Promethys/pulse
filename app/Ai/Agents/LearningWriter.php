@@ -43,7 +43,7 @@ class LearningWriter implements Agent, HasStructuredOutput
             '',
             'Topic:',
             '- body: Markdown, about 5 lines, at most 900 characters, explaining the idea, why it matters and when to use it.',
-            '- laravel_angle: one short paragraph on how it applies in Laravel or PHP, or an empty string when it does not apply.',
+            '- stack_angle: one short paragraph applying the topic to the reader\'s main stack as described in their profile. Use an empty string when the profile names no stack or the topic does not apply.',
             '- links: 1 or 2 references you are certain exist (official documentation or well-known articles), each with a title and a URL.',
             '',
             'Tags for both: 1 to 3 lowercase slugs. Reuse an existing tag whenever one fits.',
@@ -63,7 +63,7 @@ class LearningWriter implements Agent, HasStructuredOutput
             ])->required(),
             'topic' => $schema->object(fn (JsonSchema $schema) => [
                 'body' => $schema->string()->required(),
-                'laravel_angle' => $schema->string()->required(),
+                'stack_angle' => $schema->string()->required(),
                 'links' => $schema->array()->items($schema->object(fn (JsonSchema $schema) => [
                     'title' => $schema->string()->required(),
                     'url' => $schema->string()->required(),

@@ -61,7 +61,7 @@ class LearningPipelineTest extends TestCase
         $this->assertSame('git bisect run with a test filter', $tip->title);
         $this->assertSame('Idempotency keys', $topic->title);
         $this->assertSame($this->topic->id, $topic->learning_topic_id);
-        $this->assertStringContainsString('**In Laravel:** Store the key with a unique index.', $topic->body);
+        $this->assertStringContainsString('**In practice:** Store the key with a unique index.', $topic->body);
         $this->assertSame(['devtools'], $tip->tags()->pluck('slug')->all());
 
         $text = implode("\n", $post->rendered['messages'] ?? []);
@@ -204,7 +204,7 @@ class LearningPipelineTest extends TestCase
             'tip' => ['title' => 'git bisect run with a test filter', 'body' => 'Use `git bisect run php artisan test --filter=X`.', 'tags' => ['devtools']],
             'topic' => [
                 'body' => 'An idempotency key lets a client retry safely.',
-                'laravel_angle' => 'Store the key with a unique index.',
+                'stack_angle' => 'Store the key with a unique index.',
                 'links' => $links ?? [['title' => 'Stripe: idempotent requests', 'url' => 'https://ok.test/stripe']],
                 'tags' => ['engineering'],
             ],
