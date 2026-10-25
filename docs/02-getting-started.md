@@ -22,7 +22,7 @@ docker compose exec app php artisan db:seed --class=TagTableSeeder
 docker compose exec app php artisan db:seed --class=LearningTopicTableSeeder
 ```
 
-Then check that the sources respond and the AI providers work:
+Then check that the sources respond and the instance AI providers work:
 
 ```bash
 docker compose exec app php artisan digest:sources
@@ -57,7 +57,32 @@ docker compose exec app npm run dev               # frontend
 
 Run npm inside the container: `node_modules` contains Linux binaries.
 
+## Running digests
+
+Manual commands require the account's email and use its local date:
+
+```bash
+docker compose exec app php artisan digest:news --user=<email> --dry-run
+docker compose exec app php artisan digest:learning --user=<email> --dry-run
+```
+
+Remove `--dry-run` to generate and deliver. Add `--force` to delete today's post and generate it again; it has no effect with `--dry-run`. Learning requires an interest with `has_learning = true`.
+
+For automatic runs, invoke Laravel's scheduler every 15 minutes and keep a queue worker running:
+
+```cron
+*/15 * * * * cd /path/to/pulse && php artisan schedule:run
+```
+
+```bash
+php artisan queue:work
+```
+
+The scheduler calls `digest:tick`, which collects sources and queues one job per due user, kind and local date. Accounts must have verified email, completed onboarding and either personal AI keys or instance AI access. Their settings control the enabled digests and times. See [Architecture](04-architecture.md#the-daily-schedule).
+
 ## Adopting existing data
+
+**For an existing single-owner install, run `pulse:adopt` before migrating to this version**, using the previous version that supports adoption. The migration that removes the single-owner columns refuses to run while any post has no owner. A fresh install can migrate directly.
 
 Register the account first, then replace `<email>` with its address:
 
@@ -66,8 +91,8 @@ docker compose exec app php artisan pulse:adopt <email> --dry-run
 docker compose exec app php artisan pulse:adopt <email>
 ```
 
-`pulse:adopt` copies the instance settings from `.env`, chooses interests and source subscriptions, assigns unowned posts and imports learning topic usage. It makes the newsletters source custom to the user, stores the Resend key as encrypted credentials, and creates Discord destinations from the configured forum ids. It also grants administrator access and instance AI access, backfills deliveries for posted Discord threads and ensures an in-app channel exists.
+`pulse:adopt` copies the instance settings from `.env`, chooses interests and source subscriptions, and assigns unowned posts. It makes the newsletters source custom to the user, stores the Resend key as encrypted credentials, and creates Discord destinations from the configured forum ids. It also grants administrator access and instance AI access, enables both digests, marks onboarding complete and ensures an in-app channel exists.
 
 The command is idempotent and uses one transaction. `--dry-run` prints counts and rolls back all database changes. Both modes read Discord to resolve the configured forums and guilds, so the bot needs access; missing forum ids are skipped with a warning. Re-running the command reapplies the current environment settings and configured Discord destinations.
 
-The digest commands still use the instance configuration and enabled sources, rather than the per-user records. See [Architecture](04-architecture.md).
+The digest commands use the resulting per-user records. The migrations copy historical selections and source sightings. Run adoption on the previous version to import topic usage and delivered Discord thread progress before the old columns are removed. See [Architecture](04-architecture.md).

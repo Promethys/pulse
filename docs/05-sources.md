@@ -10,7 +10,9 @@ A catalog source has `user_id = null`; a custom source belongs to a user. `is_de
 
 `App\Actions\ChooseInterests::handle($user, $interests)` syncs the user's interests, adds missing subscriptions to enabled default catalog sources, and removes enabled catalog subscriptions no longer covered by the chosen interests. It preserves disabled subscriptions and custom source subscriptions.
 
-The collector and `digest:sources` still fetch all enabled sources, including custom sources, without consulting subscriptions or interests. The newsletter fetcher still uses `RESEND_API_KEY`, rather than stored source credentials.
+`SourceCollector::collectFor($users)` fetches only enabled sources with an enabled subscription among those users, skipping sources fetched successfully less than 25 minutes ago. It looks back to the source's last successful fetch minus one hour, or 24 hours ago on the first fetch. `item_source` records each source where an item was seen, preserving its first sighting time. `failuresFor($user)` returns only errors from that user's enabled subscribed sources for their news footer.
+
+The newsletter fetcher reads only `credentials.api_key` on its own source, never `RESEND_API_KEY`. `pulse:adopt` can copy that environment value into the source's encrypted credentials. Without credentials the source fails with a clear message.
 
 ## Interests
 
@@ -41,7 +43,7 @@ Each source has a default tag (used when the AI model gives none) and a `max_ite
 | AINews (smol.ai) | Its feed looked paused (last item 2026-09-09) when it was added. |
 | Filament | The Insights blog has no feed; only GitHub releases are followed. |
 | Reddit | Reddit ends RSS on **2026-11-13**. Disable the three `r-*` sources on that date. |
-| Newsletters | Needs `RESEND_API_KEY`. Subscribe newsletters that have no feed with your Resend receiving address. |
+| Newsletters | Needs `credentials.api_key` on the source. Subscribe newsletters that have no feed with your Resend receiving address. |
 
 ## Adding, changing or disabling a source
 
@@ -61,18 +63,21 @@ App\Models\Source::create([
 App\Models\Source::where('slug', 'like', 'r-%')->update(['enabled' => false]);
 ```
 
-To make a new source part of the initial list for fresh installs, also add it to `SourceTableSeeder`.
+A source is collected only when a user has an enabled subscription to it. For a custom source, set `user_id` to its owner and create that user's subscription. To make a catalog source part of the initial list for fresh installs, also add it to `SourceTableSeeder` and link it to the appropriate interests.
+
+Custom feed URLs must be public HTTP(S) addresses. `PublicUrl` validates all resolved addresses before fetching and checks every redirect (up to three); private, loopback, reserved and unresolved addresses are refused. `PublicHttpUrl` is the form validation rule for these URLs.
 
 ## Health check
 
 ```bash
 docker compose exec app php artisan digest:sources            # last 24 hours
 docker compose exec app php artisan digest:sources --since=7d
+docker compose exec app php artisan digest:sources --user=<email>
 ```
 
-It fetches every enabled source and prints how many items each returned and any error, without storing anything, so it is safe to run at any time, including in production. It exits with an error code if any source failed.
+Without `--user`, it fetches every enabled source; with `--user=<email>`, only enabled sources on that account's enabled subscriptions. It bypasses the collector's 25-minute cache and prints how many items each returned and any error, without storing anything, so it is safe to run at any time, including in production. It exits with an error code if any source failed.
 
 ## Rate limits
 
-- **Reddit** allows about one anonymous request per minute and announces the wait in `x-ratelimit-reset`. On a 429 the feed fetcher waits that long (or `Retry-After`) plus 2 seconds, capped at 60, with up to 3 attempts. Expect about a minute of extra runtime per day for the three subreddits.
-- Every request has a 10-second timeout and sends the `pulse-digest/1.0` User-Agent.
+- **Reddit catalog feeds** allow about one anonymous request per minute and announces the wait in `x-ratelimit-reset`. On a 429 the feed fetcher waits that long (or `Retry-After`) plus 2 seconds, capped at 60, with up to 3 attempts. These waits can add about a minute for the three subreddits.
+- Feed requests have a 10-second timeout and send the `pulse-digest/1.0` User-Agent. Catalog feeds retry up to three times; custom feeds use the public URL checks. The Resend client uses a 15-second timeout and up to two attempts.
