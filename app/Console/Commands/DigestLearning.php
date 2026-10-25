@@ -6,16 +6,15 @@ namespace App\Console\Commands;
 
 use App\Digest\Learning\LearningPipeline;
 use App\Enums\PostKind;
-use App\Enums\PostStatus;
-use App\Models\Post;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DigestLearning extends Command
 {
     protected $signature = 'digest:learning
+        {--user= : Email of the user whose digest to build}
         {--dry-run : Build today\'s tip and topic and print them, without storing or posting anything}
         {--force : Post today\'s tip and topic again (same topic), even if already posted}';
 
@@ -23,14 +22,30 @@ class DigestLearning extends Command
 
     public function handle(LearningPipeline $pipeline): int
     {
-        $today = CarbonImmutable::now((string) config('digest.timezone'))->startOfDay();
+        $email = $this->option('user');
+
+        if (! is_string($email) || $email === '') {
+            $this->error('The --user option is required.');
+
+            return self::FAILURE;
+        }
+
+        $user = User::query()->with('digestSettings')->where('email', $email)->first();
+
+        if ($user === null) {
+            $this->error("User {$email} was not found.");
+
+            return self::FAILURE;
+        }
+
+        $today = CarbonImmutable::now($user->digestSettings->timezone ?? (string) config('digest.timezone'))->startOfDay();
 
         if ($this->option('force') && ! $this->option('dry-run')) {
-            $this->reset($today);
+            $user->posts()->where('date', $today->toDateString())->where('kind', PostKind::Learning)->delete();
         }
 
         try {
-            $post = $pipeline->run($today, dryRun: (bool) $this->option('dry-run'));
+            $post = $pipeline->runFor($user, $today, dryRun: (bool) $this->option('dry-run'));
         } catch (Throwable $e) {
             $this->error($e->getMessage());
 
@@ -50,20 +65,5 @@ class DigestLearning extends Command
         $this->info("Learning post {$post->status->value} (thread {$post->discord_thread_id}).");
 
         return self::SUCCESS;
-    }
-
-    /** Back to a fresh post; today's topic stays picked, so the new run writes about the same topic. */
-    private function reset(CarbonImmutable $today): void
-    {
-        $post = Post::query()->where('date', $today->toDateString())->where('kind', PostKind::Learning)->first();
-
-        if ($post === null) {
-            return;
-        }
-
-        DB::transaction(function () use ($post) {
-            $post->learningPosts()->delete();
-            $post->update(['status' => PostStatus::Pending, 'rendered' => null, 'discord_thread_id' => null, 'messages_sent' => 0, 'attempts' => 0, 'last_error' => null, 'posted_at' => null, 'model_used' => null]);
-        });
     }
 }

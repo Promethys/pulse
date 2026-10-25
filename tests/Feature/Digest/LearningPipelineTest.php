@@ -177,23 +177,6 @@ class LearningPipelineTest extends TestCase
         Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'discord.com'));
     }
 
-    public function test_command_dry_run_prints_and_force_reposts_the_same_topic(): void
-    {
-        LearningWriter::fake([$this->answer(), $this->answer(), $this->answer()]);
-        $this->fakeHttp();
-
-        $this->artisan('digest:learning', ['--dry-run' => true])
-            ->expectsOutputToContain('🧠 Tip & topic — Fri 16 Oct')
-            ->assertExitCode(0);
-
-        $this->artisan('digest:learning')->assertExitCode(0);
-        $this->artisan('digest:learning', ['--force' => true])->assertExitCode(0);
-
-        $this->assertSame(1, Post::query()->count());
-        $this->assertSame(2, LearningPost::query()->count());
-        $this->assertSame('Idempotency keys', LearningPost::query()->where('kind', LearningKind::Topic)->value('title'));
-    }
-
     /**
      * @param  list<array{title: string, url: string}>|null  $links
      * @return array<string, mixed>

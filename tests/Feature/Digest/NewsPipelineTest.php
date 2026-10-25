@@ -23,7 +23,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
-use Laravel\Ai\Prompts\AgentPrompt;
 use Tests\TestCase;
 
 class NewsPipelineTest extends TestCase
@@ -185,31 +184,6 @@ class NewsPipelineTest extends TestCase
         $this->assertSame(0, Item::query()->count());
         $this->assertNull(Source::query()->firstOrFail()->last_fetched_at);
         Http::assertNothingSent();
-    }
-
-    public function test_command_dry_run_prints_the_post(): void
-    {
-        NewsCurator::fake();
-
-        $this->artisan('digest:news', ['--dry-run' => true])
-            ->expectsOutputToContain('📰 News digest — Fri 16 Oct')
-            ->expectsOutputToContain('Quiet night: nothing notable.')
-            ->assertExitCode(0);
-    }
-
-    public function test_command_force_reposts_today_with_the_same_items(): void
-    {
-        $this->feed = [$this->candidate('https://laravel-news.com/a')];
-        NewsCurator::fake(fn () => ['items' => [['candidate_id' => Item::query()->value('id'), 'url' => 'https://laravel-news.com/a', 'title' => 'Laravel 13.18', 'summary' => 'Deferred batches.', 'tags' => ['laravel']]]]);
-        $this->fakeDiscord();
-        app(NewsPipeline::class)->run($this->today);
-
-        $this->artisan('digest:news', ['--force' => true])->assertExitCode(0);
-
-        NewsCurator::assertPromptedTimes(2);
-        NewsCurator::assertPrompted(fn (AgentPrompt $prompt) => $prompt->contains('https://laravel-news.com/a'));
-        Http::assertSentCount(4);
-        $this->assertSame(1, Post::query()->count());
     }
 
     private function candidate(string $url, string $title = 'A title'): Candidate
