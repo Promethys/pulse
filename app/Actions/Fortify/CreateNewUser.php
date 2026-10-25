@@ -4,6 +4,8 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Enums\DeliveryChannelType;
+use App\Enums\PostKind;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -33,6 +35,14 @@ class CreateNewUser implements CreatesNewUsers
             ]);
 
             $user->digestSettings()->create();
+
+            $user->deliveryChannels()->create([
+                'name' => 'In the app',
+                'type' => DeliveryChannelType::InApp,
+                'kinds' => [PostKind::News->value, PostKind::Learning->value],
+                'enabled' => true,
+                'settings' => null,
+            ]);
 
             return $user;
         });

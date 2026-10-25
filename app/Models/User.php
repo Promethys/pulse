@@ -35,6 +35,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read DigestSettings|null $digestSettings
+ * @property-read Collection<int, DeliveryChannel> $deliveryChannels
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, SourceSubscription> $sourceSubscriptions
  * @property-read Collection<int, Source> $customSources
@@ -70,6 +71,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function digestSettings(): HasOne
     {
         return $this->hasOne(DigestSettings::class);
+    }
+
+    /**
+     * @return HasMany<DeliveryChannel, $this>
+     */
+    public function deliveryChannels(): HasMany
+    {
+        return $this->hasMany(DeliveryChannel::class);
     }
 
     /**

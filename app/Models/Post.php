@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read User|null $user
  * @property-read Collection<int, PostItem> $postItems
+ * @property-read Collection<int, Delivery> $deliveries
  */
 #[Fillable(['user_id', 'date', 'kind', 'status', 'attempts', 'rendered', 'messages_sent', 'discord_thread_id', 'posted_at', 'last_error', 'model_used'])]
 class Post extends Model
@@ -68,6 +69,14 @@ class Post extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasMany<Delivery, $this>
+     */
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(Delivery::class);
     }
 
     /**
