@@ -17,6 +17,22 @@ final class DiscordClient
     private const NO_MENTIONS = ['parse' => []];
 
     /**
+     * @return array<string, mixed>
+     */
+    public function channel(string $channelId): array
+    {
+        return $this->send('get', "/channels/{$channelId}")->json();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function guild(string $guildId): array
+    {
+        return $this->send('get', "/guilds/{$guildId}")->json();
+    }
+
+    /**
      * @return list<array{id: string, name: string}>
      */
     public function forumChannels(string $guildId): array
