@@ -41,10 +41,9 @@ final class NewsSelector
             $maxItems,
         );
 
-        $items = DB::transaction(function () use ($post, $selected, $candidates) {
+        DB::transaction(function () use ($post, $selected, $candidates): void {
             $post->postItems()->delete();
-            /** @var Collection<int, PostItem> $items */
-            $items = collect();
+            $position = 0;
             $candidatesById = $candidates->keyBy('id');
 
             foreach ($selected as $pick) {
@@ -54,13 +53,11 @@ final class NewsSelector
                 }
 
                 $item = $this->sharedItem($candidate, $pick);
-                $items->push($this->storePostItem($post, $item, $pick->title, $pick->summary, $pick->tagSlugs, $items->count() + 1));
+                $this->storePostItem($post, $item, $pick->title, $pick->summary, $pick->tagSlugs, ++$position);
             }
-
-            return $items;
         });
 
-        return new NewsSelection($items, "{$response->meta->provider}:{$response->meta->model}");
+        return new NewsSelection("{$response->meta->provider}:{$response->meta->model}");
     }
 
     /**

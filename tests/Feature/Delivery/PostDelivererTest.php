@@ -36,7 +36,7 @@ class PostDelivererTest extends TestCase
 
     private const API = 'https://discord.com/api/v10';
 
-    private const WEBHOOK = 'https://discord.com/api/webhooks/webhook-1/private-token';
+    private const WEBHOOK = 'https://discord.com/api/webhooks/123456789/private-token';
 
     /** @var list<array<string, mixed>> */
     private array $calls = [];

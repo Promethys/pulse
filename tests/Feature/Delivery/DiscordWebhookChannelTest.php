@@ -23,7 +23,7 @@ class DiscordWebhookChannelTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const WEBHOOK = 'https://discord.com/api/webhooks/webhook-1/private-token';
+    private const WEBHOOK = 'https://discord.com/api/webhooks/123456789/private-token';
 
     protected function setUp(): void
     {
@@ -169,6 +169,44 @@ class DiscordWebhookChannelTest extends TestCase
         $this->assertSame(0, $delivery->fresh()->progress);
         $this->assertNull($delivery->fresh()->external_id);
         $this->assertTrue($delivery->channel->fresh()->enabled);
+    }
+
+    #[DataProvider('tamperedWebhooks')]
+    public function test_tampered_webhooks_are_rejected_without_requests_or_secret_leaks(string $url, bool $resume): void
+    {
+        [$post, $delivery] = $this->makeDelivery(['First', 'Second']);
+        $delivery->channel->update(['settings' => ['webhook_url' => $url]]);
+        if ($resume) {
+            $delivery->update(['external_id' => 'thread-1', 'progress' => 1]);
+        }
+        Http::fake(['*' => Http::response(['id' => 'message-1', 'channel_id' => 'thread-1'])]);
+
+        try {
+            app(DiscordWebhookChannel::class)->deliver($post, $delivery);
+            $this->fail('Expected DeliveryException');
+        } catch (DeliveryException $e) {
+            $this->assertStringNotContainsString($url, $e->getMessage());
+            $this->assertStringNotContainsString('private-token', $e->getMessage());
+        }
+
+        Http::assertNotSent(fn (Request $r) => str_starts_with($r->url(), $url));
+        Http::assertNothingSent();
+        $this->assertSame($resume ? 1 : 0, $delivery->fresh()->progress);
+        $this->assertSame($resume ? 'thread-1' : null, $delivery->fresh()->external_id);
+    }
+
+    /** @return array<string, array{string, bool}> */
+    public static function tamperedWebhooks(): array
+    {
+        return [
+            'metadata on initial send' => ['http://169.254.169.254/api/webhooks/123/private-token', false],
+            'loopback on resume' => ['http://127.0.0.1/api/webhooks/123/private-token', true],
+            'other public host' => ['https://evil.test/api/webhooks/123/private-token', false],
+            'discord over http' => ['http://discord.com/api/webhooks/123/private-token', false],
+            'extra path' => [self::WEBHOOK.'/messages', false],
+            'query string' => [self::WEBHOOK.'?thread_id=other', true],
+            'missing token' => ['https://discord.com/api/webhooks/123/', false],
+        ];
     }
 
     /** @return array<string, array{int, bool}> */

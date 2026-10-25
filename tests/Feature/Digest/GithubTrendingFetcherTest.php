@@ -38,7 +38,6 @@ class GithubTrendingFetcherTest extends TestCase
         $this->assertSame(['https://github.com/anthropics/claude-code'], $candidates[0]->links);
         $this->assertSame('Claude Code is an agentic coding tool that lives in your terminal.', $candidates[0]->excerpt);
         $this->assertSame('', $candidates[2]->excerpt);
-        $this->assertSame('github-trending', $candidates[0]->sourceSlug);
         $this->assertSame('2026-10-16 07:00:00', $candidates[0]->publishedAt?->toDateTimeString());
     }
 

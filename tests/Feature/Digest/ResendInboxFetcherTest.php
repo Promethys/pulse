@@ -34,7 +34,6 @@ class ResendInboxFetcherTest extends TestCase
         $this->assertSame(['Kilo Thursday roundup', 'Shifty Bits #212: Laravel 13 upgrade notes'], array_map(fn (Candidate $c) => $c->title, $candidates));
 
         $shift = $candidates[1];
-        $this->assertSame('newsletters', $shift->sourceSlug);
         $this->assertSame('resend://email/email-new', $shift->url);
         $this->assertSame('2026-10-16 06:15:00', $shift->publishedAt?->utc()->toDateTimeString());
         $this->assertSame(
@@ -139,8 +138,6 @@ class ResendInboxFetcherTest extends TestCase
         $first = $this->fetch(credentials: ['api_key' => 'first-user-key'], slug: 'first-newsletter');
         $second = $this->fetch(credentials: ['api_key' => 'second-user-key'], slug: 'second-newsletter');
 
-        $this->assertSame('first-newsletter', $first[0]->sourceSlug);
-        $this->assertSame('second-newsletter', $second[0]->sourceSlug);
         $requests = Http::recorded()->map(fn (array $pair) => $pair[0]);
         $this->assertCount(4, $requests);
         foreach ([0, 1] as $index) {

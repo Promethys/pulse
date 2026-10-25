@@ -540,7 +540,7 @@ class UserNewsPipelineTest extends TestCase
 
     private function candidate(Source $source, string $url, string $title = 'Original title'): Candidate
     {
-        return new Candidate($source->slug, $title, $url, 'Excerpt.', CarbonImmutable::now()->subHour(), [$url]);
+        return new Candidate($title, $url, 'Excerpt.', CarbonImmutable::now()->subHour(), [$url]);
     }
 
     /**

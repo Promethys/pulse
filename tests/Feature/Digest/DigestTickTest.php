@@ -62,7 +62,7 @@ class DigestTickTest extends TestCase
                     throw new FetchException('Source unavailable');
                 }
 
-                return [new Candidate($source->slug, 'A headline', 'https://source.test/article', '', null, [])];
+                return [new Candidate('A headline', 'https://source.test/article', '', null, [])];
             }
         });
     }

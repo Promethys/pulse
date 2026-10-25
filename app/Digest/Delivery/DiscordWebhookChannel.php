@@ -7,6 +7,7 @@ namespace App\Digest\Delivery;
 use App\Digest\Rendering\RenderedPost;
 use App\Models\Delivery;
 use App\Models\Post;
+use App\Rules\DiscordWebhookUrl;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -49,7 +50,12 @@ final class DiscordWebhookChannel implements Channel
      */
     private function send(Delivery $delivery, array $body): Response
     {
-        $url = ($delivery->channel->settings['webhook_url'] ?? '').'?wait=true';
+        $url = $delivery->channel->settings['webhook_url'] ?? '';
+        if (preg_match(DiscordWebhookUrl::PATTERN, $url) !== 1) {
+            throw new DeliveryException('Invalid Discord webhook URL');
+        }
+
+        $url .= '?wait=true';
         if ($delivery->external_id !== null) {
             $url .= '&thread_id='.rawurlencode($delivery->external_id);
         }

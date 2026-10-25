@@ -288,6 +288,6 @@ class SourceCollectorTest extends TestCase
 
     private function candidate(string $slug, string $url): Candidate
     {
-        return new Candidate($slug, "Title for {$url}", $url, 'Excerpt', CarbonImmutable::parse('2026-10-16 06:00:00'), [$url]);
+        return new Candidate("Title for {$url}", $url, 'Excerpt', CarbonImmutable::parse('2026-10-16 06:00:00'), [$url]);
     }
 }

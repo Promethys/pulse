@@ -11,6 +11,7 @@ use App\Digest\Learning\LearningPipeline;
 use App\Digest\Learning\LearningUnavailableException;
 use App\Digest\Learning\LinkChecker;
 use App\Digest\Learning\TopicPicker;
+use App\Digest\Support\PublicUrl;
 use App\Enums\LearningKind;
 use App\Enums\PostKind;
 use App\Enums\PostStatus;
@@ -51,7 +52,7 @@ class UserLearningPipelineTest extends TestCase
         ]);
         $this->user = $this->learningUser();
         $this->topic = LearningTopic::factory()->create(['title' => 'Idempotency keys', 'category' => 'distributed-systems']);
-        $this->app->instance(LinkChecker::class, new LinkChecker(fn () => ['93.184.216.34']));
+        $this->app->instance(LinkChecker::class, new LinkChecker(new PublicUrl(fn () => ['93.184.216.34'])));
         Http::preventStrayRequests();
         Http::fake([
             'ok.test/*' => Http::response('', 200),

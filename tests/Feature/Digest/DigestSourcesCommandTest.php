@@ -31,7 +31,7 @@ class DigestSourcesCommandTest extends TestCase
                     throw new FetchException('HTTP 404');
                 }
 
-                return [new Candidate($source->slug, 'A', 'https://ok.test/a', '', null, ['https://ok.test/a'])];
+                return [new Candidate('A', 'https://ok.test/a', '', null, ['https://ok.test/a'])];
             }
         });
         foreach (['ok', 'broken'] as $i => $slug) {
@@ -82,7 +82,7 @@ class DigestSourcesCommandTest extends TestCase
             {
                 $this->fetched[] = $source->id;
 
-                return [new Candidate($source->slug, 'Title', 'https://source.test/article', '', null, [])];
+                return [new Candidate('Title', 'https://source.test/article', '', null, [])];
             }
         });
 
