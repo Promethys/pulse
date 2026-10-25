@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Enums\InterestCategory;
 use App\Enums\InterestStatus;
 use App\Models\Interest;
+use App\Models\Source;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -60,5 +61,32 @@ class InterestTest extends TestCase
     {
         $this->assertSame('Life', InterestCategory::Life->label());
         $this->assertSame('Software development', InterestCategory::SoftwareDevelopment->label());
+    }
+
+    public function test_statuses_count_only_enabled_default_catalog_sources(): void
+    {
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $empty = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $sources = Source::factory()->count(2)->create(['is_default' => true]);
+        $interest->sources()->attach($sources);
+        $interest->sources()->attach(Source::factory()->create(['is_default' => true, 'enabled' => false]));
+        $interest->sources()->attach(Source::factory()->create());
+        $interest->sources()->attach(Source::factory()->for(User::factory())->create(['is_default' => true]));
+
+        Interest::refreshStatuses();
+
+        $this->assertSame(InterestStatus::Draft, $interest->fresh()->status);
+        $this->assertSame(InterestStatus::Draft, $empty->fresh()->status);
+
+        $source = Source::factory()->create(['is_default' => true]);
+        $interest->sources()->attach($source);
+        Interest::refreshStatuses();
+
+        $this->assertSame(InterestStatus::Live, $interest->fresh()->status);
+
+        $source->update(['enabled' => false]);
+        Interest::refreshStatuses();
+
+        $this->assertSame(InterestStatus::Draft, $interest->fresh()->status);
     }
 }

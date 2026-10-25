@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\SourceType;
+use App\Models\Interest;
 use App\Models\Source;
 use Illuminate\Database\Seeder;
 
@@ -220,6 +221,35 @@ class SourceTableSeeder extends Seeder
         ],
     ];
 
+    private const SOURCE_INTERESTS = [
+        'anthropic-news' => ['artificial-intelligence'],
+        'openai-news' => ['artificial-intelligence'],
+        'deepmind' => ['artificial-intelligence'],
+        'huggingface' => ['artificial-intelligence'],
+        'mcp-blog' => ['artificial-intelligence', 'programming'],
+        'simon-willison' => ['artificial-intelligence'],
+        'ainews' => ['artificial-intelligence'],
+        'laravel-news' => ['programming', 'programming-languages'],
+        'laravel-blog' => ['programming', 'programming-languages'],
+        'freek' => ['programming', 'programming-languages'],
+        'stitcher' => ['programming', 'programming-languages'],
+        'filament-releases' => ['programming', 'programming-languages'],
+        'notion' => ['productivity'],
+        'railway' => ['devops'],
+        'kilo' => ['artificial-intelligence'],
+        'pragmatic-engineer' => ['programming'],
+        'bytebytego' => ['programming'],
+        'martin-fowler' => ['programming'],
+        'hacker-news' => ['programming', 'tech-companies'],
+        'lobsters' => ['programming'],
+        'laravel-io' => ['programming', 'programming-languages'],
+        'r-laravel' => ['programming', 'programming-languages'],
+        'r-claudeai' => ['artificial-intelligence'],
+        'r-localllama' => ['artificial-intelligence'],
+        'github-trending' => ['programming'],
+        'newsletters' => [],
+    ];
+
     public function run(): void
     {
         foreach (self::SOURCES as $position => [$slug, $name, $type, $url, $tag, $maxItems]) {
@@ -232,7 +262,18 @@ class SourceTableSeeder extends Seeder
                 'tag' => $tag,
                 'max_items' => $maxItems,
                 'position' => $position + 1,
+                'is_default' => $slug !== 'newsletters',
             ]);
         }
+
+        $interests = Interest::query()->pluck('id', 'slug');
+        $sources = Source::query()->whereIn('slug', array_keys(self::SOURCE_INTERESTS))->doesntHave('interests')->get();
+
+        foreach ($sources as $source) {
+            $interestIds = $interests->only(self::SOURCE_INTERESTS[$source->slug])->values()->all();
+            $source->interests()->sync($interestIds);
+        }
+
+        Interest::refreshStatuses();
     }
 }

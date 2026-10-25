@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -33,6 +34,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $updated_at
  * @property-read DigestSettings|null $digestSettings
  * @property-read Collection<int, Interest> $interests
+ * @property-read Collection<int, SourceSubscription> $sourceSubscriptions
+ * @property-read Collection<int, Source> $customSources
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'is_admin', 'uses_instance_ai'])]
@@ -71,5 +74,21 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function interests(): BelongsToMany
     {
         return $this->belongsToMany(Interest::class)->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<SourceSubscription, $this>
+     */
+    public function sourceSubscriptions(): HasMany
+    {
+        return $this->hasMany(SourceSubscription::class);
+    }
+
+    /**
+     * @return HasMany<Source, $this>
+     */
+    public function customSources(): HasMany
+    {
+        return $this->hasMany(Source::class);
     }
 }

@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, User> $users
+ * @property-read Collection<int, Source> $sources
  */
 #[Fillable(['slug', 'name', 'category', 'icon', 'position', 'has_learning', 'status'])]
 class Interest extends Model
@@ -59,6 +60,25 @@ class Interest extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Source, $this>
+     */
+    public function sources(): BelongsToMany
+    {
+        return $this->belongsToMany(Source::class)->withTimestamps();
+    }
+
+    public static function refreshStatuses(): void
+    {
+        self::query()->whereHas('sources', function (Builder $query) {
+            $query->catalog()->where('enabled', true)->where('is_default', true);
+        }, '>=', 3)->update(['status' => InterestStatus::Live]);
+
+        self::query()->whereHas('sources', function (Builder $query) {
+            $query->catalog()->where('enabled', true)->where('is_default', true);
+        }, '<', 3)->update(['status' => InterestStatus::Draft]);
     }
 
     /**
