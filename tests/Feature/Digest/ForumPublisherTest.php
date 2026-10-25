@@ -49,7 +49,7 @@ class ForumPublisherTest extends TestCase
         Http::assertSent(fn (Request $r) => $r->method() === 'POST'
             && $r->url() === self::API.'/channels/forum-1/threads'
             && $r->hasHeader('Authorization', 'Bot bot-token')
-            && $r['name'] === '📰 Tech digest — Fri 16 Oct'
+            && $r['name'] === '📰 News digest — Fri 16 Oct'
             && $r['message']['content'] === 'Part 1'
             && $r['applied_tags'] === ['11', '12']);
         Http::assertSent(fn (Request $r) => $r->url() === self::API.'/channels/thread-1/messages' && $r['content'] === 'Part 3');
@@ -216,7 +216,7 @@ class ForumPublisherTest extends TestCase
      * @param  list<string>  $messages
      * @param  list<string>  $tagSlugs
      */
-    private function makePost(array $messages, array $tagSlugs, string $title = '📰 Tech digest — Fri 16 Oct', PostKind $kind = PostKind::News, string $date = '2026-10-16'): Post
+    private function makePost(array $messages, array $tagSlugs, string $title = '📰 News digest — Fri 16 Oct', PostKind $kind = PostKind::News, string $date = '2026-10-16'): Post
     {
         return Post::query()->create([
             'date' => $date,

@@ -12,7 +12,7 @@ use App\Models\Post;
 use Illuminate\Contracts\Container\Container;
 use Throwable;
 
-final class PostDeliverer
+class PostDeliverer
 {
     public function __construct(private readonly Container $container) {}
 

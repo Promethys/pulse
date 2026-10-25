@@ -75,6 +75,27 @@ class SelectionValidatorTest extends TestCase
         $this->assertSame(['laravel'], $selected[0]->tagSlugs);
     }
 
+    public function test_default_tags_are_keyed_by_candidate_even_for_the_same_source(): void
+    {
+        $selected = $this->validate([
+            $this->entry(2, 'https://laravelshift.com/blog/upgrade-notes', tags: []),
+            $this->entry(3, 'https://example.com/story', tags: []),
+        ], newsletterLinks: ['https://example.com/story']);
+
+        $this->assertSame([['devtools'], ['engineering']], array_map(fn (SelectedItem $item) => $item->tagSlugs, $selected));
+    }
+
+    public function test_missing_candidate_default_tag_falls_back_to_general(): void
+    {
+        $selected = (new SelectionValidator)->validate(
+            ['items' => [$this->entry(1, 'https://laravel-news.com/a', tags: [])]],
+            $this->candidates(),
+            ['laravel-news' => 'wrong-source-key'],
+        );
+
+        $this->assertSame(['general'], $selected[0]->tagSlugs);
+    }
+
     public function test_keeps_the_first_of_duplicate_urls(): void
     {
         $selected = $this->validate([
@@ -95,8 +116,8 @@ class SelectionValidatorTest extends TestCase
 
     public function test_empty_or_malformed_output_gives_nothing(): void
     {
-        $this->assertSame([], (new SelectionValidator)->validate([], $this->candidates()));
-        $this->assertSame([], (new SelectionValidator)->validate(['items' => 'nope'], $this->candidates()));
+        $this->assertSame([], (new SelectionValidator)->validate([], $this->candidates(), []));
+        $this->assertSame([], (new SelectionValidator)->validate(['items' => 'nope'], $this->candidates(), []));
         $this->assertSame([], $this->validate(['not an entry', ['candidate_id' => 'x']]));
     }
 
@@ -107,7 +128,7 @@ class SelectionValidatorTest extends TestCase
      */
     private function validate(array $entries, array $newsletterLinks = []): array
     {
-        return (new SelectionValidator)->validate(['items' => $entries], $this->candidates($newsletterLinks), ['laravel-news' => 'laravel', 'newsletters' => 'devtools']);
+        return (new SelectionValidator)->validate(['items' => $entries], $this->candidates($newsletterLinks), [1 => 'laravel', 2 => 'devtools', 3 => 'engineering']);
     }
 
     /**

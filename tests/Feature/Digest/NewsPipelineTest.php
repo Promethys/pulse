@@ -83,6 +83,8 @@ class NewsPipelineTest extends TestCase
         $this->assertSame(PostStatus::Posted, $post->status);
         $this->assertSame(PostKind::News, $post->kind);
         $this->assertSame('gemini:gemini-test-flash', $post->model_used);
+        $this->assertSame('📰 News digest — Fri 16 Oct', $post->rendered['title']);
+        $this->assertStringContainsString('## Laravel', implode("\n", $post->rendered['messages']));
         $this->assertSame('thread-1', $post->discord_thread_id);
         $this->assertSame(ItemStatus::Selected, Item::query()->firstOrFail()->status);
         Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/channels/forum-news/threads') && str_contains($r['message']['content'], 'Laravel 13.18'));
@@ -114,6 +116,7 @@ class NewsPipelineTest extends TestCase
         $text = implode("\n", $post->rendered['messages'] ?? []);
         $this->assertStringContainsString('- **A plain headline** <https://laravel-news.com/a>', $text);
         $this->assertStringContainsString('headlines only', $text);
+        $this->assertStringContainsString('## Laravel', $text);
         $item = Item::query()->firstOrFail();
         $this->assertSame(ItemStatus::Selected, $item->status);
         $this->assertSame($post->id, $item->post_id);
@@ -189,7 +192,7 @@ class NewsPipelineTest extends TestCase
         NewsCurator::fake();
 
         $this->artisan('digest:news', ['--dry-run' => true])
-            ->expectsOutputToContain('📰 Tech digest — Fri 16 Oct')
+            ->expectsOutputToContain('📰 News digest — Fri 16 Oct')
             ->expectsOutputToContain('Quiet night: nothing notable.')
             ->assertExitCode(0);
     }

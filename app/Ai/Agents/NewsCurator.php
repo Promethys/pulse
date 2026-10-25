@@ -16,19 +16,25 @@ class NewsCurator implements Agent, HasStructuredOutput
 
     /**
      * @param  list<string>  $existingTags
+     * @param  list<string>  $interests
      */
     public function __construct(
         private readonly string $profile,
         private readonly array $existingTags,
         private readonly int $maxItems,
+        private readonly array $interests = [],
     ) {}
 
     public function instructions(): string
     {
-        $lines = ['You curate a daily tech news digest for one reader.'];
+        $lines = ['You curate a daily news digest for one reader.'];
 
         if (trim($this->profile) !== '') {
             $lines[] = "Reader profile: {$this->profile}";
+        }
+
+        if ($this->interests !== []) {
+            $lines[] = 'Reader interests: '.implode(', ', $this->interests);
         }
 
         return implode("\n", [
