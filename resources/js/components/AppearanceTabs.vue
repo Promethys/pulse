@@ -18,6 +18,8 @@ const tabs = [
         <button
             v-for="{ value, Icon, label } in tabs"
             :key="value"
+            type="button"
+            :aria-pressed="appearance === value"
             @click="updateAppearance(value)"
             :class="[
                 'flex items-center rounded-md px-3.5 py-1.5 transition-colors',

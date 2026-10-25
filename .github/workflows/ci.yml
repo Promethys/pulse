@@ -95,6 +95,9 @@ jobs:
       - name: Tests
         run: php artisan test
 
+      - name: JS tests
+        run: npm run test
+
   gitleaks:
     runs-on: ubuntu-latest
 
