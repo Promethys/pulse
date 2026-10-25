@@ -137,17 +137,17 @@ class SelectionValidatorTest extends TestCase
      */
     private function candidates(array $extraLinks = []): Collection
     {
-        $make = function (int $id, string $slug, string $url, array $links) {
-            $item = new Item(['source_slug' => $slug, 'url' => $url, 'links' => $links]);
+        $make = function (int $id, string $url, array $links) {
+            $item = new Item(['url' => $url, 'links' => $links]);
             $item->id = $id;
 
             return $item;
         };
 
         return collect([
-            1 => $make(1, 'laravel-news', 'https://laravel-news.com/a', ['https://laravel-news.com/a']),
-            2 => $make(2, 'newsletters', 'resend://email/x', ['https://laravelshift.com/blog/upgrade-notes', 'https://github.com/laravel/framework/pull/1']),
-            3 => $make(3, 'newsletters', 'resend://email/y', $extraLinks),
+            1 => $make(1, 'https://laravel-news.com/a', ['https://laravel-news.com/a']),
+            2 => $make(2, 'resend://email/x', ['https://laravelshift.com/blog/upgrade-notes', 'https://github.com/laravel/framework/pull/1']),
+            3 => $make(3, 'resend://email/y', $extraLinks),
         ]);
     }
 

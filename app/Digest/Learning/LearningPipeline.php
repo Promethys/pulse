@@ -7,9 +7,7 @@ namespace App\Digest\Learning;
 use App\Ai\Agents\LearningWriter;
 use App\Digest\Ai\AiChainResolver;
 use App\Digest\Ai\AiUnavailableException;
-use App\Digest\Ai\ProviderChain;
 use App\Digest\Delivery\PostDeliverer;
-use App\Digest\Discord\ForumPublisher;
 use App\Digest\Rendering\LearningRenderer;
 use App\Digest\Support\TagResolver;
 use App\Enums\LearningKind;
@@ -39,54 +37,10 @@ class LearningPipeline
         private readonly TopicPicker $topics,
         private readonly LinkChecker $links,
         private readonly LearningRenderer $renderer,
-        private readonly ForumPublisher $publisher,
         private readonly TagResolver $tags,
         private readonly PostDeliverer $deliverer,
         private readonly AiChainResolver $ai,
     ) {}
-
-    public function run(CarbonImmutable $today, bool $dryRun = false): Post
-    {
-        if ($dryRun) {
-            DB::beginTransaction();
-
-            try {
-                $post = $this->post($today);
-                if ($post->rendered === null) {
-                    $this->generate($post, $today);
-                }
-
-                return $post;
-            } finally {
-                DB::rollBack();
-            }
-        }
-
-        $post = $this->post($today);
-
-        if ($post->status === PostStatus::Posted) {
-            return $post;
-        }
-
-        try {
-            if ($post->rendered === null) {
-                $this->generate($post, $today);
-            }
-
-            $this->publisher->publish($post, (string) config('services.discord.learning_forum'));
-        } catch (Throwable $e) {
-            $post->update(['status' => PostStatus::Failed, 'attempts' => $post->attempts + 1, 'last_error' => $e->getMessage()]);
-
-            if ($post->attempts >= (int) config('digest.max_attempts')) {
-                // the day is lost: let the topic be picked again on another day
-                LearningTopic::query()->whereDate('last_used_on', $today->toDateString())->update(['last_used_on' => null]);
-            }
-
-            throw $e;
-        }
-
-        return $post->refresh();
-    }
 
     public function runFor(User $user, CarbonImmutable $today, bool $dryRun = false): Post
     {
@@ -127,14 +81,14 @@ class LearningPipeline
         }
     }
 
-    private function post(CarbonImmutable $today, ?User $user = null): Post
+    private function post(CarbonImmutable $today, User $user): Post
     {
-        return Post::query()->firstOrCreate(['user_id' => $user?->id, 'date' => $today->toDateString(), 'kind' => PostKind::Learning]);
+        return Post::query()->firstOrCreate(['user_id' => $user->id, 'date' => $today->toDateString(), 'kind' => PostKind::Learning]);
     }
 
-    private function generate(Post $post, CarbonImmutable $today, ?User $user = null): void
+    private function generate(Post $post, CarbonImmutable $today, User $user): void
     {
-        $topic = $user === null ? $this->topics->next($today) : $this->topics->nextFor($user, $today);
+        $topic = $this->topics->nextFor($user, $today);
         $response = $this->ask($topic, $user);
         $answer = $response->toArray();
 
@@ -156,15 +110,13 @@ class LearningPipeline
         ]);
     }
 
-    private function ask(LearningTopic $topic, ?User $user = null): StructuredAgentResponse
+    private function ask(LearningTopic $topic, User $user): StructuredAgentResponse
     {
         $recentTips = LearningPost::query()->where('learning_posts.kind', LearningKind::Tip);
-        if ($user !== null) {
-            $recentTips->join('posts', 'posts.id', '=', 'learning_posts.post_id')->where('posts.user_id', $user->id);
-        }
+        $recentTips->join('posts', 'posts.id', '=', 'learning_posts.post_id')->where('posts.user_id', $user->id);
 
         $agent = new LearningWriter(
-            profile: $user === null ? (string) config('digest.profile') : (string) $user->digestSettings?->profile,
+            profile: (string) $user->digestSettings?->profile,
             recentTipTitles: array_values(array_map(strval(...), $recentTips
                 ->latest('learning_posts.id')->limit(self::RECENT_TIPS)->pluck('learning_posts.title')->all())),
             existingTags: array_values(array_map(strval(...), Tag::query()->orderBy('slug')->pluck('slug')->all())),
@@ -173,7 +125,7 @@ class LearningPipeline
         try {
             $response = $agent->prompt(
                 "Today's topic: {$topic->title} (category: {$topic->category}). Write today's tip and the explanation of this topic.",
-                provider: $user === null ? ProviderChain::fromConfig() : $this->ai->for($user),
+                provider: $this->ai->for($user),
                 timeout: (int) config('digest.ai_timeout'),
             );
         } catch (Throwable $e) {

@@ -62,7 +62,7 @@ class DigestLearning extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Learning post {$post->status->value} (thread {$post->discord_thread_id}).");
+        $this->info("Learning post {$post->status->value}.");
 
         return self::SUCCESS;
     }

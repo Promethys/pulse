@@ -8,7 +8,6 @@ use App\Digest\Rendering\NewsLine;
 use App\Digest\Rendering\NewsRenderer;
 use App\Digest\Rendering\RenderedPost;
 use App\Enums\SourceType;
-use App\Models\Item;
 use App\Models\Source;
 use App\Models\Tag;
 use Carbon\CarbonImmutable;
@@ -128,19 +127,6 @@ class NewsRendererTest extends TestCase
         $this->assertEquals($post, RenderedPost::fromArray($post->toArray()));
     }
 
-    public function test_headlines_picks_by_source_priority_then_recency(): void
-    {
-        $old = $this->candidate('Laravel old', [], source: 'laravel-news', publishedAt: '2026-10-16 01:00');
-        $new = $this->candidate('Laravel new', [], source: 'laravel-news', publishedAt: '2026-10-16 05:00');
-        $openai = $this->candidate('OpenAI', [], source: 'openai-news', publishedAt: '2026-10-15 20:00');
-        $hn = $this->candidate('HN', [], source: 'hacker-news', publishedAt: '2026-10-16 06:00');
-        config(['digest.max_items' => 3]);
-
-        $picked = app(NewsRenderer::class)->headlines(collect([$old, $hn, $new, $openai]));
-
-        $this->assertSame(['OpenAI', 'Laravel new', 'Laravel old'], $picked->pluck('title')->all());
-    }
-
     /**
      * @param  list<NewsLine>  $items
      * @param  array<string, string>  $failures
@@ -156,24 +142,5 @@ class NewsRendererTest extends TestCase
     private function item(string $title, array $tags, ?string $summary = 'default'): NewsLine
     {
         return new NewsLine($title, $summary === 'default' ? "Summary of {$title}." : $summary, 'https://example.com/'.str($title)->slug(), $tags);
-    }
-
-    /**
-     * @param  list<string>  $tags
-     */
-    private function candidate(string $title, array $tags, string $source = 'openai-news', ?string $summary = 'default', string $publishedAt = '2026-10-16 05:00'): Item
-    {
-        $url = 'https://example.com/'.str($title)->slug();
-        $item = Item::factory()->create([
-            'source_slug' => $source,
-            'url' => $url,
-            'url_normalized' => $url.'-'.uniqid(),
-            'title' => $title,
-            'summary' => $summary === 'default' ? "Summary of {$title}." : $summary,
-            'published_at' => $publishedAt,
-        ]);
-        $item->tags()->sync(Tag::query()->whereIn('slug', $tags)->pluck('id'));
-
-        return $item->load('tags');
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Digest\Sources;
 
-use App\Enums\ItemStatus;
 use App\Models\Item;
 use App\Models\Source;
 use App\Models\User;
@@ -18,11 +17,6 @@ use Throwable;
 final class SourceCollector
 {
     public function __construct(private readonly Container $container) {}
-
-    public function collect(CarbonImmutable $since): CollectionResult
-    {
-        return $this->collectSources(Source::query()->enabled()->get(), $since);
-    }
 
     /**
      * @param  Collection<int, User>  $users
@@ -61,7 +55,7 @@ final class SourceCollector
     /**
      * @param  Collection<int, Source>  $sources
      */
-    private function collectSources(Collection $sources, ?CarbonImmutable $since = null): CollectionResult
+    private function collectSources(Collection $sources): CollectionResult
     {
         $stored = 0;
         $failures = [];
@@ -70,7 +64,7 @@ final class SourceCollector
             $source->last_fetched_at = now();
 
             try {
-                $sourceSince = $since ?? $source->last_success_at?->subHour() ?? CarbonImmutable::now()->subDay();
+                $sourceSince = $source->last_success_at?->subHour() ?? CarbonImmutable::now()->subDay();
                 $stored += $this->store($source, $this->fetch($source, $sourceSince));
                 $source->last_success_at = now();
                 $source->last_error = null;
@@ -115,13 +109,11 @@ final class SourceCollector
             $item = Item::query()->firstOrCreate(
                 ['url_normalized' => UrlNormalizer::normalize($candidate->url)],
                 [
-                    'source_slug' => $candidate->sourceSlug,
                     'url' => $candidate->url,
                     'title' => Str::limit($candidate->title, 499, '…'),
                     'excerpt' => $candidate->excerpt,
                     'links' => $candidate->links,
                     'published_at' => $candidate->publishedAt,
-                    'status' => ItemStatus::Candidate,
                 ],
             );
 

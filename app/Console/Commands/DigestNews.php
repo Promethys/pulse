@@ -62,7 +62,7 @@ class DigestNews extends Command
             return self::SUCCESS;
         }
 
-        $this->info("News post {$post->status->value} (thread {$post->discord_thread_id}).");
+        $this->info("News post {$post->status->value}.");
 
         return self::SUCCESS;
     }

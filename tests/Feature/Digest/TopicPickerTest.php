@@ -25,56 +25,10 @@ class TopicPickerTest extends TestCase
         $this->today = CarbonImmutable::parse('2026-10-16');
     }
 
-    public function test_picks_unused_topics_first_in_id_order(): void
-    {
-        $first = LearningTopic::factory()->create(['category' => 'databases']);
-        LearningTopic::factory()->create(['category' => 'testing']);
-        LearningTopic::factory()->create(['category' => 'security', 'last_used_on' => '2026-01-01']);
-
-        $picked = (new TopicPicker)->next($this->today);
-
-        $this->assertTrue($picked->is($first));
-        $this->assertSame('2026-10-16', $picked->refresh()->last_used_on?->toDateString());
-    }
-
-    public function test_avoids_the_same_category_twice_in_a_row(): void
-    {
-        LearningTopic::factory()->create(['category' => 'databases', 'last_used_on' => '2026-10-15']);
-        LearningTopic::factory()->create(['category' => 'databases']);
-        $testing = LearningTopic::factory()->create(['category' => 'testing']);
-
-        $this->assertTrue((new TopicPicker)->next($this->today)->is($testing));
-    }
-
-    public function test_same_category_is_allowed_when_nothing_else_is_left(): void
-    {
-        LearningTopic::factory()->create(['category' => 'databases', 'last_used_on' => '2026-10-15']);
-        $only = LearningTopic::factory()->create(['category' => 'databases']);
-
-        $this->assertTrue((new TopicPicker)->next($this->today)->is($only));
-    }
-
-    public function test_restarts_from_the_oldest_when_all_are_used(): void
-    {
-        LearningTopic::factory()->create(['category' => 'testing', 'last_used_on' => '2026-10-15']);
-        $oldest = LearningTopic::factory()->create(['category' => 'databases', 'last_used_on' => '2026-09-01']);
-        LearningTopic::factory()->create(['category' => 'security', 'last_used_on' => '2026-10-01']);
-
-        $this->assertTrue((new TopicPicker)->next($this->today)->is($oldest));
-    }
-
-    public function test_reuses_the_topic_already_picked_today(): void
-    {
-        LearningTopic::factory()->create(['category' => 'testing']);
-        $today = LearningTopic::factory()->create(['category' => 'databases', 'last_used_on' => '2026-10-16']);
-
-        $this->assertTrue((new TopicPicker)->next($this->today)->is($today));
-    }
-
-    public function test_next_for_picks_never_used_topics_in_id_order_and_ignores_mvp_history(): void
+    public function test_next_for_picks_never_used_topics_in_id_order(): void
     {
         $user = User::factory()->create();
-        $first = LearningTopic::factory()->create(['category' => 'databases', 'last_used_on' => '2026-10-16']);
+        $first = LearningTopic::factory()->create(['category' => 'databases']);
         LearningTopic::factory()->create(['category' => 'testing']);
 
         $picked = (new TopicPicker)->nextFor($user, $this->today);
@@ -83,7 +37,6 @@ class TopicPickerTest extends TestCase
         $this->assertDatabaseHas('learning_topic_usages', [
             'user_id' => $user->id, 'learning_topic_id' => $first->id, 'used_on' => '2026-10-16',
         ]);
-        $this->assertSame('2026-10-16', $first->refresh()->last_used_on?->toDateString());
     }
 
     public function test_next_for_prefers_a_never_used_topic_over_an_older_used_topic(): void
@@ -94,7 +47,6 @@ class TopicPickerTest extends TestCase
         $this->usage($user, $used, '2026-01-01');
 
         $this->assertTrue((new TopicPicker)->nextFor($user, $this->today)->is($unused));
-        $this->assertNull($unused->refresh()->last_used_on);
     }
 
     public function test_next_for_avoids_the_previous_usage_category_even_after_a_gap(): void
@@ -147,7 +99,6 @@ class TopicPickerTest extends TestCase
         $this->assertTrue($picker->nextFor($user, $this->today)->is($topic));
         $this->assertSame(1, $user->learningTopicUsages()->count());
         $this->assertTrue($updatedAt->equalTo($usage->refresh()->updated_at));
-        $this->assertNull($topic->refresh()->last_used_on);
     }
 
     public function test_next_for_ignores_other_users_history_and_todays_pick(): void
@@ -168,12 +119,13 @@ class TopicPickerTest extends TestCase
     public function test_seeder_is_idempotent_and_covers_every_category(): void
     {
         $this->seed(LearningTopicTableSeeder::class);
-        LearningTopic::query()->first()?->update(['last_used_on' => '2026-10-01']);
+        $before = LearningTopic::query()->orderBy('id')->get()->map(fn (LearningTopic $topic) => $topic->fresh()->getAttributes())->all();
         $this->seed(LearningTopicTableSeeder::class);
+
+        $this->assertEquals($before, LearningTopic::query()->orderBy('id')->get()->map(fn (LearningTopic $topic) => $topic->fresh()->getAttributes())->all());
 
         $count = LearningTopic::query()->count();
         $this->assertGreaterThanOrEqual(60, $count);
-        $this->assertSame(1, LearningTopic::query()->whereNotNull('last_used_on')->count());
         $this->assertEqualsCanonicalizing(
             ['architecture', 'databases', 'distributed-systems', 'testing', 'performance', 'security', 'php-internals', 'laravel-internals', 'devops', 'design-patterns', 'ai-engineering'],
             LearningTopic::query()->distinct()->pluck('category')->all(),

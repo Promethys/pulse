@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Digest\Rendering;
 
-use App\Models\Item;
-use App\Models\Source;
 use App\Models\Tag;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -41,25 +39,6 @@ final class NewsRenderer
             $this->splitter->split([...$blocks, $footer]),
             array_slice(array_column($sections, 'slug'), 0, self::MAX_FORUM_TAGS),
         );
-    }
-
-    /**
-     * Fallback when no AI provider answered: the newest candidates of the highest-priority sources.
-     *
-     * @param  Collection<int, Item>  $candidates
-     * @return Collection<int, Item>
-     */
-    public function headlines(Collection $candidates): Collection
-    {
-        $positions = Source::query()->pluck('position', 'slug');
-
-        return $candidates
-            ->sortBy([
-                fn (Item $a, Item $b) => ($positions[$a->source_slug] ?? PHP_INT_MAX) <=> ($positions[$b->source_slug] ?? PHP_INT_MAX),
-                fn (Item $a, Item $b) => ($b->published_at?->getTimestamp() ?? 0) <=> ($a->published_at?->getTimestamp() ?? 0),
-            ])
-            ->take((int) config('digest.max_items'))
-            ->values();
     }
 
     /**

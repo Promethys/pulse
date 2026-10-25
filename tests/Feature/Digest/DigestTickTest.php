@@ -12,7 +12,6 @@ use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\FetchException;
 use App\Digest\Sources\SourceFetcher;
 use App\Enums\DeliveryStatus;
-use App\Enums\ItemStatus;
 use App\Enums\PostKind;
 use App\Jobs\RunDigest;
 use App\Models\AiKey;
@@ -21,6 +20,7 @@ use App\Models\DigestSettings;
 use App\Models\Interest;
 use App\Models\Item;
 use App\Models\Post;
+use App\Models\PostItem;
 use App\Models\Source;
 use App\Models\SourceSubscription;
 use App\Models\User;
@@ -159,17 +159,20 @@ class DigestTickTest extends TestCase
         Bus::assertNothingDispatched();
     }
 
-    public function test_dispatches_before_retrying_deliveries_then_prunes_only_old_dated_skipped_items(): void
+    public function test_dispatches_before_retrying_deliveries_then_prunes_only_old_unreferenced_items(): void
     {
         $this->eligibleUser('UTC');
         $post = Post::factory()->create(['user_id' => User::factory()]);
         Delivery::factory()->create(['post_id' => $post->id, 'status' => DeliveryStatus::Failed]);
-        $old = Item::factory()->create(['status' => ItemStatus::Skipped, 'published_at' => now()->subDays(40), 'created_at' => now()->subDays(31)]);
+        $this->freezeSecond();
+        $old = Item::factory()->create(['published_at' => now(), 'created_at' => now()->subDays(30)->subSecond()]);
+        $undated = Item::factory()->create(['published_at' => null, 'created_at' => now()->subDays(31)]);
+        $referenced = Item::factory()->create(['created_at' => now()->subDays(31)]);
+        $selection = PostItem::factory()->create(['post_id' => $post->id, 'item_id' => $referenced->id]);
         $kept = [
-            Item::factory()->create(['status' => ItemStatus::Skipped, 'created_at' => now()->subDays(29)]),
-            Item::factory()->create(['status' => ItemStatus::Skipped, 'published_at' => null, 'created_at' => now()->subDays(31)]),
-            Item::factory()->create(['status' => ItemStatus::Selected, 'created_at' => now()->subDays(31)]),
-            Item::factory()->create(['status' => ItemStatus::Candidate, 'created_at' => now()->subDays(31)]),
+            $referenced,
+            Item::factory()->create(['published_at' => now()->subDays(40), 'created_at' => now()->subDays(29)]),
+            Item::factory()->create(['created_at' => now()->subDays(30)]),
         ];
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->withArgs(function (Post $actual) use ($post, $old) {
             Bus::assertDispatchedTimes(RunDigest::class, 2);
@@ -181,10 +184,11 @@ class DigestTickTest extends TestCase
         $this->artisan('digest:tick')
             ->expectsOutput('Dispatched 2 digests')
             ->expectsOutput('Retried deliveries for 1 posts')
-            ->expectsOutput('Pruned 1 old skipped items')
             ->assertExitCode(0);
 
         $this->assertModelMissing($old);
+        $this->assertModelMissing($undated);
+        $this->assertModelExists($selection);
         foreach ($kept as $item) {
             $this->assertModelExists($item);
         }

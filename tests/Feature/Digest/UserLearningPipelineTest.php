@@ -135,7 +135,6 @@ class UserLearningPipelineTest extends TestCase
         $this->assertDatabaseHas('learning_topic_usages', [
             'user_id' => $this->user->id, 'learning_topic_id' => $this->topic->id, 'used_on' => '2026-10-16',
         ]);
-        $this->assertNull($this->topic->refresh()->last_used_on);
     }
 
     public function test_prompt_uses_the_users_profile_own_last_sixty_tip_titles_existing_tags_and_ai_chain(): void
@@ -145,7 +144,6 @@ class UserLearningPipelineTest extends TestCase
             $this->tipHistory($this->user, $this->today->subDays(61 - $day), "Own tip number {$day}.");
         }
         $this->tipHistory($other, $this->today->subDay(), 'Foreign tip that must stay private.');
-        $this->tipHistory(null, $this->today->subDay(), 'MVP tip that must stay private.');
         $history = Post::factory()->create(['user_id' => $this->user->id, 'date' => '2026-01-01', 'kind' => PostKind::Learning]);
         $history->learningPosts()->create(['kind' => LearningKind::Topic, 'title' => 'Own topic excluded from tips.', 'body' => '…', 'links' => []]);
         Tag::factory()->create(['slug' => 'existing-tag']);
@@ -160,7 +158,6 @@ class UserLearningPipelineTest extends TestCase
             $this->assertStringNotContainsString('Instance profile that must stay private.', $instructions);
             $this->assertStringNotContainsString('A Rust reader whose profile is private.', $instructions);
             $this->assertStringNotContainsString('Foreign tip that must stay private.', $instructions);
-            $this->assertStringNotContainsString('MVP tip that must stay private.', $instructions);
             $this->assertStringNotContainsString('Own tip number 0.', $instructions);
             $this->assertStringNotContainsString('Own topic excluded from tips.', $instructions);
             foreach (range(1, 60) as $number) {
@@ -310,7 +307,6 @@ class UserLearningPipelineTest extends TestCase
         $this->assertDatabaseCount('posts', 0);
         $this->assertDatabaseCount('learning_topic_usages', 0);
         $this->assertDatabaseCount('learning_posts', 0);
-        $this->assertNull($this->topic->refresh()->last_used_on);
     }
 
     public function test_failed_dry_run_rethrows_and_rolls_back_the_post_and_usage(): void
@@ -332,7 +328,6 @@ class UserLearningPipelineTest extends TestCase
     public function test_two_users_get_separate_posts_and_usages_on_the_same_day(): void
     {
         $other = $this->learningUser();
-        $mvp = Post::factory()->create(['date' => $this->today, 'kind' => PostKind::Learning]);
         $news = Post::factory()->create(['user_id' => $this->user->id, 'date' => $this->today, 'kind' => PostKind::News]);
         LearningWriter::fake([$this->answer(), $this->answer()])->preventStrayPrompts();
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->twice()
@@ -350,9 +345,8 @@ class UserLearningPipelineTest extends TestCase
             $this->assertDatabaseHas('learning_topic_usages', ['user_id' => $user->id, 'learning_topic_id' => $this->topic->id, 'used_on' => '2026-10-16']);
             LearningWriter::assertPrompted(fn (AgentPrompt $prompt) => $prompt->provider->name() === "user_{$user->id}_gemini");
         }
-        $this->assertSame(PostStatus::Pending, $mvp->refresh()->status);
         $this->assertSame(PostStatus::Pending, $news->refresh()->status);
-        $this->assertDatabaseCount('posts', 4);
+        $this->assertDatabaseCount('posts', 3);
         $this->assertDatabaseCount('learning_topic_usages', 2);
     }
 
@@ -366,9 +360,9 @@ class UserLearningPipelineTest extends TestCase
         return $user;
     }
 
-    private function tipHistory(?User $user, CarbonImmutable $date, string $title): void
+    private function tipHistory(User $user, CarbonImmutable $date, string $title): void
     {
-        $post = Post::factory()->create(['user_id' => $user?->id, 'date' => $date, 'kind' => PostKind::Learning, 'status' => PostStatus::Posted]);
+        $post = Post::factory()->create(['user_id' => $user->id, 'date' => $date, 'kind' => PostKind::Learning, 'status' => PostStatus::Generated]);
         $post->learningPosts()->create(['kind' => LearningKind::Tip, 'title' => $title, 'body' => '…', 'links' => []]);
     }
 

@@ -14,7 +14,6 @@ use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\FetchException;
 use App\Digest\Sources\SourceFetcher;
 use App\Digest\Sources\UrlNormalizer;
-use App\Enums\ItemStatus;
 use App\Enums\PostKind;
 use App\Enums\PostStatus;
 use App\Models\AiKey;
@@ -125,25 +124,24 @@ class UserNewsPipelineTest extends TestCase
         $this->assertStringContainsString('- **Second story**: Selected summary. <https://example.com/two>', $text);
         $this->assertStringContainsString('- **First story**: Selected summary. <https://example.com/one>', $text);
         $this->assertLessThan(strpos($text, 'First story'), strpos($text, 'Second story'));
-        $this->assertDatabaseCount('item_tag', 0);
         foreach (Item::query()->get() as $item) {
-            $this->assertSame(ItemStatus::Candidate, $item->status);
-            $this->assertNull($item->summary);
-            $this->assertNull($item->post_id);
             $this->assertStringStartsWith('Original ', $item->title);
         }
     }
 
-    public function test_ai_selection_does_not_mutate_existing_shared_items_or_their_legacy_tags(): void
+    public function test_ai_selection_does_not_mutate_existing_shared_items_or_another_users_selection(): void
     {
-        $foreign = $this->source($this->reader(), 'foreign-original', position: 0, tag: 'wrong');
+        $other = $this->reader();
+        $foreign = $this->source($other, 'foreign-original', position: 0, tag: 'wrong');
         $source = $this->source($this->user, 'reader-source', position: 1, tag: 'space');
-        $legacyPost = Post::factory()->create(['date' => '2026-10-15', 'kind' => PostKind::News]);
-        $picked = $this->item($foreign, ['title' => 'Shared title', 'summary' => 'Shared summary', 'status' => ItemStatus::Selected, 'post_id' => $legacyPost->id]);
+        $otherPost = Post::factory()->create(['user_id' => $other->id, 'date' => '2026-10-15', 'kind' => PostKind::News]);
+        $picked = $this->item($foreign, ['title' => 'Shared title']);
         $picked->sources()->attach($source, ['first_seen_at' => now()]);
-        $ignored = $this->item($source, ['status' => ItemStatus::Skipped]);
+        $ignored = $this->item($source);
         $tag = Tag::query()->create(['slug' => 'legacy', 'name' => 'Legacy']);
-        $picked->tags()->attach($tag);
+        $otherPick = PostItem::factory()->create(['post_id' => $otherPost->id, 'item_id' => $picked->id, 'summary' => 'Shared summary']);
+        $otherPick->tags()->attach($tag);
+        $otherBefore = $otherPick->fresh()->getAttributes();
         $before = [$picked->fresh()->getAttributes(), $ignored->fresh()->getAttributes()];
         NewsCurator::fake([['items' => [$this->pick($picked, 'Reader title', [])]]]);
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(0);
@@ -156,8 +154,8 @@ class UserNewsPipelineTest extends TestCase
         $this->assertSame('Selected summary.', $pick->summary);
         $this->assertSame(['space'], $pick->tags()->pluck('slug')->all());
         $this->assertEquals($before, [$picked->fresh()->getAttributes(), $ignored->fresh()->getAttributes()]);
-        $this->assertSame([$tag->id], $picked->tags()->pluck('tags.id')->all());
-        $this->assertDatabaseCount('item_tag', 1);
+        $this->assertSame([$tag->id], $otherPick->tags()->pluck('tags.id')->all());
+        $this->assertEquals($otherBefore, $otherPick->fresh()->getAttributes());
         $this->assertStringContainsString('- **Reader title**: Selected summary. <'.$picked->url.'>', $this->text($post));
         $this->assertStringNotContainsString('Shared summary', $this->text($post));
     }
@@ -249,17 +247,21 @@ class UserNewsPipelineTest extends TestCase
     public function test_fallback_uses_user_limit_first_source_priority_then_recency_and_leaves_shared_items_untouched(): void
     {
         $this->user->digestSettings()->update(['max_items' => 3]);
-        $foreign = $this->source($this->reader(), 'foreign', position: 0, tag: 'wrong');
+        $other = $this->reader();
+        $foreign = $this->source($other, 'foreign', position: 0, tag: 'wrong');
         $high = $this->source($this->user, 'high', position: 1, tag: 'space');
         $low = $this->source($this->user, 'low', position: 20, tag: 'garden');
         $old = $this->item($low, ['title' => 'Low old', 'published_at' => now()->subHours(6)]);
         $new = $this->item($low, ['title' => 'Low new', 'published_at' => now()->subHour()]);
-        $best = $this->item($foreign, ['title' => 'High old', 'published_at' => now()->subHours(12), 'summary' => 'Shared summary']);
+        $best = $this->item($foreign, ['title' => 'High old', 'published_at' => now()->subHours(12)]);
         $best->sources()->attach($high, ['first_seen_at' => now()]);
         $omitted = $this->item($low, ['title' => 'Omitted', 'published_at' => now()->subHours(10)]);
         $tag = Tag::query()->create(['slug' => 'original', 'name' => 'Original']);
-        $best->tags()->attach($tag);
-        $before = Item::query()->get()->mapWithKeys(fn (Item $item) => [$item->id => $item->getAttributes()])->all();
+        $otherPost = Post::factory()->create(['user_id' => $other->id, 'date' => '2026-10-15', 'kind' => PostKind::News]);
+        $otherPick = PostItem::factory()->create(['post_id' => $otherPost->id, 'item_id' => $best->id, 'summary' => 'Shared summary']);
+        $otherPick->tags()->attach($tag);
+        $otherBefore = $otherPick->fresh()->getAttributes();
+        $before = Item::query()->get()->mapWithKeys(fn (Item $item) => [$item->id => $item->fresh()->getAttributes()])->all();
         NewsCurator::fake(fn () => throw new ProviderOverloadedException('overloaded'));
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(1);
 
@@ -281,14 +283,15 @@ class UserNewsPipelineTest extends TestCase
         foreach (Item::query()->get() as $item) {
             $this->assertEquals($before[$item->id], $item->getAttributes());
         }
-        $this->assertSame([$tag->id], $best->tags()->pluck('tags.id')->all());
-        $this->assertDatabaseCount('item_tag', 1);
+        $this->assertSame([$tag->id], $otherPick->tags()->pluck('tags.id')->all());
+        $this->assertEquals($otherBefore, $otherPick->fresh()->getAttributes());
     }
 
     public function test_missing_ai_configuration_fails_the_post_increments_attempts_and_rethrows_without_delivery(): void
     {
         $this->user->aiKeys()->delete();
         $item = $this->item($this->source($this->user, 'configured-source'));
+        $before = $item->fresh()->getAttributes();
         $post = Post::factory()->create(['user_id' => $this->user->id, 'date' => $this->date, 'kind' => PostKind::News, 'status' => PostStatus::Failed, 'attempts' => 2]);
         NewsCurator::fake()->preventStrayPrompts();
         $this->mock(PostDeliverer::class)->shouldNotReceive('deliver');
@@ -304,7 +307,7 @@ class UserNewsPipelineTest extends TestCase
         $this->assertSame(3, $post->fresh()->attempts);
         $this->assertNull($post->fresh()->rendered);
         $this->assertDatabaseCount('post_items', 0);
-        $this->assertSame(ItemStatus::Candidate, $item->fresh()->status);
+        $this->assertEquals($before, $item->fresh()->getAttributes());
         NewsCurator::assertNeverPrompted();
     }
 
@@ -363,8 +366,9 @@ class UserNewsPipelineTest extends TestCase
         $normalized = UrlNormalizer::normalize($url);
         $email = $this->item($foreign, ['url' => 'resend://email/one', 'url_normalized' => 'resend://email/one', 'links' => [$url]]);
         $email->sources()->attach($source, ['first_seen_at' => now()]);
-        $shared = $existing ? Item::factory()->create(['url' => $normalized, 'url_normalized' => $normalized, 'title' => 'Shared title', 'summary' => 'Shared summary']) : null;
+        $shared = $existing ? Item::factory()->create(['url' => $normalized, 'url_normalized' => $normalized, 'title' => 'Shared title']) : null;
         $before = $shared?->fresh()?->getAttributes();
+        $emailBefore = $email->fresh()->getAttributes();
         NewsCurator::fake([['items' => [['candidate_id' => $email->id, 'url' => $url, 'title' => 'Newsletter story', 'summary' => 'A new discovery.', 'tags' => []]]]]);
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(0);
 
@@ -381,11 +385,7 @@ class UserNewsPipelineTest extends TestCase
         $this->assertDatabaseHas('item_source', ['item_id' => $linked->id, 'source_id' => $source->id]);
         $this->assertDatabaseMissing('item_source', ['item_id' => $linked->id, 'source_id' => $foreign->id]);
         $this->assertSame(2, Item::query()->count());
-        $this->assertSame(ItemStatus::Candidate, $email->fresh()->status);
-        $this->assertNull($email->fresh()->post_id);
-        $this->assertNull($linked->post_id);
-        $this->assertSame(ItemStatus::Candidate, $linked->status);
-        $this->assertDatabaseCount('item_tag', 0);
+        $this->assertEquals($emailBefore, $email->fresh()->getAttributes());
         $this->assertStringContainsString('- **Newsletter story**: A new discovery. <'.$linked->url.'>', $this->text($post));
         if ($shared !== null) {
             $this->assertSame($shared->id, $linked->id);
@@ -481,7 +481,7 @@ class UserNewsPipelineTest extends TestCase
         $this->assertSame(PostStatus::Generated, $post->status);
         $this->assertStringContainsString('- **Dry pick**: Selected summary. <https://example.com/dry>', $this->text($post));
         $this->assertSame($level, DB::transactionLevel());
-        foreach (['posts', 'post_items', 'post_item_tag', 'items', 'item_source', 'item_tag', 'tags', 'deliveries'] as $table) {
+        foreach (['posts', 'post_items', 'post_item_tag', 'items', 'item_source', 'tags', 'deliveries'] as $table) {
             $this->assertDatabaseCount($table, 0);
         }
         $this->assertEquals($before, $source->fresh()->getAttributes());
@@ -532,7 +532,7 @@ class UserNewsPipelineTest extends TestCase
     /** @param array<string, mixed> $attributes */
     private function item(Source $source, array $attributes = [], ?CarbonImmutable $seenAt = null): Item
     {
-        $item = Item::factory()->create(['source_slug' => $source->slug, ...$attributes]);
+        $item = Item::factory()->create($attributes);
         $item->sources()->attach($source, ['first_seen_at' => $seenAt ?? now()]);
 
         return $item;

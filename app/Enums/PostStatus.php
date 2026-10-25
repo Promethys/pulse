@@ -8,6 +8,5 @@ enum PostStatus: string
 {
     case Pending = 'pending';
     case Generated = 'generated';
-    case Posted = 'posted';
     case Failed = 'failed';
 }

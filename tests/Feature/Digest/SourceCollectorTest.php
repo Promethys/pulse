@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature\Digest;
 
 use App\Digest\Sources\Candidate;
-use App\Digest\Sources\CollectionResult;
 use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\FetchException;
 use App\Digest\Sources\SourceCollector;
 use App\Digest\Sources\SourceFetcher;
-use App\Enums\ItemStatus;
 use App\Enums\SourceType;
 use App\Models\Item;
 use App\Models\Source;
@@ -54,149 +52,6 @@ class SourceCollectorTest extends TestCase
                 return $response instanceof \Throwable ? throw $response : $response;
             }
         });
-    }
-
-    public function test_stores_new_candidates(): void
-    {
-        $this->source('laravel-news');
-        $this->responses['laravel-news'] = [$this->candidate('laravel-news', 'https://laravel-news.com/a'), $this->candidate('laravel-news', 'https://laravel-news.com/b')];
-
-        $result = $this->collect();
-
-        $this->assertSame(2, $result->stored);
-        $this->assertSame([], $result->failures);
-        $item = Item::query()->where('url', 'https://laravel-news.com/a')->firstOrFail();
-        $this->assertSame(ItemStatus::Candidate, $item->status);
-        $this->assertSame('laravel-news', $item->source_slug);
-        $this->assertSame('https://laravel-news.com/a', $item->url_normalized);
-        $this->assertSame(['https://laravel-news.com/a'], $item->links);
-    }
-
-    public function test_skips_already_known_urls(): void
-    {
-        $this->source('laravel-news');
-        Item::factory()->create(['url' => 'https://example.com/a', 'url_normalized' => 'https://example.com/a']);
-        $this->responses['laravel-news'] = [
-            $this->candidate('laravel-news', 'https://www.example.com/a/?utm_source=x'),
-            $this->candidate('laravel-news', 'https://example.com/new'),
-            $this->candidate('laravel-news', 'https://example.com/new/'),
-        ];
-
-        $result = $this->collect();
-
-        $this->assertSame(1, $result->stored);
-        $this->assertSame(2, Item::query()->count());
-    }
-
-    public function test_one_failing_source_does_not_stop_the_others(): void
-    {
-        $this->source('broken', 'Broken Blog', position: 1);
-        $this->source('laravel-news', position: 2);
-        $this->responses['broken'] = new FetchException('HTTP 500');
-        $this->responses['laravel-news'] = [$this->candidate('laravel-news', 'https://laravel-news.com/a')];
-
-        $result = $this->collect();
-
-        $this->assertSame(1, $result->stored);
-        $this->assertSame(['Broken Blog' => 'HTTP 500'], $result->failures);
-        $broken = Source::query()->where('slug', 'broken')->firstOrFail();
-        $this->assertSame('HTTP 500', $broken->last_error);
-        $this->assertNull($broken->last_success_at);
-        $this->assertSame('2026-10-16 07:00:00', $broken->last_fetched_at?->toDateTimeString());
-    }
-
-    public function test_unexpected_exception_counts_as_a_failure(): void
-    {
-        $this->source('weird', 'Weird Feed');
-        $this->responses['weird'] = new RuntimeException('Undefined index');
-
-        $result = $this->collect();
-
-        $this->assertSame(['Weird Feed' => 'Undefined index'], $result->failures);
-    }
-
-    public function test_records_last_success_at_and_clears_the_error(): void
-    {
-        $source = $this->source('laravel-news');
-        $source->update(['last_error' => 'old failure']);
-
-        $this->collect();
-
-        $source->refresh();
-        $this->assertSame('2026-10-16 07:00:00', $source->last_success_at?->toDateTimeString());
-        $this->assertNull($source->last_error);
-    }
-
-    public function test_disabled_sources_are_skipped(): void
-    {
-        $this->source('laravel-news')->update(['enabled' => false]);
-        $this->responses['laravel-news'] = [$this->candidate('laravel-news', 'https://laravel-news.com/a')];
-
-        $result = $this->collect();
-
-        $this->assertSame(0, $result->stored);
-        $this->assertNull(Source::query()->firstOrFail()->last_fetched_at);
-    }
-
-    public function test_records_the_returning_source_for_new_candidates(): void
-    {
-        $source = $this->source('laravel-news');
-        $this->responses[$source->slug] = [$this->candidate('legacy-slug', 'https://example.com/new')];
-
-        $result = $this->collect();
-
-        $this->assertSame(1, $result->stored);
-        $item = Item::query()->where('url_normalized', 'https://example.com/new')->firstOrFail();
-        $this->assertDatabaseCount('item_source', 1);
-        $this->assertDatabaseHas('item_source', ['item_id' => $item->id, 'source_id' => $source->id, 'first_seen_at' => now()->toDateTimeString()]);
-    }
-
-    public function test_records_the_source_for_an_already_known_normalized_url(): void
-    {
-        $source = $this->source('laravel-news');
-        $item = Item::factory()->create(['url_normalized' => 'https://example.com/a', 'source_slug' => 'other']);
-        $this->responses[$source->slug] = [$this->candidate($source->slug, 'https://www.example.com/a/?utm_source=x')];
-
-        $result = $this->collect();
-
-        $this->assertSame(0, $result->stored);
-        $this->assertDatabaseCount('items', 1);
-        $this->assertDatabaseHas('item_source', ['item_id' => $item->id, 'source_id' => $source->id, 'first_seen_at' => now()->toDateTimeString()]);
-        $this->assertSame('other', $item->fresh()->source_slug);
-    }
-
-    public function test_reseeing_an_item_never_changes_first_seen_at(): void
-    {
-        $source = $this->source('laravel-news');
-        $this->responses[$source->slug] = [$this->candidate($source->slug, 'https://example.com/a')];
-        $this->collect();
-        $firstSeen = now()->toDateTimeString();
-        $this->travel(1)->hour();
-
-        $result = $this->collect();
-
-        $this->assertSame(0, $result->stored);
-        $this->assertDatabaseCount('item_source', 1);
-        $this->assertDatabaseHas('item_source', ['source_id' => $source->id, 'first_seen_at' => $firstSeen]);
-    }
-
-    public function test_the_same_item_can_be_seen_in_two_sources(): void
-    {
-        $first = $this->source('first');
-        $second = $this->source('second', position: 2);
-        foreach ([$first, $second] as $source) {
-            $this->responses[$source->slug] = [$this->candidate($source->slug, 'https://example.com/shared')];
-        }
-
-        $result = $this->collect();
-
-        $this->assertSame(1, $result->stored);
-        $this->assertDatabaseCount('items', 1);
-        $this->assertDatabaseCount('item_source', 2);
-        $item = Item::query()->firstOrFail();
-        foreach ([$first, $second] as $source) {
-            $this->assertDatabaseHas('item_source', ['item_id' => $item->id, 'source_id' => $source->id, 'first_seen_at' => now()->toDateTimeString()]);
-        }
     }
 
     public function test_collect_for_fetches_only_enabled_subscriptions_to_enabled_sources_for_given_users(): void
@@ -297,7 +152,8 @@ class SourceCollectorTest extends TestCase
         $known = Item::factory()->create(['url_normalized' => 'https://example.com/known']);
         $this->responses['shared'] = [
             $this->candidate('shared', 'https://example.com/known/'),
-            $this->candidate('shared', 'https://example.com/new'),
+            $this->candidate('legacy-slug', 'https://example.com/new'),
+            $this->candidate('shared', 'https://example.com/new/'),
         ];
         $collector = $this->app->make(SourceCollector::class);
 
@@ -306,6 +162,8 @@ class SourceCollectorTest extends TestCase
         $this->assertCount(1, $this->calls['shared']);
         $this->assertSame(1, $result->stored);
         $new = Item::query()->where('url_normalized', 'https://example.com/new')->firstOrFail();
+        $this->assertSame('https://example.com/new', $new->url_normalized);
+        $this->assertSame(['https://example.com/new'], $new->links);
         $firstSeen = now()->toDateTimeString();
         foreach ([$known, $new] as $item) {
             $this->assertDatabaseHas('item_source', ['item_id' => $item->id, 'source_id' => $source->id, 'first_seen_at' => $firstSeen]);
@@ -318,6 +176,26 @@ class SourceCollectorTest extends TestCase
         $this->assertCount(2, $this->calls['shared']);
         $this->assertDatabaseCount('item_source', 2);
         $this->assertSame(2, DB::table('item_source')->where('first_seen_at', $firstSeen)->count());
+    }
+
+    public function test_collect_for_records_the_same_item_in_two_subscribed_sources(): void
+    {
+        $user = User::factory()->create();
+        $sources = [$this->source('first'), $this->source('second', position: 2)];
+        foreach ($sources as $source) {
+            $user->sourceSubscriptions()->create(['source_id' => $source->id, 'enabled' => true]);
+            $this->responses[$source->slug] = [$this->candidate($source->slug, 'https://example.com/shared')];
+        }
+
+        $result = $this->app->make(SourceCollector::class)->collectFor(collect([$user]));
+
+        $this->assertSame(1, $result->stored);
+        $this->assertDatabaseCount('items', 1);
+        $this->assertDatabaseCount('item_source', 2);
+        $item = Item::query()->sole();
+        foreach ($sources as $source) {
+            $this->assertDatabaseHas('item_source', ['item_id' => $item->id, 'source_id' => $source->id, 'first_seen_at' => now()->toDateTimeString()]);
+        }
     }
 
     public function test_collect_for_isolates_expected_and_unexpected_failures_and_updates_source_health(): void
@@ -393,11 +271,6 @@ class SourceCollectorTest extends TestCase
         $this->source('failing')->update(['last_error' => 'HTTP 500']);
 
         $this->assertSame([], $this->app->make(SourceCollector::class)->failuresFor(User::factory()->create()));
-    }
-
-    private function collect(): CollectionResult
-    {
-        return $this->app->make(SourceCollector::class)->collect(CarbonImmutable::parse('2026-10-15 07:00:00'));
     }
 
     private function source(string $slug, ?string $name = null, int $position = 1): Source

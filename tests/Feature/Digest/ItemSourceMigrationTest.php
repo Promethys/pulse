@@ -21,6 +21,9 @@ class ItemSourceMigrationTest extends TestCase
 
     public function test_up_backfills_matching_slugs_with_original_creation_times_and_keeps_legacy_items(): void
     {
+        $drop = require database_path('migrations/2026_10_26_000002_drop_single_owner_columns.php');
+        $drop->down();
+
         $migration = require database_path('migrations/2026_10_26_000001_create_item_source_table.php');
         $migration->down();
         foreach (['first', 'second'] as $slug) {
@@ -57,6 +60,9 @@ class ItemSourceMigrationTest extends TestCase
 
     public function test_backfill_can_run_twice_without_duplicates_or_overwriting_first_seen_at(): void
     {
+        $drop = require database_path('migrations/2026_10_26_000002_drop_single_owner_columns.php');
+        $drop->down();
+
         $migration = require database_path('migrations/2026_10_26_000001_create_item_source_table.php');
         $migration->down();
         $source = Source::factory()->create(['slug' => 'first']);

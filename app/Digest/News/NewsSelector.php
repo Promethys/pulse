@@ -6,14 +6,11 @@ namespace App\Digest\News;
 
 use App\Ai\Agents\NewsCurator;
 use App\Digest\Ai\AiUnavailableException;
-use App\Digest\Ai\ProviderChain;
 use App\Digest\Sources\UrlNormalizer;
 use App\Digest\Support\TagResolver;
-use App\Enums\ItemStatus;
 use App\Models\Item;
 use App\Models\Post;
 use App\Models\PostItem;
-use App\Models\Source;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -31,31 +28,7 @@ final class NewsSelector
 
     /**
      * @param  Collection<int, Item>  $candidates
-     * @return NewsSelection<Item>
-     *
-     * @throws AiUnavailableException when no provider could answer (nothing is changed)
-     */
-    public function select(Post $post, Collection $candidates): NewsSelection
-    {
-        $candidatesById = $candidates->keyBy('id');
-        $response = $this->ask($candidates);
-
-        $sourceTags = Source::query()->pluck('tag', 'slug');
-        $selected = $this->validator->validate(
-            $response->toArray(),
-            $candidatesById,
-            $candidates->mapWithKeys(fn (Item $item) => [$item->id => (string) ($sourceTags[$item->source_slug] ?? 'general')])->all(),
-        );
-
-        $items = DB::transaction(fn () => $this->persist($post, $selected, $candidatesById));
-
-        return new NewsSelection($items, "{$response->meta->provider}:{$response->meta->model}");
-    }
-
-    /**
-     * @param  Collection<int, Item>  $candidates
      * @param  array<string, string>  $providers
-     * @return NewsSelection<PostItem>
      */
     public function selectFor(User $user, Post $post, Collection $candidates, array $providers): NewsSelection
     {
@@ -119,7 +92,6 @@ final class NewsSelector
 
         $source = $candidate->sources->firstOrFail();
         $item = Item::query()->firstOrCreate(['url_normalized' => $normalized], [
-            'source_slug' => $source->slug,
             'url' => $pick->url,
             'title' => $pick->title,
             'excerpt' => '',
@@ -154,25 +126,25 @@ final class NewsSelector
 
     /**
      * @param  Collection<int, Item>  $candidates
-     * @param  array<string, string>|null  $providers
+     * @param  array<string, string>  $providers
      */
-    private function ask(Collection $candidates, ?User $user = null, ?array $providers = null): StructuredAgentResponse
+    private function ask(Collection $candidates, User $user, array $providers): StructuredAgentResponse
     {
         $agent = new NewsCurator(
-            profile: $user !== null ? (string) $user->digestSettings?->profile : (string) config('digest.profile'),
+            profile: (string) $user->digestSettings?->profile,
             existingTags: array_values(array_map(strval(...), Tag::query()->orderBy('slug')->pluck('slug')->all())),
-            maxItems: $user !== null ? ($user->digestSettings->max_items ?? 20) : (int) config('digest.max_items'),
-            interests: $user !== null ? array_values(array_map(strval(...), $user->interests()->orderBy('position')->pluck('name')->all())) : [],
+            maxItems: $user->digestSettings->max_items ?? 20,
+            interests: array_values(array_map(strval(...), $user->interests()->orderBy('position')->pluck('name')->all())),
         );
 
         try {
             $response = $agent->prompt(
-                $this->prompt($candidates, $user !== null),
-                provider: $providers ?? ProviderChain::fromConfig(),
+                $this->prompt($candidates),
+                provider: $providers,
                 timeout: (int) config('digest.ai_timeout'),
             );
         } catch (Throwable $e) {
-            if ($user !== null && ! $e instanceof FailoverableException) {
+            if (! $e instanceof FailoverableException) {
                 throw $e;
             }
 
@@ -189,59 +161,16 @@ final class NewsSelector
     /**
      * @param  Collection<int, Item>  $candidates
      */
-    private function prompt(Collection $candidates, bool $forUser = false): string
+    private function prompt(Collection $candidates): string
     {
         $rows = $candidates->map(fn (Item $item) => [
             'id' => $item->id,
-            'source' => $forUser ? $item->sources->first()?->slug : $item->source_slug,
+            'source' => $item->sources->first()?->slug,
             'title' => $item->title,
             'excerpt' => $item->excerpt,
             'links' => $item->links,
         ])->values()->all();
 
         return "Candidates:\n".json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
-     * @param  list<SelectedItem>  $selected
-     * @param  Collection<int, Item>  $candidatesById
-     * @return Collection<int, Item>
-     */
-    private function persist(Post $post, array $selected, Collection $candidatesById): Collection
-    {
-        $items = collect();
-
-        foreach ($selected as $pick) {
-            $candidate = $candidatesById->get($pick->candidateId);
-            if ($candidate === null) {
-                continue;
-            }
-
-            $item = UrlNormalizer::normalize($pick->url) === $candidate->url_normalized
-                ? $candidate
-                : Item::query()->firstOrNew(['url_normalized' => UrlNormalizer::normalize($pick->url)], [
-                    'source_slug' => $candidate->source_slug,
-                    'url' => $pick->url,
-                    'excerpt' => '',
-                    'links' => [$pick->url],
-                    'published_at' => $candidate->published_at,
-                ]);
-
-            $item->fill([
-                'title' => $pick->title,
-                'summary' => $pick->summary,
-                'status' => ItemStatus::Selected,
-                'post_id' => $post->id,
-            ])->save();
-
-            $item->tags()->sync($this->tags->resolve($pick->tagSlugs)->pluck('id'));
-            $items->push($item);
-        }
-
-        $selectedIds = $items->pluck('id');
-        $candidatesById->reject(fn (Item $item) => $selectedIds->contains($item->id))
-            ->each(fn (Item $item) => $item->update(['status' => ItemStatus::Skipped]));
-
-        return $items;
     }
 }

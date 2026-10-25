@@ -15,27 +15,15 @@ class PostUniquenessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_posts_without_a_user_remain_unique_per_date_and_kind(): void
-    {
-        $post = Post::factory()->create(['user_id' => null, 'date' => '2026-10-25', 'kind' => PostKind::News]);
-        $this->assertNull($post->fresh()->user_id);
-
-        $this->expectException(UniqueConstraintViolationException::class);
-
-        Post::factory()->create(['user_id' => null, 'date' => '2026-10-25', 'kind' => PostKind::News]);
-    }
-
     public function test_different_users_can_have_posts_for_the_same_date_and_kind(): void
     {
         $first = User::factory()->create();
         $second = User::factory()->create();
         $post = Post::factory()->create(['user_id' => $first->id, 'date' => '2026-10-25', 'kind' => PostKind::News]);
         $other = Post::factory()->create(['user_id' => $second->id, 'date' => '2026-10-25', 'kind' => PostKind::News]);
-        $legacy = Post::factory()->create(['user_id' => null, 'date' => '2026-10-25', 'kind' => PostKind::News]);
 
         $this->assertSame($first->id, $post->fresh()->user_id);
         $this->assertSame($second->id, $other->fresh()->user_id);
-        $this->assertNull($legacy->fresh()->user_id);
     }
 
     public function test_the_same_user_cannot_have_two_posts_for_the_same_date_and_kind(): void
@@ -64,12 +52,10 @@ class PostUniquenessTest extends TestCase
         $user = User::factory()->create();
         $post = Post::factory()->create(['user_id' => $user->id]);
         $other = Post::factory()->create(['user_id' => User::factory()->create()->id]);
-        $legacy = Post::factory()->create(['user_id' => null]);
 
         $user->delete();
 
         $this->assertModelMissing($post);
         $this->assertModelExists($other);
-        $this->assertModelExists($legacy);
     }
 }

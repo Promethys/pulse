@@ -101,7 +101,6 @@ class DigestNewsCommandTest extends TestCase
         $delivery = Delivery::factory()->create(['post_id' => $target->id]);
         $kept = [
             Post::factory()->create(['user_id' => User::factory(), 'date' => '2026-07-02', 'kind' => PostKind::News]),
-            Post::factory()->create(['user_id' => null, 'date' => '2026-07-02', 'kind' => PostKind::News]),
             Post::factory()->create(['user_id' => $this->user->id, 'date' => '2026-07-01', 'kind' => PostKind::News]),
             Post::factory()->create(['user_id' => $this->user->id, 'date' => '2026-07-02', 'kind' => PostKind::Learning]),
         ];
@@ -124,7 +123,7 @@ class DigestNewsCommandTest extends TestCase
 
         $this->artisan('digest:news', ['--user' => $this->user->email, '--force' => true])->assertExitCode(0);
 
-        $this->assertDatabaseCount('posts', 5);
+        $this->assertDatabaseCount('posts', 4);
         $this->assertModelMissing($target);
         $this->assertSame(1, $this->user->posts()->where('date', '2026-07-02')->where('kind', PostKind::News)->count());
     }

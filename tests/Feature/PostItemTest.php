@@ -19,7 +19,7 @@ class PostItemTest extends TestCase
     public function test_a_post_item_belongs_to_its_post_and_item_and_keeps_its_own_text(): void
     {
         $post = Post::factory()->create();
-        $item = Item::factory()->create(['title' => 'Original title', 'summary' => 'Original summary']);
+        $item = Item::factory()->create(['title' => 'Original title']);
         $selection = new PostItem;
         $selection->fill(['post_id' => $post->id, 'item_id' => $item->id, 'title' => str_repeat('a', 500), 'summary' => null, 'position' => 3]);
         $selection->save();
@@ -31,15 +31,15 @@ class PostItemTest extends TestCase
         $this->assertNull($selection->summary);
         $this->assertSame(3, $selection->position);
         $this->assertSame('Original title', $item->fresh()->title);
-        $this->assertSame('Original summary', $item->fresh()->summary);
     }
 
-    public function test_post_item_tags_use_a_separate_pivot_without_timestamps(): void
+    public function test_post_item_tags_are_independent_for_each_selection_of_a_shared_item(): void
     {
         $selection = PostItem::factory()->create();
         $tags = Tag::factory()->count(2)->create();
         $original = Tag::factory()->create();
-        $selection->item->tags()->attach($original);
+        $other = PostItem::factory()->create(['item_id' => $selection->item_id]);
+        $other->tags()->attach($original);
 
         $selection->tags()->attach($tags);
 
@@ -47,11 +47,12 @@ class PostItemTest extends TestCase
         foreach ($tags as $tag) {
             $this->assertDatabaseHas('post_item_tag', ['post_item_id' => $selection->id, 'tag_id' => $tag->id]);
         }
-        $this->assertSame([$original->id], $selection->item->fresh()->tags->modelKeys());
+        $this->assertSame([$original->id], $other->fresh()->tags->modelKeys());
 
         $selection->tags()->detach($tags->first());
 
         $this->assertSame([$tags->last()->id], $selection->fresh()->tags->modelKeys());
+        $this->assertSame([$original->id], $other->fresh()->tags->modelKeys());
     }
 
     public function test_a_posts_selections_are_ordered_by_position(): void

@@ -123,10 +123,10 @@ class TickSchedulerTest extends TestCase
         $this->assertSame($expected, in_array($kind, array_map(fn (DueDigest $digest) => $digest->kind, $due), true));
     }
 
-    public function test_other_users_mvp_posts_and_other_days_do_not_suppress_a_users_digest(): void
+    public function test_other_users_posts_and_other_days_do_not_suppress_a_users_digest(): void
     {
         $user = $this->eligibleUser();
-        foreach ([null, User::factory()->create()->id] as $owner) {
+        foreach ([User::factory()->create()->id] as $owner) {
             Post::factory()->create(['user_id' => $owner, 'date' => '2026-07-01', 'kind' => PostKind::News, 'rendered' => ['title' => 'Done', 'messages' => ['Done']]]);
         }
         Post::factory()->create(['user_id' => $user->id, 'date' => '2026-06-30', 'kind' => PostKind::News, 'attempts' => 4]);
@@ -182,7 +182,6 @@ class TickSchedulerTest extends TestCase
                 'above limit' => [PostStatus::Failed, null, 5, false],
                 'generated' => [PostStatus::Generated, ['title' => 'Done', 'messages' => ['Done']], 0, false],
                 'delivery failed' => [PostStatus::Failed, ['title' => 'Done', 'messages' => ['Done']], 1, false],
-                'posted' => [PostStatus::Posted, ['title' => 'Done', 'messages' => ['Done']], 0, false],
             ] as $name => $state) {
                 $states[$kind->value.' '.$name] = [$kind, ...$state];
             }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Digest;
 
 use App\Digest\News\CandidateQuery;
-use App\Enums\ItemStatus;
 use App\Enums\PostKind;
 use App\Models\Item;
 use App\Models\Post;
@@ -43,7 +42,7 @@ class CandidateQueryTest extends TestCase
         $this->item($disabledSubscription);
         $this->item($disabledSource);
         $this->item($unsubscribed);
-        Item::factory()->create(['source_slug' => $enabled->slug]);
+        Item::factory()->create();
 
         $this->assertSame([$wanted->id], app(CandidateQuery::class)->for($this->user, $this->since)->pluck('id')->all());
     }
@@ -88,7 +87,6 @@ class CandidateQueryTest extends TestCase
         $post = Post::factory()->create(['user_id' => $this->user->id, 'date' => '2026-10-15', 'kind' => PostKind::Learning]);
         PostItem::factory()->create(['post_id' => $post->id, 'item_id' => $used->id]);
         PostItem::factory()->create(['post_id' => Post::factory()->create(['user_id' => User::factory()])->id, 'item_id' => $otherUsersPick->id]);
-        $otherUsersPick->update(['status' => ItemStatus::Selected, 'post_id' => $post->id]);
 
         $this->assertSame([$otherUsersPick->id], app(CandidateQuery::class)->for($this->user, $this->since)->pluck('id')->all());
     }
@@ -115,7 +113,7 @@ class CandidateQueryTest extends TestCase
 
     private function item(Source $source, ?CarbonImmutable $seenAt = null): Item
     {
-        $item = Item::factory()->create(['source_slug' => $source->slug]);
+        $item = Item::factory()->create();
         $item->sources()->attach($source, ['first_seen_at' => $seenAt ?? now()]);
 
         return $item;

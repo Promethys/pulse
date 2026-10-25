@@ -5,24 +5,21 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\DeliveryChannelType;
-use App\Enums\DeliveryStatus;
-use App\Enums\PostKind;
 use App\Enums\PostStatus;
 use App\Enums\SourceType;
-use App\Models\Delivery;
 use App\Models\DeliveryChannel;
 use App\Models\DigestSettings;
 use App\Models\DiscordGuild;
 use App\Models\Interest;
-use App\Models\LearningTopic;
-use App\Models\LearningTopicUsage;
 use App\Models\Post;
 use App\Models\Source;
 use App\Models\SourceSubscription;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -188,9 +185,6 @@ class PulseAdoptCommandTest extends TestCase
         $owner = User::factory()->create();
         $this->fakeDiscord();
         config(['services.discord.learning_forum' => '111']);
-        foreach (PostKind::cases() as $kind) {
-            Post::factory()->create(['user_id' => null, 'kind' => $kind, 'status' => PostStatus::Posted, 'discord_thread_id' => 'thread-'.$kind->value]);
-        }
 
         $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
 
@@ -198,7 +192,6 @@ class PulseAdoptCommandTest extends TestCase
         $this->assertSame('Discord', $channel->name);
         $this->assertEqualsCanonicalizing(['news', 'learning'], $channel->kinds);
         $this->assertSame('111', $channel->settings['channel_id']);
-        $this->assertSame(2, $channel->deliveries()->count());
         $this->assertDatabaseCount('discord_guilds', 1);
     }
 
@@ -225,6 +218,7 @@ class PulseAdoptCommandTest extends TestCase
     public function test_assigns_only_unowned_posts_and_sets_owner_flags(): void
     {
         $owner = User::factory()->create(['is_admin' => false, 'uses_instance_ai' => false]);
+        $this->allowUnownedPosts();
         $posts = Post::factory()->count(3)->create(['user_id' => null]);
         $owned = Post::factory()->create(['user_id' => $owner->id]);
         $other = User::factory()->create(['is_admin' => false, 'uses_instance_ai' => false]);
@@ -240,56 +234,6 @@ class PulseAdoptCommandTest extends TestCase
         $this->assertTrue($owner->fresh()->uses_instance_ai);
         $this->assertFalse($other->fresh()->is_admin);
         $this->assertFalse($other->fresh()->uses_instance_ai);
-    }
-
-    public function test_imports_topic_history_once_per_date_without_replacing_existing_usage(): void
-    {
-        $owner = User::factory()->create();
-        $first = LearningTopic::factory()->create(['last_used_on' => '2026-10-20']);
-        LearningTopic::factory()->create(['last_used_on' => '2026-10-20']);
-        $second = LearningTopic::factory()->create(['last_used_on' => '2026-10-21']);
-        LearningTopic::factory()->create(['last_used_on' => '2026-10-22']);
-        LearningTopic::factory()->create(['last_used_on' => null]);
-        $existing = LearningTopicUsage::factory()->create(['user_id' => $owner->id, 'used_on' => '2026-10-22']);
-        $other = LearningTopicUsage::factory()->create(['learning_topic_id' => $first->id, 'used_on' => '2026-10-20']);
-
-        $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
-
-        $this->assertSame(3, $owner->learningTopicUsages()->count());
-        $this->assertSame(1, $owner->learningTopicUsages()->whereDate('used_on', '2026-10-20')->count());
-        $this->assertDatabaseHas('learning_topic_usages', ['user_id' => $owner->id, 'learning_topic_id' => $second->id, 'used_on' => '2026-10-21']);
-        $this->assertSame($existing->learning_topic_id, $existing->fresh()->learning_topic_id);
-        $this->assertModelExists($other);
-    }
-
-    public function test_backfills_deliveries_only_for_owner_posted_threads_into_the_matching_kind(): void
-    {
-        $owner = User::factory()->create();
-        $this->fakeDiscord();
-        $posts = [
-            Post::factory()->create(['user_id' => null, 'kind' => PostKind::News, 'status' => PostStatus::Posted, 'discord_thread_id' => 'news-thread', 'messages_sent' => 4, 'attempts' => 2, 'posted_at' => now()->subDays(2)]),
-            Post::factory()->create(['user_id' => $owner->id, 'kind' => PostKind::Learning, 'status' => PostStatus::Posted, 'discord_thread_id' => 'learning-thread', 'messages_sent' => 3, 'attempts' => 1, 'posted_at' => now()->subDay()]),
-        ];
-        foreach ([PostStatus::Pending, PostStatus::Generated, PostStatus::Failed] as $status) {
-            Post::factory()->create(['user_id' => null, 'status' => $status, 'discord_thread_id' => 'unfinished']);
-        }
-        Post::factory()->create(['user_id' => null, 'status' => PostStatus::Posted, 'discord_thread_id' => null]);
-        Post::factory()->create(['user_id' => User::factory()->create()->id, 'status' => PostStatus::Posted, 'discord_thread_id' => 'other-thread']);
-
-        $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
-
-        $this->assertDatabaseCount('deliveries', 2);
-        foreach ($posts as $post) {
-            $delivery = $post->deliveries()->sole();
-            $this->assertSame(DeliveryStatus::Delivered, $delivery->status);
-            $this->assertSame($post->discord_thread_id, $delivery->external_id);
-            $this->assertSame($post->messages_sent, $delivery->progress);
-            $this->assertSame($post->attempts, $delivery->attempts);
-            $this->assertTrue($delivery->delivered_at?->equalTo($post->posted_at));
-            $this->assertSame($owner->id, $delivery->channel->user_id);
-            $this->assertSame(DeliveryChannelType::DiscordBot, $delivery->channel->type);
-            $this->assertSame([$post->kind->value], $delivery->channel->kinds);
-        }
     }
 
     public function test_creates_an_in_app_channel_for_the_owner_even_when_another_user_has_one(): void
@@ -318,14 +262,13 @@ class PulseAdoptCommandTest extends TestCase
         $this->fakeDiscord();
 
         $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
-        $tables = ['digest_settings', 'interest_user', 'source_subscriptions', 'discord_guilds', 'delivery_channels', 'learning_topic_usages', 'deliveries'];
+        $tables = ['digest_settings', 'interest_user', 'source_subscriptions', 'discord_guilds', 'delivery_channels', 'posts'];
         $before = [];
         foreach ($tables as $table) {
             $before[$table] = DB::table($table)->count();
             $this->assertGreaterThan(0, $before[$table]);
         }
         $channelIds = $owner->deliveryChannels()->pluck('id')->all();
-        $deliveryIds = Delivery::query()->pluck('id')->all();
 
         $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
 
@@ -333,7 +276,6 @@ class PulseAdoptCommandTest extends TestCase
             $this->assertDatabaseCount($table, $count);
         }
         $this->assertSame($channelIds, $owner->deliveryChannels()->pluck('id')->all());
-        $this->assertSame($deliveryIds, Delivery::query()->pluck('id')->all());
     }
 
     #[DataProvider('discordFailures')]
@@ -376,15 +318,22 @@ class PulseAdoptCommandTest extends TestCase
 
     private function mvpData(): User
     {
+        $this->allowUnownedPosts();
         $owner = User::factory()->create(['is_admin' => false, 'uses_instance_ai' => false]);
         DigestSettings::factory()->create(['user_id' => $owner->id, 'news_enabled' => false, 'learning_enabled' => false]);
         $source = Source::factory()->create(['is_default' => true]);
         Interest::factory()->create()->sources()->attach($source);
         Source::factory()->create(['slug' => 'newsletters', 'type' => SourceType::ResendInbox, 'is_default' => true]);
-        Post::factory()->create(['user_id' => null, 'status' => PostStatus::Posted, 'discord_thread_id' => 'old-thread', 'messages_sent' => 2, 'attempts' => 1, 'posted_at' => now()->subDay()]);
-        LearningTopic::factory()->create(['last_used_on' => '2026-10-24']);
+        Post::factory()->create(['user_id' => null, 'status' => PostStatus::Generated]);
 
         return $owner;
+    }
+
+    private function allowUnownedPosts(): void
+    {
+        Schema::table('posts', function (Blueprint $table) {
+            $table->foreignId('user_id')->nullable()->change();
+        });
     }
 
     private function fakeDiscord(): void
