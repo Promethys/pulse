@@ -23,6 +23,8 @@ class RunDigest implements ShouldBeUnique, ShouldQueue
 
     public int $tries = 1;
 
+    public int $timeout = 300;
+
     public function __construct(
         public User $user,
         public PostKind $kind,

@@ -94,6 +94,10 @@ class PulseAdopt extends Command
             $query->catalog()->where('enabled', true);
         })->get();
 
+        if ($interests->isEmpty()) {
+            $this->warn('No catalog interest has an enabled source. Run the seeders, then adopt again.');
+        }
+
         $chooseInterests->handle($owner, $interests);
         $subscriptions = $owner->sourceSubscriptions()->count();
 
@@ -176,9 +180,9 @@ class PulseAdopt extends Command
 
     private function adoptOwner(User $owner): void
     {
-        $owner->forceFill(['is_admin' => true, 'uses_instance_ai' => true])->save();
+        $owner->forceFill(['is_admin' => true, 'uses_instance_ai' => true, 'email_verified_at' => $owner->email_verified_at ?? now()])->save();
 
-        $this->info('Enabled administrator access and instance AI for 1 user.');
+        $this->info('Enabled administrator access, instance AI and a verified email for 1 user.');
     }
 
     private function adoptPosts(User $owner): void
