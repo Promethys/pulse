@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read User|null $user
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, SourceSubscription> $subscriptions
+ * @property-read Collection<int, Item> $items
  */
 #[Fillable(['slug', 'name', 'type', 'url', 'tag', 'max_items', 'position', 'enabled', 'last_fetched_at', 'last_success_at', 'last_error', 'is_default', 'site_url', 'credentials'])]
 #[Hidden(['credentials'])]
@@ -83,6 +84,14 @@ class Source extends Model
     public function interests(): BelongsToMany
     {
         return $this->belongsToMany(Interest::class)->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Item, $this, ItemSource>
+     */
+    public function items(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class)->using(ItemSource::class)->withPivot('first_seen_at');
     }
 
     /**

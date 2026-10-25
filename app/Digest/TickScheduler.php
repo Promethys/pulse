@@ -5,38 +5,72 @@ declare(strict_types=1);
 namespace App\Digest;
 
 use App\Enums\PostKind;
-use App\Enums\PostStatus;
 use App\Models\Post;
+use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 
-/** Decides from local time and the posts table what a cron tick should do; the cron itself runs in UTC. */
 final class TickScheduler
 {
     /**
-     * @return list<PostKind> news before learning
+     * @return list<DueDigest>
      */
     public function due(CarbonImmutable $nowUtc): array
     {
-        $local = $nowUtc->setTimezone((string) config('digest.timezone'));
-        $due = [];
+        $users = User::query()
+            ->whereNotNull('email_verified_at')
+            ->whereHas('digestSettings', fn (Builder $query) => $query->whereNotNull('onboarded_at'))
+            ->where(fn (Builder $query) => $query->whereHas('aiKeys')->orWhere('uses_instance_ai', true))
+            ->with('digestSettings')
+            ->orderBy('id')
+            ->get();
+        $candidates = [];
 
-        foreach ([[PostKind::News, 'digest.news_time'], [PostKind::Learning, 'digest.learning_time']] as [$kind, $timeKey]) {
-            if ($local->lessThan($local->setTimeFromTimeString((string) config($timeKey)))) {
+        foreach ($users as $user) {
+            $settings = $user->digestSettings;
+
+            if ($settings === null) {
                 continue;
             }
 
-            $post = Post::query()->whereDate('date', $local->toDateString())->where('kind', $kind)->first();
+            $local = $nowUtc->setTimezone($settings->timezone);
 
-            if ($post === null || ($post->status !== PostStatus::Posted && $post->attempts < (int) config('digest.max_attempts'))) {
-                $due[] = $kind;
+            foreach (PostKind::cases() as $kind) {
+                $enabled = $kind === PostKind::News ? $settings->news_enabled : $settings->learning_enabled;
+                $time = $kind === PostKind::News ? $settings->news_time : $settings->learning_time;
+
+                if (! $enabled || $local->lessThan($local->setTimeFromTimeString($time))) {
+                    continue;
+                }
+
+                if ($kind === PostKind::Learning && ! $user->learningAvailable()) {
+                    continue;
+                }
+
+                $candidates[] = new DueDigest($user, $kind, $local->startOfDay());
+            }
+        }
+
+        if ($candidates === []) {
+            return [];
+        }
+
+        $dates = array_map(fn (DueDigest $digest): string => $digest->date->toDateString(), $candidates);
+        $posts = Post::query()
+            ->whereIn('user_id', $users->modelKeys())
+            ->whereIn('date', array_unique($dates))
+            ->get()
+            ->keyBy(fn (Post $post): string => $post->user_id.':'.$post->kind->value.':'.$post->date->toDateString());
+        $due = [];
+
+        foreach ($candidates as $digest) {
+            $post = $posts->get($digest->user->id.':'.$digest->kind->value.':'.$digest->date->toDateString());
+
+            if ($post === null || ($post->rendered === null && $post->attempts < (int) config('digest.max_attempts'))) {
+                $due[] = $digest;
             }
         }
 
         return $due;
-    }
-
-    public function localToday(CarbonImmutable $nowUtc): CarbonImmutable
-    {
-        return $nowUtc->setTimezone((string) config('digest.timezone'))->startOfDay();
     }
 }

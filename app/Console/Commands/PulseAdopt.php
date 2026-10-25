@@ -8,13 +8,9 @@ use App\Actions\ChooseInterests;
 use App\Digest\Discord\DiscordClient;
 use App\Digest\Discord\DiscordException;
 use App\Enums\DeliveryChannelType;
-use App\Enums\DeliveryStatus;
 use App\Enums\PostKind;
-use App\Enums\PostStatus;
-use App\Models\Delivery;
 use App\Models\DeliveryChannel;
 use App\Models\Interest;
-use App\Models\LearningTopic;
 use App\Models\Post;
 use App\Models\Source;
 use App\Models\User;
@@ -49,11 +45,9 @@ class PulseAdopt extends Command
             $this->adoptSettings($owner);
             $this->adoptInterests($owner, $chooseInterests);
             $this->adoptNewsletters($owner);
-            $channels = $this->adoptDiscord($owner, $discord);
+            $this->adoptDiscord($owner, $discord);
             $this->adoptOwner($owner);
             $this->adoptPosts($owner);
-            $this->adoptTopicHistory($owner);
-            $this->adoptDeliveries($owner, $channels);
             $this->ensureInAppChannel($owner);
 
             if ($this->option('dry-run')) {
@@ -129,10 +123,7 @@ class PulseAdopt extends Command
         $this->info('Adopted 1 newsletter source.');
     }
 
-    /**
-     * @return list<DeliveryChannel>
-     */
-    private function adoptDiscord(User $owner, DiscordClient $discord): array
+    private function adoptDiscord(User $owner, DiscordClient $discord): void
     {
         $forums = [];
 
@@ -181,8 +172,6 @@ class PulseAdopt extends Command
         }
 
         $this->info('Adopted '.count($channels).' Discord destinations.');
-
-        return $channels;
     }
 
     private function adoptOwner(User $owner): void
@@ -197,56 +186,6 @@ class PulseAdopt extends Command
         $count = Post::query()->whereNull('user_id')->update(['user_id' => $owner->id]);
 
         $this->info("Assigned {$count} posts.");
-    }
-
-    private function adoptTopicHistory(User $owner): void
-    {
-        $count = 0;
-
-        foreach (LearningTopic::query()->whereNotNull('last_used_on')->orderBy('id')->get() as $topic) {
-            if ($topic->last_used_on === null) {
-                continue;
-            }
-
-            $usage = $owner->learningTopicUsages()->firstOrCreate(
-                ['used_on' => $topic->last_used_on->toDateString()],
-                ['learning_topic_id' => $topic->id],
-            );
-            $count += (int) $usage->wasRecentlyCreated;
-        }
-
-        $this->info("Imported {$count} learning topic usages.");
-    }
-
-    /**
-     * @param  list<DeliveryChannel>  $channels
-     */
-    private function adoptDeliveries(User $owner, array $channels): void
-    {
-        $count = 0;
-        $posts = $owner->posts()->where('status', PostStatus::Posted)->whereNotNull('discord_thread_id')->get();
-
-        foreach ($posts as $post) {
-            foreach ($channels as $channel) {
-                if (! $channel->takes($post->kind)) {
-                    continue;
-                }
-
-                $delivery = Delivery::query()->firstOrCreate([
-                    'post_id' => $post->id,
-                    'delivery_channel_id' => $channel->id,
-                ], [
-                    'status' => DeliveryStatus::Delivered,
-                    'external_id' => $post->discord_thread_id,
-                    'progress' => $post->messages_sent,
-                    'attempts' => $post->attempts,
-                    'delivered_at' => $post->posted_at,
-                ]);
-                $count += (int) $delivery->wasRecentlyCreated;
-            }
-        }
-
-        $this->info("Backfilled {$count} deliveries.");
     }
 
     private function ensureInAppChannel(User $owner): void

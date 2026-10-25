@@ -16,6 +16,9 @@ class UserSelectionsMigrationTest extends TestCase
 
     public function test_selected_items_and_tags_are_copied_in_item_id_order_per_post_without_changing_mvp_rows(): void
     {
+        $drop = require database_path('migrations/2026_10_26_000002_drop_single_owner_columns.php');
+        $drop->down();
+
         $migration = require database_path('migrations/2026_10_25_000001_add_user_selections_tables.php');
         $migration->down();
         DB::table('posts')->insert([
@@ -75,6 +78,9 @@ class UserSelectionsMigrationTest extends TestCase
 
     public function test_copy_selections_skips_existing_rows_and_can_be_repeated_without_duplicate_tags(): void
     {
+        $drop = require database_path('migrations/2026_10_26_000002_drop_single_owner_columns.php');
+        $drop->down();
+
         $migration = require database_path('migrations/2026_10_25_000001_add_user_selections_tables.php');
         $migration->down();
         DB::table('posts')->insert(['id' => 101, 'date' => '2026-10-25', 'kind' => 'news']);
@@ -104,6 +110,9 @@ class UserSelectionsMigrationTest extends TestCase
 
     public function test_rollback_removes_new_tables_and_user_id_and_restores_legacy_post_uniqueness(): void
     {
+        $drop = require database_path('migrations/2026_10_26_000002_drop_single_owner_columns.php');
+        $drop->down();
+
         $migration = require database_path('migrations/2026_10_25_000001_add_user_selections_tables.php');
 
         $migration->down();

@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace App\Digest\Discord;
 
-use App\Digest\Rendering\RenderedPost;
-use App\Enums\PostStatus;
-use App\Models\Post;
 use App\Models\Tag;
 
-/** Publishes a rendered post as a forum thread, resuming where a previous attempt stopped. */
-final class ForumPublisher
+final class ForumTagMatcher
 {
     private const MAX_FORUM_TAGS = 20;
 
@@ -18,47 +14,13 @@ final class ForumPublisher
 
     private const MAX_TAG_NAME = 20;
 
-    private const MAX_TITLE = 100;
-
     public function __construct(private readonly DiscordClient $discord) {}
 
     /**
-     * @throws DiscordException progress so far is saved on the post
-     */
-    public function publish(Post $post, string $channelId): void
-    {
-        $rendered = RenderedPost::fromArray($post->rendered ?? []);
-
-        if ($rendered->messages === []) {
-            throw new DiscordException("Post {$post->id} has no rendered messages");
-        }
-
-        if ($post->discord_thread_id === null) {
-            $threadId = $this->discord->createForumPost(
-                $channelId,
-                mb_substr($rendered->title, 0, self::MAX_TITLE),
-                $rendered->messages[0],
-                $this->forumTagIds($channelId, $rendered->tagSlugs),
-            );
-            $post->update(['discord_thread_id' => $threadId, 'messages_sent' => 1]);
-        }
-
-        for ($i = $post->messages_sent; $i < count($rendered->messages); $i++) {
-            $this->discord->postMessage((string) $post->discord_thread_id, $rendered->messages[$i]);
-            $post->update(['messages_sent' => $i + 1]);
-        }
-
-        $post->update(['status' => PostStatus::Posted, 'posted_at' => now(), 'last_error' => null]);
-    }
-
-    /**
-     * Discord ids of the post's tags in this forum (each forum has its own ids, so tags are matched by name),
-     * creating missing forum tags while the forum has room (20 max).
-     *
      * @param  list<string>  $slugs
      * @return list<string>
      */
-    private function forumTagIds(string $channelId, array $slugs): array
+    public function tagIds(string $channelId, array $slugs): array
     {
         $tags = Tag::query()->whereIn('slug', $slugs)->get()->keyBy('slug');
         $forumTags = $this->discord->forumTags($channelId);

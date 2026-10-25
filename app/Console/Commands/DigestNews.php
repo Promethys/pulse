@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Digest\News\NewsPipeline;
-use App\Enums\ItemStatus;
 use App\Enums\PostKind;
-use App\Enums\PostStatus;
-use App\Models\Post;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class DigestNews extends Command
 {
     protected $signature = 'digest:news
+        {--user= : Email of the user whose digest to build}
         {--dry-run : Build today\'s post and print it, without storing or posting anything}
         {--force : Post today\'s news again, even if it was already posted}';
 
@@ -24,14 +22,30 @@ class DigestNews extends Command
 
     public function handle(NewsPipeline $pipeline): int
     {
-        $today = CarbonImmutable::now((string) config('digest.timezone'))->startOfDay();
+        $email = $this->option('user');
+
+        if (! is_string($email) || $email === '') {
+            $this->error('The --user option is required.');
+
+            return self::FAILURE;
+        }
+
+        $user = User::query()->with('digestSettings')->where('email', $email)->first();
+
+        if ($user === null) {
+            $this->error("User {$email} was not found.");
+
+            return self::FAILURE;
+        }
+
+        $today = CarbonImmutable::now($user->digestSettings->timezone ?? (string) config('digest.timezone'))->startOfDay();
 
         if ($this->option('force') && ! $this->option('dry-run')) {
-            $this->reset($today);
+            $user->posts()->where('date', $today->toDateString())->where('kind', PostKind::News)->delete();
         }
 
         try {
-            $post = $pipeline->run($today, dryRun: (bool) $this->option('dry-run'));
+            $post = $pipeline->runFor($user, $today, dryRun: (bool) $this->option('dry-run'));
         } catch (Throwable $e) {
             $this->error($e->getMessage());
 
@@ -48,26 +62,8 @@ class DigestNews extends Command
             return self::SUCCESS;
         }
 
-        $this->info("News post {$post->status->value} (thread {$post->discord_thread_id}).");
+        $this->info("News post {$post->status->value}.");
 
         return self::SUCCESS;
-    }
-
-    /** Back to a fresh post; its selected items become candidates again so the new run can pick them. */
-    private function reset(CarbonImmutable $today): void
-    {
-        $post = Post::query()->where('date', $today->toDateString())->where('kind', PostKind::News)->first();
-
-        if ($post === null) {
-            return;
-        }
-
-        DB::transaction(function () use ($post) {
-            $post->items()->each(function ($item) {
-                $item->tags()->detach();
-                $item->update(['status' => ItemStatus::Candidate, 'post_id' => null, 'summary' => null]);
-            });
-            $post->update(['status' => PostStatus::Pending, 'rendered' => null, 'discord_thread_id' => null, 'messages_sent' => 0, 'attempts' => 0, 'last_error' => null, 'posted_at' => null, 'model_used' => null]);
-        });
     }
 }

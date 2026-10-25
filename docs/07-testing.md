@@ -17,6 +17,21 @@ Tests never reach the internet:
 - AI agents are faked with the AI SDK (`HealthCheck::fake(...)`), see [AI providers](06-ai.md#tests).
 - Waits (rate-limit backoff) are faked with `Sleep::fake()`.
 
+## Digest and delivery tests
+
+The feature suite covers subscriber-scoped collection and source sightings, per-user candidate windows and selection isolation, AI chains and fallback behavior, topic rotation and personal tip history, and adoption and ownership migrations.
+
+Delivery tests cover independent channel failures and attempt limits, Discord thread resumption, bot tag matching, destination disabling on bot 403 or webhook 404, Markdown email and in-app delivery. Scheduling tests use faked queues and verify due users, local dates, unique `RunDigest` jobs, delivery retries and pruning.
+
+URL safety tests inject DNS results and fake HTTP responses to check public addresses, mixed public/private results and redirects without real DNS or HTTP requests. Webhook tests cover accepted URL patterns, rejected tampered URLs and errors that omit webhook secrets.
+
+```bash
+docker compose exec app php artisan test --filter=UserNewsPipelineTest
+docker compose exec app php artisan test --filter=UserLearningPipelineTest
+docker compose exec app php artisan test tests/Feature/Delivery
+docker compose exec app php artisan test --filter=DigestTickTest
+```
+
 ## Front-end tests
 
 The front-end tests live in `tests/js/`, mirroring `resources/js/`. They run with Vitest through Vite+ (`vp test`, configured in the `test` block of `vite.config.ts`) in a `jsdom` browser environment, with Vue Test Utils and Testing Library. Import the test API from `vite-plus/test`, not from `vitest`.
@@ -53,4 +68,4 @@ docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --re
 
 ## Live checks
 
-`digest:sources` and `digest:ai` check the real sources and providers without storing anything. They are the quickest way to confirm a change against the outside world.
+`digest:sources [--user=<email>]` checks real sources, and `digest:ai` checks the instance AI chain without storing anything. They are the quickest way to confirm a change against the outside world.

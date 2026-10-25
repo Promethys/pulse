@@ -7,6 +7,7 @@ namespace Tests\Feature\Digest;
 use App\Digest\Sources\Candidate;
 use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\FetchException;
+use App\Digest\Support\PublicUrl;
 use App\Enums\SourceType;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
@@ -14,6 +15,7 @@ use Carbon\CarbonInterval;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class FeedFetcherTest extends TestCase
@@ -38,7 +40,6 @@ class FeedFetcherTest extends TestCase
         );
 
         $first = $candidates[0];
-        $this->assertSame('laravel-news', $first->sourceSlug);
         $this->assertSame('https://laravel-news.com/laravel-13-18', $first->url);
         $this->assertSame(['https://laravel-news.com/laravel-13-18'], $first->links);
         $this->assertSame('2026-10-16 06:00:00', $first->publishedAt?->utc()->toDateTimeString());
@@ -161,6 +162,69 @@ class FeedFetcherTest extends TestCase
         Sleep::assertSlept(fn (CarbonInterval $duration) => (int) $duration->totalMilliseconds === 60000, times: 1);
     }
 
+    #[DataProvider('unsafeCustomUrls')]
+    public function test_custom_sources_refuse_unsafe_urls_without_requesting_them(string $url): void
+    {
+        $this->app->instance(PublicUrl::class, new PublicUrl(fn (string $host) => ['10.0.0.5']));
+        Http::fake(['*' => Http::response((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml')))]);
+
+        try {
+            $this->fetch(since: '2026-10-15 07:00:00', url: $url, userId: 1);
+            $this->fail('Expected FetchException');
+        } catch (FetchException) {
+            Http::assertNotSent(fn (Request $r) => $r->url() === $url);
+            Http::assertNothingSent();
+        }
+    }
+
+    /** @return array<string, array{string}> */
+    public static function unsafeCustomUrls(): array
+    {
+        return [
+            'loopback' => ['http://127.0.0.1/feed'],
+            'private network' => ['http://10.0.0.5/feed'],
+            'link local' => ['http://169.254.1.2/feed'],
+            'metadata' => ['http://169.254.169.254/latest/meta-data'],
+            'ipv6 loopback' => ['http://[::1]/feed'],
+            'private dns' => ['https://internal.test/feed'],
+        ];
+    }
+
+    public function test_custom_sources_refuse_public_redirects_to_private_addresses(): void
+    {
+        $this->app->instance(PublicUrl::class, new PublicUrl(fn (string $host) => ['93.184.216.34']));
+        $privateUrl = 'http://169.254.169.254/latest/meta-data';
+        Http::fake([
+            self::URL => Http::response((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml')), 302, ['Location' => $privateUrl]),
+            $privateUrl => Http::response((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml'))),
+        ]);
+
+        try {
+            $this->fetch(since: '2026-10-15 07:00:00', userId: 1);
+            $this->fail('Expected FetchException');
+        } catch (FetchException) {
+            Http::assertSent(fn (Request $r) => $r->url() === self::URL);
+            Http::assertNotSent(fn (Request $r) => $r->url() === $privateUrl);
+            Http::assertSentCount(1);
+        }
+    }
+
+    public function test_custom_sources_parse_a_public_feed_after_a_relative_redirect(): void
+    {
+        $this->app->instance(PublicUrl::class, new PublicUrl(fn (string $host) => ['93.184.216.34']));
+        Http::fake([
+            self::URL => Http::response('', 302, ['Location' => '/final']),
+            'https://feeds.test/final' => Http::response((string) file_get_contents(base_path('tests/Fixtures/feeds/hnrss.xml'))),
+        ]);
+
+        $candidates = $this->fetch(since: '2026-10-15 07:00:00', userId: 1);
+
+        $this->assertCount(1, $candidates);
+        $this->assertSame('https://example.dev/sqlite-queue', $candidates[0]->url);
+        Http::assertSent(fn (Request $r) => $r->url() === 'https://feeds.test/final');
+        Http::assertSentCount(2);
+    }
+
     private function fakeFeed(string $fixture): void
     {
         Http::fake([self::URL => Http::response((string) file_get_contents(base_path("tests/Fixtures/feeds/{$fixture}")), 200)]);
@@ -169,17 +233,19 @@ class FeedFetcherTest extends TestCase
     /**
      * @return list<Candidate>
      */
-    private function fetch(string $since, int $maxItems = 10): array
+    private function fetch(string $since, int $maxItems = 10, string $url = self::URL, ?int $userId = null): array
     {
         $source = new Source([
             'slug' => 'laravel-news',
             'name' => 'Laravel News',
             'type' => SourceType::Feed,
-            'url' => self::URL,
+            'url' => $url,
             'tag' => 'laravel',
             'max_items' => $maxItems,
             'position' => 1,
         ]);
+
+        $source->user_id = $userId;
 
         return (new FeedFetcher)->fetch($source, CarbonImmutable::parse($since, 'UTC'));
     }
