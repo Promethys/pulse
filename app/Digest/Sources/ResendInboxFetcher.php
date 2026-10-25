@@ -28,7 +28,7 @@ final class ResendInboxFetcher implements SourceFetcher
 
     public function fetch(Source $source, CarbonImmutable $since): array
     {
-        $http = $this->client();
+        $http = $this->client($source);
 
         $emails = array_filter(
             $this->listEmails($http),
@@ -42,12 +42,12 @@ final class ResendInboxFetcher implements SourceFetcher
         );
     }
 
-    private function client(): PendingRequest
+    private function client(Source $source): PendingRequest
     {
-        $key = config('services.resend.key');
+        $key = $source->credentials['api_key'] ?? null;
 
         if (! is_string($key) || $key === '') {
-            throw new FetchException('RESEND_API_KEY is not set');
+            throw new FetchException('This newsletter source has no Resend API key');
         }
 
         return Http::timeout(15)->retry(2, 500, throw: false)->withToken($key)->acceptJson();

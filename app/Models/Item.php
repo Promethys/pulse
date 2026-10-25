@@ -8,6 +8,7 @@ use App\Enums\ItemStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\ItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int|null $post_id
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, Source> $sources
  */
 #[Fillable(['source_slug', 'url', 'url_normalized', 'title', 'excerpt', 'links', 'published_at', 'status', 'summary', 'post_id'])]
 class Item extends Model
@@ -57,6 +59,14 @@ class Item extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * @return BelongsToMany<Source, $this, ItemSource>
+     */
+    public function sources(): BelongsToMany
+    {
+        return $this->belongsToMany(Source::class)->using(ItemSource::class)->withPivot('first_seen_at');
     }
 
     /**
