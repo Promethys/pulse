@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Digest\Rendering;
 
-use App\Models\Tag;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -27,7 +26,7 @@ final class NewsRenderer
             return new RenderedPost($title, $this->splitter->split(['Quiet night: nothing notable.', $footer]), []);
         }
 
-        $sections = $this->sections($lines);
+        $sections = NewsSections::group($lines, fn (NewsLine $line) => $line->tagSlugs);
 
         $blocks = array_map(fn (array $section) => "## {$section['name']}\n".implode("\n", array_map(
             fn (NewsLine $item) => $this->line($item, $headlinesOnly),
@@ -39,34 +38,6 @@ final class NewsRenderer
             $this->splitter->split([...$blocks, $footer]),
             array_slice(array_column($sections, 'slug'), 0, self::MAX_FORUM_TAGS),
         );
-    }
-
-    /**
-     * Each item goes to the section of its tag that is most common that day (fewer one-item sections),
-     * then sections are ordered by size.
-     *
-     * @param  Collection<int, NewsLine>  $items
-     * @return list<array{slug: string, name: string, items: list<NewsLine>}>
-     */
-    private function sections(Collection $items): array
-    {
-        $tagsOf = $items->map(fn (NewsLine $item) => $item->tagSlugs ?: ['general']);
-
-        $frequency = array_count_values(array_merge(...$tagsOf->values()->all()));
-
-        $sections = [];
-        foreach ($items as $index => $item) {
-            $slugs = $tagsOf[$index];
-            usort($slugs, fn (string $a, string $b) => [$frequency[$b], $a] <=> [$frequency[$a], $b]);
-            $slug = $slugs[0];
-
-            $sections[$slug] ??= ['slug' => $slug, 'name' => Tag::displayName($slug), 'items' => []];
-            $sections[$slug]['items'][] = $item;
-        }
-
-        usort($sections, fn (array $a, array $b) => [count($b['items']), $a['name']] <=> [count($a['items']), $b['name']]);
-
-        return $sections;
     }
 
     private function line(NewsLine $item, bool $headlinesOnly): string

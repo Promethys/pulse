@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read User $user
  * @property-read Collection<int, Delivery> $deliveries
+ * @property-read Delivery|null $latestDelivery
  */
 #[Fillable(['user_id', 'type', 'name', 'kinds', 'enabled', 'settings', 'verified_at'])]
 #[Hidden(['settings'])]
@@ -66,6 +68,14 @@ class DeliveryChannel extends Model
     public function deliveries(): HasMany
     {
         return $this->hasMany(Delivery::class);
+    }
+
+    /**
+     * @return HasOne<Delivery, $this>
+     */
+    public function latestDelivery(): HasOne
+    {
+        return $this->hasOne(Delivery::class, 'delivery_channel_id')->latestOfMany();
     }
 
     public function takes(PostKind $kind): bool
