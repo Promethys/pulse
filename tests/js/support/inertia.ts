@@ -1,4 +1,4 @@
-import { reactive } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import { vi } from 'vite-plus/test';
 
 export const page = reactive({
@@ -13,6 +13,7 @@ export const http = {
 export function inertiaModuleMock<T extends object>(actual: T): T {
     return {
         ...actual,
+        Head: defineComponent({ name: 'Head', render: () => null }),
         usePage: () => page,
         useHttp: () => http,
     };

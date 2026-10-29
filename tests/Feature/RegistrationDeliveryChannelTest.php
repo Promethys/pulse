@@ -26,7 +26,7 @@ class RegistrationDeliveryChannelTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('home', absolute: false));
         $this->assertAuthenticated();
         $user = User::query()->sole();
         $channel = $user->deliveryChannels()->sole();
