@@ -13,6 +13,7 @@ Digest behavior is stored per account: timezone, schedule, toggles, profile, max
 | `DIGEST_LEARNING_TIME` | Starting local learning time for `pulse:adopt`. | `09:30` |
 | `DIGEST_MAX_ITEMS` | Starting news item limit for `pulse:adopt`. | `20` |
 | `DIGEST_PROFILE` | Starting reader profile for `pulse:adopt`; stored in the account's settings. | empty |
+| `DB_QUEUE_RETRY_AFTER` | Seconds before the database queue retries a reserved job; keep it above the 300-second digest job timeout. | `360` |
 | `DIGEST_MAX_ATTEMPTS` | Maximum failed generation attempts per post and failed delivery attempts per destination. | `4` |
 
 New accounts default to `UTC`, 09:00 news, 09:30 learning and 20 items. Settings validation accepts times in 15-minute steps and an item limit from 1 to 20. The scheduler and a queue worker are both required; see [Getting started](02-getting-started.md#running-digests).

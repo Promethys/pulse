@@ -78,20 +78,24 @@ For automatic runs, invoke Laravel's scheduler every 15 minutes and keep a queue
 php artisan queue:work
 ```
 
+On a host that starts cron jobs late, run `php artisan digest:tick` from the cron instead. `schedule:run` only runs tasks due at the minute it starts, while `digest:tick` catches up on every digest whose time has passed today.
+
+Each digest job may run for 300 seconds, since one AI call can take up to 120. Keep `DB_QUEUE_RETRY_AFTER` (default 360) above that timeout, or a slow job runs twice.
+
 The scheduler calls `digest:tick`, which collects sources and queues one job per due user, kind and local date. Accounts must have verified email, completed onboarding and either personal AI keys or instance AI access. Their settings control the enabled digests and times. See [Architecture](04-architecture.md#the-daily-schedule).
 
 ## Adopting existing data
 
 **For an existing single-owner install, run `pulse:adopt` before migrating to this version**, using the previous version that supports adoption. The migration that removes the single-owner columns refuses to run while any post has no owner. A fresh install can migrate directly.
 
-Register the account first, then replace `<email>` with its address:
+Seed the catalog first (`InterestTableSeeder` before `SourceTableSeeder`): adoption chooses the interests linked to enabled catalog sources and warns when there are none. Register the account, then replace `<email>` with its address:
 
 ```bash
 docker compose exec app php artisan pulse:adopt <email> --dry-run
 docker compose exec app php artisan pulse:adopt <email>
 ```
 
-`pulse:adopt` copies the instance settings from `.env`, chooses interests and source subscriptions, and assigns unowned posts. It makes the newsletters source custom to the user, stores the Resend key as encrypted credentials, and creates Discord destinations from the configured forum ids. It also grants administrator access and instance AI access, enables both digests, marks onboarding complete and ensures an in-app channel exists.
+`pulse:adopt` copies the instance settings from `.env`, chooses interests and source subscriptions, and assigns unowned posts. It makes the newsletters source custom to the user, stores the Resend key as encrypted credentials, and creates Discord destinations from the configured forum ids. It also grants administrator access and instance AI access, marks the email as verified, enables both digests, marks onboarding complete and ensures an in-app channel exists.
 
 The command is idempotent and uses one transaction. `--dry-run` prints counts and rolls back all database changes. Both modes read Discord to resolve the configured forums and guilds, so the bot needs access; missing forum ids are skipped with a warning. Re-running the command reapplies the current environment settings and configured Discord destinations.
 

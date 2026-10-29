@@ -236,6 +236,33 @@ class PulseAdoptCommandTest extends TestCase
         $this->assertFalse($other->fresh()->uses_instance_ai);
     }
 
+    public function test_verifies_an_unverified_owner(): void
+    {
+        $owner = User::factory()->unverified()->create();
+
+        $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
+
+        $this->assertTrue($owner->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_keeps_the_verification_date_of_a_verified_owner(): void
+    {
+        $owner = User::factory()->create(['email_verified_at' => '2026-10-01 10:00:00']);
+
+        $this->artisan('pulse:adopt', ['email' => $owner->email])->assertExitCode(0);
+
+        $this->assertSame('2026-10-01 10:00:00', $owner->fresh()->email_verified_at?->toDateTimeString());
+    }
+
+    public function test_warns_when_no_catalog_interest_can_be_chosen(): void
+    {
+        $owner = User::factory()->create();
+
+        $this->artisan('pulse:adopt', ['email' => $owner->email])
+            ->expectsOutputToContain('No catalog interest has an enabled source')
+            ->assertExitCode(0);
+    }
+
     public function test_creates_an_in_app_channel_for_the_owner_even_when_another_user_has_one(): void
     {
         $owner = User::factory()->create();

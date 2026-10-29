@@ -62,6 +62,14 @@ class RunDigestTest extends TestCase
         }
     }
 
+    public function test_timeout_covers_a_slow_ai_call_and_stays_below_the_queue_retry_window(): void
+    {
+        $job = new RunDigest(User::factory()->create(), PostKind::News, CarbonImmutable::parse('2026-07-02', 'UTC'));
+
+        $this->assertSame(300, $job->timeout);
+        $this->assertGreaterThan($job->timeout, config('queue.connections.database.retry_after'));
+    }
+
     public function test_learning_unavailable_is_logged_and_swallowed(): void
     {
         $user = User::factory()->create();
