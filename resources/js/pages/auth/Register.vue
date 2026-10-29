@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
@@ -14,101 +15,101 @@ defineProps<{
     passwordRules: string;
 }>();
 
-defineOptions({
-    layout: {
-        title: 'Create an account',
-        description: 'Enter your details below to create your account',
-    },
-});
+defineOptions({ layout: [] });
 </script>
 
 <template>
-    <Head title="Register" />
-
-    <Form
-        v-bind="store.form()"
-        :reset-on-success="['password', 'password_confirmation']"
-        v-slot="{ errors, processing }"
-        class="flex flex-col gap-6"
+    <AuthLayout
+        title="Create your account"
+        description="It takes a minute. Then pick what you follow."
     >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
-                    type="text"
-                    required
-                    v-focus
-                    :tabindex="1"
-                    autocomplete="name"
-                    name="name"
-                    placeholder="Full name"
-                />
-                <InputError :message="errors.name" />
+        <Head title="Register" />
+
+        <Form
+            v-bind="store.form()"
+            :reset-on-success="['password', 'password_confirmation']"
+            v-slot="{ errors, processing }"
+            class="flex flex-col gap-4"
+        >
+            <div class="grid gap-4">
+                <div class="grid gap-2">
+                    <Label for="name">Name</Label>
+                    <Input
+                        id="name"
+                        type="text"
+                        required
+                        v-focus
+                        :tabindex="1"
+                        autocomplete="name"
+                        name="name"
+                        placeholder="Full name"
+                    />
+                    <InputError :message="errors.name" />
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="email">Email address</Label>
+                    <Input
+                        id="email"
+                        type="email"
+                        required
+                        :tabindex="2"
+                        autocomplete="email"
+                        name="email"
+                        placeholder="email@example.com"
+                    />
+                    <InputError :message="errors.email" />
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="password">Password</Label>
+                    <PasswordInput
+                        id="password"
+                        required
+                        :tabindex="3"
+                        autocomplete="new-password"
+                        name="password"
+                        placeholder="Password"
+                        :passwordrules="passwordRules"
+                    />
+                    <InputError :message="errors.password" />
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="password_confirmation">Confirm password</Label>
+                    <PasswordInput
+                        id="password_confirmation"
+                        required
+                        :tabindex="4"
+                        autocomplete="new-password"
+                        name="password_confirmation"
+                        placeholder="Confirm password"
+                        :passwordrules="passwordRules"
+                    />
+                    <InputError :message="errors.password_confirmation" />
+                </div>
+
+                <Button
+                    type="submit"
+                    class="w-full"
+                    tabindex="5"
+                    :disabled="processing"
+                    data-test="register-user-button"
+                >
+                    <Spinner v-if="processing" />
+                    Create account
+                </Button>
             </div>
+        </Form>
 
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    required
-                    :tabindex="2"
-                    autocomplete="email"
-                    name="email"
-                    placeholder="email@example.com"
-                />
-                <InputError :message="errors.email" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password">Password</Label>
-                <PasswordInput
-                    id="password"
-                    required
-                    :tabindex="3"
-                    autocomplete="new-password"
-                    name="password"
-                    placeholder="Password"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
-                <PasswordInput
-                    id="password_confirmation"
-                    required
-                    :tabindex="4"
-                    autocomplete="new-password"
-                    name="password_confirmation"
-                    placeholder="Confirm password"
-                    :passwordrules="passwordRules"
-                />
-                <InputError :message="errors.password_confirmation" />
-            </div>
-
-            <Button
-                type="submit"
-                class="mt-2 w-full"
-                tabindex="5"
-                :disabled="processing"
-                data-test="register-user-button"
-            >
-                <Spinner v-if="processing" />
-                Create account
-            </Button>
-        </div>
-
-        <div class="text-center text-sm text-muted-foreground">
+        <template #footer>
             Already have an account?
             <TextLink
                 :href="login()"
-                class="underline underline-offset-4"
                 :tabindex="6"
+                class="font-medium text-foreground underline-offset-2 hover:underline"
                 >Log in</TextLink
             >
-        </div>
-    </Form>
+        </template>
+    </AuthLayout>
 </template>

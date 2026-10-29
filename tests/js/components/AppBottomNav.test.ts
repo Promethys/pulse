@@ -18,7 +18,7 @@ describe('AppBottomNav', () => {
         );
         expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
             'href',
-            '/settings/profile',
+            '/settings',
         );
         expect(
             screen.queryByRole('link', {
@@ -88,4 +88,32 @@ describe('AppBottomNav', () => {
             expect(link).not.toHaveAttribute('aria-current', 'page');
         });
     });
+});
+
+describe('AppBottomNav mobile settings destination', () => {
+    it.each([
+        '/settings',
+        '/settings/profile',
+        '/settings/security?tab=password#form',
+    ])(
+        'links to the settings index and keeps Settings current on %s',
+        (path) => {
+            page.url = path;
+            render(AppBottomNav);
+
+            expect(
+                screen.getByRole('link', { name: 'Settings' }),
+            ).toHaveAttribute('href', '/settings');
+            expect(
+                screen.getByRole('link', { name: 'Settings' }),
+            ).toHaveAttribute('aria-current', 'page');
+            expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
+                'href',
+                '/',
+            );
+            expect(
+                screen.getByRole('link', { name: 'Today' }),
+            ).not.toHaveAttribute('aria-current', 'page');
+        },
+    );
 });

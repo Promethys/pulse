@@ -17,7 +17,7 @@ const items = computed(() =>
         <Link
             v-for="item in items"
             :key="item.href"
-            :href="item.href"
+            :href="item.mobileHref ?? item.href"
             :aria-current="isActive(page.url, item.href) ? 'page' : undefined"
             class="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium"
         >

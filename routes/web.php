@@ -15,7 +15,7 @@ Route::get('/', function (Request $request) {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::permanentRedirect('dashboard', '/')->name('dashboard');
+    Route::get('dashboard', fn () => redirect('/', 301))->name('dashboard');
 
     Route::get('discord/install', [DiscordInstallController::class, 'install'])->name('discord.install');
     Route::get('discord/callback', [DiscordInstallController::class, 'callback'])->name('discord.callback');

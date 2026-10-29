@@ -14,6 +14,7 @@ export type NavigationItem = {
     icon: Component;
     available: boolean;
     desktopOnly?: boolean;
+    mobileHref?: string;
 };
 
 export const navItems: NavigationItem[] = [
@@ -36,6 +37,7 @@ export const navItems: NavigationItem[] = [
     {
         title: 'Settings',
         href: '/settings/profile',
+        mobileHref: '/settings',
         icon: Settings,
         available: true,
     },

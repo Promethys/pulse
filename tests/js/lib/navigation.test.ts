@@ -81,3 +81,14 @@ describe('navigation', () => {
         expect(isActive(path, href)).toBe(active);
     });
 });
+
+describe('navigation mobile destinations', () => {
+    it('keeps the desktop settings destination and adds a mobile settings index', () => {
+        expect(
+            navItems.find((item) => item.title === 'Settings'),
+        ).toMatchObject({
+            href: '/settings/profile',
+            mobileHref: '/settings',
+        });
+    });
+});

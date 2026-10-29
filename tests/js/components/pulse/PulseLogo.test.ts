@@ -16,12 +16,13 @@ describe('PulseLogo', () => {
     );
 
     it('uses a smaller footprint for sm than md', async () => {
-        const { container, rerender } = render(PulseLogo, {
+        const result = render(PulseLogo, {
             props: { size: 'sm' },
         });
+        const { container } = result;
         const small = container.innerHTML;
 
-        await rerender({ size: 'md' });
+        await result.rerender({ size: 'md' });
 
         expect(screen.getByText('Pulse')).toBeVisible();
         expect(container.innerHTML).not.toBe(small);
