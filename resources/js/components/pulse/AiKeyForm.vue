@@ -88,18 +88,24 @@ async function testKey(): Promise<KeyTestResult> {
                 digest. Choose a provider and model, then add your key. You can
                 change it later in Settings.
             </p>
-            <p class="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                <a
-                    v-for="item in providers"
-                    :key="item.value"
-                    :href="item.key_url"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
-                >
-                    Get a {{ item.label }} key
-                    <ExternalLink class="size-3" aria-hidden="true" />
-                </a>
+            <p class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <template v-for="(item, index) in providers" :key="item.value">
+                    <span
+                        v-if="index > 0"
+                        aria-hidden="true"
+                        class="text-muted-foreground"
+                        >·</span
+                    >
+                    <a
+                        :href="item.key_url"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
+                    >
+                        Get a {{ item.label }} key
+                        <ExternalLink class="size-3" aria-hidden="true" />
+                    </a>
+                </template>
             </p>
         </div>
         <RadioGroupRoot

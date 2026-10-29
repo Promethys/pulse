@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RadioGroupItem } from 'reka-ui';
+import ProviderLogo from '@/components/pulse/ProviderLogo.vue';
 import { cn } from '@/lib/utils';
 import type { OnboardingProvider } from '@/types/onboarding';
 
@@ -21,9 +22,10 @@ defineProps<{ provider: OnboardingProvider; selected: boolean }>();
     >
         <span
             aria-hidden="true"
-            class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent font-mono text-sm font-semibold text-accent-foreground"
-            >{{ provider.label.slice(0, 2) }}</span
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground"
         >
+            <ProviderLogo :provider="provider.value" class="size-5" />
+        </span>
         <span class="min-w-0 text-sm font-semibold">{{ provider.label }}</span>
     </RadioGroupItem>
 </template>
