@@ -5,12 +5,22 @@ declare(strict_types=1);
 namespace Tests\Feature\Onboarding;
 
 use App\Ai\Agents\HealthCheck;
+use App\Digest\Ai\AiUnavailableException;
 use App\Enums\AiProvider;
 use App\Models\AiKey;
 use App\Models\DigestSettings;
 use App\Models\User;
+use Closure;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
+use Laravel\Ai\Exceptions\ProviderConnectionException;
+use Laravel\Ai\Exceptions\ProviderOverloadedException;
+use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Ai\Prompts\AgentPrompt;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
@@ -61,22 +71,46 @@ class AiKeyTestEndpointTest extends TestCase
         ];
     }
 
-    public function test_provider_errors_return_http_200_error_json_and_store_nothing(): void
+    #[DataProvider('providerErrors')]
+    public function test_provider_errors_return_a_friendly_message_and_log_the_raw_one_without_the_key(Closure $error, string $message): void
     {
-        HealthCheck::fake(function (string $prompt, mixed $attachments, mixed $provider, string $model) {
-            throw new RuntimeException('Invalid API key.');
+        Log::spy();
+        HealthCheck::fake(function () use ($error) {
+            throw $error();
         })->preventStrayPrompts();
         $user = $this->onboardingUser();
         $settings = $user->digestSettings()->sole()->getAttributes();
 
         $this->actingAs($user)->postJson('/onboarding/ai-key/test', [
             'provider' => 'gemini', 'model' => 'custom-model', 'api_key' => 'fake-invalid-key',
-        ])->assertOk()->assertExactJson(['ok' => false, 'message' => 'Invalid API key.']);
+        ])->assertOk()->assertExactJson(['ok' => false, 'message' => $message]);
 
         HealthCheck::assertPromptedTimes(1);
         $this->assertDatabaseCount('ai_keys', 0);
         $this->assertSame($settings, $user->digestSettings()->sole()->getAttributes());
         Http::assertNothingSent();
+        Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $log, array $context) => $log === 'AI key test failed.'
+            && $context['provider'] === 'gemini'
+            && ! str_contains(json_encode($context), 'fake-invalid-key'));
+    }
+
+    public static function providerErrors(): array
+    {
+        $http = fn (int $status) => fn () => new RequestException(new Response(new Psr7Response($status, [], '{"error":{"message":"raw detail fake-invalid-key"}}')));
+
+        return [
+            'unauthorized' => [$http(401), 'The provider rejected this key.'],
+            'forbidden' => [$http(403), 'The provider rejected this key.'],
+            'bad request' => [$http(400), 'The provider rejected the request. Check the model name.'],
+            'unknown model' => [$http(404), 'The provider rejected the request. Check the model name.'],
+            'other status' => [$http(418), 'The key test failed (HTTP 418).'],
+            'wrapped status' => [fn () => new AiUnavailableException('x', previous: $http(401)()), 'The provider rejected this key.'],
+            'rate limited' => [fn () => RateLimitedException::forProvider('gemini'), 'The provider is rate limiting this key, or its account has no balance left. Try again later.'],
+            'no credits' => [fn () => InsufficientCreditsException::forProvider('gemini'), 'The provider account has no credit left.'],
+            'overloaded' => [fn () => ProviderOverloadedException::forProvider('gemini'), 'The provider is overloaded right now. Try again in a minute.'],
+            'unreachable' => [fn () => ProviderConnectionException::forProvider('gemini'), 'Pulse could not reach the provider. Try again.'],
+            'anything else' => [fn () => new RuntimeException('raw detail fake-invalid-key'), 'The key test failed.'],
+        ];
     }
 
     #[DataProvider('invalidKeys')]
