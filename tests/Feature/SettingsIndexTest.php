@@ -15,7 +15,7 @@ class SettingsIndexTest extends TestCase
     {
         $this->assertSame(url('/settings'), route('settings.index'));
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->onboarded()->create())
             ->get(route('settings.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('settings/Index'));
@@ -36,7 +36,7 @@ class SettingsIndexTest extends TestCase
 
     public function test_dashboard_keeps_its_permanent_redirect_and_rejects_post_requests(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->onboarded()->create())
             ->get(route('dashboard'))
             ->assertStatus(301)
             ->assertRedirect(route('home'));

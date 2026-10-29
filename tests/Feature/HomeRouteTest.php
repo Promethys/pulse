@@ -17,7 +17,7 @@ class HomeRouteTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Welcome'));
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->onboarded()->create())
             ->get(route('home'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today'));
@@ -32,7 +32,7 @@ class HomeRouteTest extends TestCase
 
     public function test_dashboard_permanently_redirects_signed_in_users_to_home(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->onboarded()->create())
             ->get(route('dashboard'))
             ->assertStatus(301)
             ->assertRedirect(route('home'));
