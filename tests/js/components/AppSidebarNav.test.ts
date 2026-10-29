@@ -40,13 +40,9 @@ describe('AppSidebar', () => {
             'href',
             '/',
         );
-        expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
-            'href',
-            '/settings/profile',
-        );
         expect(
             screen.queryByRole('link', {
-                name: /Archive|Search|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
+                name: /Settings|Archive|Search|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -70,7 +66,7 @@ describe('AppSidebar', () => {
     });
 
     it.each(['/', '/days/2026-10-01'])(
-        'highlights Today on %s and follows navigation to settings',
+        'highlights Today on %s and clears it after navigation to settings',
         async (path) => {
             page.url = path;
             renderSidebar();
@@ -79,18 +75,10 @@ describe('AppSidebar', () => {
                 'bg-sidebar-primary',
                 'text-sidebar-primary-foreground',
             );
-            expect(screen.getByRole('link', { name: 'Settings' })).toHaveClass(
-                'text-sidebar-foreground/75',
-                'hover:bg-sidebar-accent',
-            );
 
             page.url = '/settings/security';
             await nextTick();
 
-            expect(screen.getByRole('link', { name: 'Settings' })).toHaveClass(
-                'bg-sidebar-primary',
-                'text-sidebar-primary-foreground',
-            );
             expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(
                 'bg-sidebar-primary',
             );

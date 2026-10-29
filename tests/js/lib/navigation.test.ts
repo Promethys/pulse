@@ -41,9 +41,10 @@ describe('navigation', () => {
             },
             {
                 title: 'Settings',
-                href: '/settings/profile',
+                href: '/settings',
                 icon: Settings,
                 available: true,
+                mobileOnly: true,
             },
         ]);
         expect(
@@ -63,10 +64,10 @@ describe('navigation', () => {
         ['/daydream', '/', false],
         ['/days-old/2026-10-01', '/', false],
         ['/archive', '/', false],
-        ['/settings/profile', '/settings/profile', true],
-        ['/settings/security', '/settings/profile', true],
-        ['/settings/profile/edit', '/settings/profile', true],
-        ['/settings-old/profile', '/settings/profile', false],
+        ['/settings', '/settings', true],
+        ['/settings/security', '/settings', true],
+        ['/settings/profile/edit', '/settings', true],
+        ['/settings-old/profile', '/settings', false],
         ['/archive', '/archive', true],
         ['/archive/2026/10', '/archive', true],
         ['/archived', '/archive', false],
@@ -83,12 +84,12 @@ describe('navigation', () => {
 });
 
 describe('navigation mobile destinations', () => {
-    it('keeps the desktop settings destination and adds a mobile settings index', () => {
+    it('shows settings only in the mobile bar, pointing to the settings index', () => {
         expect(
             navItems.find((item) => item.title === 'Settings'),
         ).toMatchObject({
-            href: '/settings/profile',
-            mobileHref: '/settings',
+            href: '/settings',
+            mobileOnly: true,
         });
     });
 });

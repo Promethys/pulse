@@ -14,7 +14,7 @@ export type NavigationItem = {
     icon: Component;
     available: boolean;
     desktopOnly?: boolean;
-    mobileHref?: string;
+    mobileOnly?: boolean;
 };
 
 export const navItems: NavigationItem[] = [
@@ -36,10 +36,10 @@ export const navItems: NavigationItem[] = [
     },
     {
         title: 'Settings',
-        href: '/settings/profile',
-        mobileHref: '/settings',
+        href: '/settings',
         icon: Settings,
         available: true,
+        mobileOnly: true,
     },
 ];
 
@@ -50,7 +50,5 @@ export function isActive(currentPath: string, href: string): boolean {
         return path === '/' || path.startsWith('/days/');
     }
 
-    const prefix = href.startsWith('/settings/') ? '/settings' : href;
-
-    return path === prefix || path.startsWith(`${prefix}/`);
+    return path === href || path.startsWith(`${href}/`);
 }

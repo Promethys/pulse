@@ -11,7 +11,9 @@ const page = usePage();
 <template>
     <nav aria-label="Main navigation" class="flex flex-col gap-1">
         <Link
-            v-for="item in items.filter((item) => item.available)"
+            v-for="item in items.filter(
+                (item) => item.available && !item.mobileOnly,
+            )"
             :key="item.href"
             :href="item.href"
             :aria-current="isActive(page.url, item.href) ? 'page' : undefined"
