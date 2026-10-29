@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\DeliveryChannelType;
+use App\Enums\PostKind;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -23,7 +24,7 @@ final class CompleteOnboarding
             if ($emailDelivery) {
                 $user->deliveryChannels()->updateOrCreate(['type' => DeliveryChannelType::Email], [
                     'name' => 'Email',
-                    'kinds' => ['news', 'learning'],
+                    'kinds' => [PostKind::News->value, PostKind::Learning->value],
                     'enabled' => true,
                     'settings' => ['address' => $email],
                 ]);
