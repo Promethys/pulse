@@ -1,9 +1,55 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Sunrise } from '@lucide/vue';
+import { computed } from 'vue';
+import DayView from '@/components/pulse/DayView.vue';
+import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
+import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
+import type { TodayProps } from '@/types';
+
+const props = defineProps<TodayProps>();
+const incomplete = computed(() =>
+    Object.values(props.setup).some((done) => !done),
+);
+const firstDigest = computed(() =>
+    props.next_digest
+        ? `Your first digest arrives tomorrow at ${props.next_digest.time} (${props.next_digest.timezone}).`
+        : undefined,
+);
 </script>
 
 <template>
     <Head title="Today" />
-    <PageHeader title="Today" subtitle="Your digest will appear here." />
+    <div v-if="day">
+        <div v-if="incomplete" class="mb-6">
+            <SetupChecklist :state="setup" />
+        </div>
+        <p
+            v-if="next_digest"
+            class="mb-6 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 text-sm text-muted-foreground"
+        >
+            Today's digest arrives at {{ next_digest.time }} ({{
+                next_digest.timezone
+            }}).
+        </p>
+        <DayView
+            :day="day"
+            :available-dates="available_dates"
+            :is-today="is_today"
+            :today="today"
+        />
+    </div>
+    <div v-else class="space-y-6">
+        <PageHeader title="Today" subtitle="Welcome to Pulse" />
+        <SetupChecklist v-if="incomplete" :state="setup" />
+        <EmptyState
+            title="Your first digest is on its way"
+            :description="firstDigest"
+        >
+            <template #icon
+                ><Sunrise class="size-5" aria-hidden="true"
+            /></template>
+        </EmptyState>
+    </div>
 </template>
