@@ -48,15 +48,15 @@ describe('AppSidebar', () => {
             screen
                 .getAllByRole('link')
                 .filter((link) =>
-                    ['Today', 'Archive', 'Search'].includes(
+                    ['Today', 'Archive', 'Search', 'Learning'].includes(
                         link.textContent?.trim() ?? '',
                     ),
                 )
                 .map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Archive', 'Search']);
+        ).toEqual(['Today', 'Archive', 'Search', 'Learning']);
         expect(
             screen.queryByRole('link', {
-                name: /Settings|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
+                name: /Settings|Sources|Catalog review|Dashboard|Repository|Documentation/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -174,7 +174,7 @@ describe('AppSidebar', () => {
         expect(main).toHaveClass(
             'mx-auto',
             'w-full',
-            'max-w-3xl',
+            'max-w-5xl',
             'px-4',
             'pt-6',
             'pb-safe',
@@ -228,4 +228,37 @@ describe('AppSidebar search destination', () => {
             'bg-sidebar-primary',
         );
     });
+});
+
+describe('AppSidebar learning destination', () => {
+    it.each(['/learning?tag=php&page=2', '/learning/21'])(
+        'links Learning and highlights it after navigation to %s',
+        async (path) => {
+            page.props = {
+                auth: {
+                    user: {
+                        id: 1,
+                        name: 'Taylor',
+                        email: 'taylor@example.com',
+                    },
+                },
+            };
+            renderSidebar();
+            page.url = path;
+            await nextTick();
+            expect(
+                screen.getByRole('link', { name: 'Learning' }),
+            ).toHaveAttribute('href', '/learning');
+            expect(screen.getByRole('link', { name: 'Learning' })).toHaveClass(
+                'bg-sidebar-primary',
+                'text-sidebar-primary-foreground',
+            );
+            expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(
+                'bg-sidebar-primary',
+            );
+            expect(
+                screen.getByRole('link', { name: 'Search' }),
+            ).not.toHaveClass('bg-sidebar-primary');
+        },
+    );
 });

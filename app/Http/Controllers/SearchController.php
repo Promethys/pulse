@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\PostItemResource;
-use App\Http\Resources\TagResource;
 use App\Models\PostItem;
 use App\Models\Source;
 use App\Models\Tag;
@@ -32,10 +31,7 @@ final class SearchController extends Controller
         $options = $this->search->options($user);
 
         return Inertia::render('Search', [
-            'results' => array_map(fn (PostItem $item) => [
-                ...(new PostItemResource($item))->resolve($request),
-                'tags' => TagResource::collection($item->tags)->resolve($request),
-            ], array_values($results->items())),
+            'results' => array_map(fn (PostItem $item) => (new PostItemResource($item))->resolve($request), array_values($results->items())),
             'pagination' => [
                 'current_page' => $results->currentPage(),
                 'last_page' => $results->lastPage(),

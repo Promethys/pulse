@@ -25,7 +25,7 @@ export const navItems: NavigationItem[] = [
         title: 'Learning',
         href: '/learning',
         icon: GraduationCap,
-        available: false,
+        available: true,
     },
     {
         title: 'Sources',
@@ -51,6 +51,10 @@ export function isActive(currentPath: string, href: string): boolean {
     }
 
     if (href === '/archive' && path.startsWith('/days/')) {
+        return true;
+    }
+
+    if (href === '/search' && path.startsWith('/tags/')) {
         return true;
     }
 

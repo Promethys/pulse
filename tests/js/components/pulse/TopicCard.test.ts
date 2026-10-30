@@ -5,13 +5,16 @@ import TopicCard from '@/components/pulse/TopicCard.vue';
 import { learningPostProps } from '../../support/dayProps';
 
 describe('TopicCard', () => {
-    it('keeps the title plain and clamped with its full text available', () => {
+    it('links the clamped title to the full learning entry', () => {
         const topic = learningPostProps('topic');
         render(TopicCard, { props: { topic } });
         const title = screen.getByRole('heading', { name: topic.title });
         expect(title).toHaveClass('line-clamp-2');
         expect(title).toHaveAttribute('title', topic.title);
-        expect(title.closest('a')).toBeNull();
+        expect(screen.getByRole('link', { name: topic.title })).toHaveAttribute(
+            'href',
+            '/learning/22',
+        );
         expect(screen.getByText('Programming')).toBeVisible();
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
@@ -77,10 +80,10 @@ describe('TopicCard', () => {
 });
 
 describe('tag links', () => {
-    it('links the topic tag to its page', () => {
+    it('links the topic tag to filtered learning', () => {
         render(TopicCard, { props: { topic: learningPostProps('topic') } });
         expect(
             screen.getByRole('link', { name: 'Programming' }),
-        ).toHaveAttribute('href', '/tags/programming');
+        ).toHaveAttribute('href', '/learning?tag=programming');
     });
 });

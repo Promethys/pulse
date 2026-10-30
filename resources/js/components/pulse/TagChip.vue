@@ -7,6 +7,7 @@ defineProps<{
     name: string;
     active?: boolean;
     linked?: boolean;
+    href?: string;
     onToggle?: () => void;
 }>();
 const emit = defineEmits<{ toggle: [] }>();
@@ -14,8 +15,10 @@ const emit = defineEmits<{ toggle: [] }>();
 
 <template>
     <component
-        :is="onToggle ? 'button' : linked ? Link : 'span'"
-        :href="linked && !onToggle ? show.url(slug) : undefined"
+        :is="onToggle ? 'button' : href || linked ? Link : 'span'"
+        :href="
+            !onToggle && (href || linked) ? (href ?? show.url(slug)) : undefined
+        "
         :type="onToggle ? 'button' : undefined"
         :aria-pressed="onToggle ? !!active : undefined"
         class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors"

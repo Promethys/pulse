@@ -5,13 +5,16 @@ import TipCard from '@/components/pulse/TipCard.vue';
 import { learningPostProps } from '../../support/dayProps';
 
 describe('TipCard', () => {
-    it('keeps the title plain and clamped with its full text available', () => {
+    it('links the clamped title to the full learning entry', () => {
         const tip = learningPostProps('tip');
         render(TipCard, { props: { tip } });
         const title = screen.getByRole('heading', { name: tip.title });
         expect(title).toHaveClass('line-clamp-2');
         expect(title).toHaveAttribute('title', tip.title);
-        expect(title.closest('a')).toBeNull();
+        expect(screen.getByRole('link', { name: tip.title })).toHaveAttribute(
+            'href',
+            '/learning/21',
+        );
         expect(screen.getByText('Programming')).toBeVisible();
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
@@ -59,10 +62,10 @@ describe('TipCard', () => {
 });
 
 describe('tag links', () => {
-    it('links the tip tag to its page', () => {
+    it('links the tip tag to filtered learning', () => {
         render(TipCard, { props: { tip: learningPostProps('tip') } });
         expect(
             screen.getByRole('link', { name: 'Programming' }),
-        ).toHaveAttribute('href', '/tags/programming');
+        ).toHaveAttribute('href', '/learning?tag=programming');
     });
 });

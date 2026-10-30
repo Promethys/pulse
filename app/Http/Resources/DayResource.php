@@ -41,10 +41,7 @@ final class DayResource extends JsonResource
                 'sections' => array_map(fn (array $section) => [
                     'slug' => $section['slug'],
                     'name' => $section['name'],
-                    'items' => array_map(fn (PostItem $item) => [
-                        ...(new PostItemResource($item))->resolve($request),
-                        'tags' => TagResource::collection($item->tags)->resolve($request),
-                    ], $section['items']),
+                    'items' => array_map(fn (PostItem $item) => (new PostItemResource($item))->resolve($request), $section['items']),
                 ], $news['sections']),
             ],
             'learning' => $learning === null ? null : [
@@ -60,9 +57,6 @@ final class DayResource extends JsonResource
      */
     private function learningPost(?LearningPost $post, Request $request): ?array
     {
-        return $post === null ? null : [
-            ...(new LearningPostResource($post))->resolve($request),
-            'tags' => TagResource::collection($post->tags)->resolve($request),
-        ];
+        return $post === null ? null : (new LearningPostResource($post))->resolve($request);
     }
 }

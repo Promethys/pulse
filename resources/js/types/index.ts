@@ -5,3 +5,4 @@ export * from './onboarding';
 export * from './day';
 export * from './search';
 export * from './tag';
+export * from './learning';

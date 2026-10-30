@@ -11,7 +11,7 @@ describe('AppBottomNav', () => {
 
         expect(
             screen.getAllByRole('link').map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Archive', 'Search', 'Settings']);
+        ).toEqual(['Today', 'Archive', 'Search', 'Learning', 'Settings']);
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
             'href',
             '/',
@@ -26,7 +26,7 @@ describe('AppBottomNav', () => {
         );
         expect(
             screen.queryByRole('link', {
-                name: /Learning|Sources|Catalog review/,
+                name: /Sources|Catalog review/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -87,7 +87,7 @@ describe('AppBottomNav', () => {
         page.url = '/archived';
         render(AppBottomNav);
 
-        expect(screen.getAllByRole('link')).toHaveLength(4);
+        expect(screen.getAllByRole('link')).toHaveLength(5);
         screen.getAllByRole('link').forEach((link) => {
             expect(link).not.toHaveAttribute('aria-current', 'page');
         });
@@ -173,4 +173,27 @@ describe('AppBottomNav search destination', () => {
             'page',
         );
     });
+});
+
+describe('AppBottomNav learning destination', () => {
+    it.each(['/learning?tag=php&page=2', '/learning/21'])(
+        'links Learning and marks it current on %s',
+        async (path) => {
+            render(AppBottomNav);
+            page.url = path;
+            await nextTick();
+            expect(
+                screen.getByRole('link', { name: 'Learning' }),
+            ).toHaveAttribute('href', '/learning');
+            expect(
+                screen.getByRole('link', { name: 'Learning' }),
+            ).toHaveAttribute('aria-current', 'page');
+            expect(
+                screen.getByRole('link', { name: 'Today' }),
+            ).not.toHaveAttribute('aria-current', 'page');
+            expect(
+                screen.getByRole('link', { name: 'Search' }),
+            ).not.toHaveAttribute('aria-current', 'page');
+        },
+    );
 });

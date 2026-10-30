@@ -31,7 +31,7 @@ final class PostItemResource extends JsonResource
             'url' => $this->item->url,
             'date' => $date,
             'source' => $source?->name,
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve($request)),
         ];
     }
 }

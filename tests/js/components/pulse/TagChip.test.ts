@@ -49,6 +49,16 @@ describe('TagChip toggle', () => {
 });
 
 describe('TagChip link', () => {
+    it.each([false, true])('uses an explicit href with linked=%s', (linked) => {
+        render(TagChip, {
+            props: { ...tagProps(), linked, href: '/learning?tag=programming' },
+        });
+        expect(
+            screen.getByRole('link', { name: 'Programming' }),
+        ).toHaveAttribute('href', '/learning?tag=programming');
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
     it('links to the tag page without becoming a button', () => {
         render(TagChip, { props: { ...tagProps(), linked: true } });
         expect(

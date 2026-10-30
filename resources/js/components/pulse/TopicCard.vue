@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { BookOpen } from '@lucide/vue';
 import { ref } from 'vue';
 import ClampedProse from '@/components/pulse/ClampedProse.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { index, show } from '@/routes/learning';
 import type { LearningPost } from '@/types';
 
 defineProps<{ topic: LearningPost }>();
@@ -29,7 +31,9 @@ const expanded = ref(false);
                     { 'line-clamp-2': !expanded },
                 ]"
             >
-                {{ topic.title }}
+                <Link :href="show.url(topic.id)" class="hover:underline">{{
+                    topic.title
+                }}</Link>
             </h3>
         </CardHeader>
         <CardContent class="space-y-3 text-sm leading-relaxed">
@@ -43,7 +47,7 @@ const expanded = ref(false);
                     :key="tag.id"
                     :slug="tag.slug"
                     :name="tag.name"
-                    linked
+                    :href="index.url({ query: { tag: tag.slug } })"
                 />
             </div>
         </CardContent>

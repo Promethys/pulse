@@ -26,7 +26,7 @@ final class LearningPostResource extends JsonResource
             'body_html' => Str::markdown($this->body, ['html_input' => 'strip', 'allow_unsafe_links' => false]),
             'category' => $this->topic?->category,
             'links' => $this->links ?? [],
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve($request)),
         ];
     }
 }

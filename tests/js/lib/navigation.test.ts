@@ -30,7 +30,7 @@ describe('navigation', () => {
                 title: 'Learning',
                 href: '/learning',
                 icon: GraduationCap,
-                available: false,
+                available: true,
             },
             {
                 title: 'Sources',
@@ -49,7 +49,7 @@ describe('navigation', () => {
         ]);
         expect(
             navItems.filter((item) => item.available).map((item) => item.title),
-        ).toEqual(['Today', 'Archive', 'Search', 'Settings']);
+        ).toEqual(['Today', 'Archive', 'Search', 'Learning', 'Settings']);
         expect(
             navItems
                 .filter((item) => item.desktopOnly)
@@ -61,6 +61,8 @@ describe('navigation', () => {
         ['/', '/', true],
         ['/days/2026-10-01', '/', false],
         ['/days/2026-10-01', '/archive', true],
+        ['/tags/laravel', '/search', true],
+        ['/tags/laravel', '/archive', false],
         ['/days/2026-10-01/items', '/archive', true],
         ['/daydream', '/', false],
         ['/days-old/2026-10-01', '/', false],

@@ -16,7 +16,7 @@ const className = computed(() => props.class);
 <template>
     <main
         v-if="props.variant === 'sidebar'"
-        class="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-safe md:px-8 md:pt-10 md:pb-12"
+        class="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-safe md:px-8 md:pt-10 md:pb-12"
         :class="className"
     >
         <slot />

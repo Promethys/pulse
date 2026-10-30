@@ -36,10 +36,7 @@ final class TagController extends Controller
             'tag' => (new TagResource($result['tag']))->resolve($request),
             'count' => $result['count'],
             'weeks' => $result['weeks'],
-            'items' => array_map(fn (PostItem $item) => [
-                ...(new PostItemResource($item))->resolve($request),
-                'tags' => TagResource::collection($item->tags)->resolve($request),
-            ], array_values($items->items())),
+            'items' => array_map(fn (PostItem $item) => (new PostItemResource($item))->resolve($request), array_values($items->items())),
             'pagination' => [
                 'current_page' => $items->currentPage(),
                 'last_page' => $items->lastPage(),
