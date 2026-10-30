@@ -15,10 +15,13 @@ final readonly class SearchFilters
         public ?string $source,
         public ?string $from,
         public ?string $to,
+        public string $type = 'news',
+        public ?string $kind = null,
+        public ?string $category = null,
     ) {}
 
     public function active(): int
     {
-        return count($this->tags) + ($this->source !== null ? 1 : 0) + ($this->from !== null || $this->to !== null ? 1 : 0);
+        return count($this->tags) + ($this->kind !== null ? 1 : 0) + ($this->category !== null ? 1 : 0) + ($this->source !== null ? 1 : 0) + ($this->from !== null || $this->to !== null ? 1 : 0);
     }
 }

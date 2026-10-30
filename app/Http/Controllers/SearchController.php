@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
+use App\Http\Resources\LearningPostResource;
 use App\Http\Resources\PostItemResource;
+use App\Models\LearningPost;
 use App\Models\PostItem;
 use App\Models\Source;
 use App\Models\Tag;
@@ -22,7 +24,9 @@ final class SearchController extends Controller
     {
         $user = $request->user();
         $filters = $request->filters();
-        $results = $this->search->for($user, $filters)->withQueryString();
+        $results = ($filters->type === 'learning'
+            ? $this->search->learning($user, $filters)
+            : $this->search->for($user, $filters))->withQueryString();
 
         if ($results->currentPage() > $results->lastPage()) {
             return to_route('search.index', [...$request->query(), 'page' => $results->lastPage()]);
@@ -31,7 +35,11 @@ final class SearchController extends Controller
         $options = $this->search->options($user);
 
         return Inertia::render('Search', [
-            'results' => array_map(fn (PostItem $item) => (new PostItemResource($item))->resolve($request), array_values($results->items())),
+            'type' => $filters->type,
+            'counts' => $this->search->counts($user, $filters),
+            'results' => array_map(fn (PostItem|LearningPost $item) => ($item instanceof LearningPost
+                ? new LearningPostResource($item)
+                : new PostItemResource($item))->resolve($request), array_values($results->items())),
             'pagination' => [
                 'current_page' => $results->currentPage(),
                 'last_page' => $results->lastPage(),
@@ -40,6 +48,9 @@ final class SearchController extends Controller
                 'next_url' => $results->nextPageUrl(),
             ],
             'filters' => [
+                'type' => $filters->type,
+                'kind' => $filters->kind,
+                'category' => $filters->category,
                 'q' => $filters->q,
                 'tags' => $filters->tags,
                 'source' => $filters->source,
@@ -47,6 +58,7 @@ final class SearchController extends Controller
                 'to' => $filters->to,
             ],
             'options' => [
+                'categories' => $options['categories'],
                 'tags' => array_map(fn (Tag $tag) => ['slug' => $tag->slug, 'name' => $tag->name], $options['tags']),
                 'sources' => array_map(fn (Source $source) => ['slug' => $source->slug, 'name' => $source->name], $options['sources']),
             ],

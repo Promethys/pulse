@@ -25,7 +25,7 @@ const emit = defineEmits<{ toggle: [] }>();
         :class="
             active
                 ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-secondary text-secondary-foreground hover:bg-primary/60'
+                : 'border-border bg-secondary text-secondary-foreground hover:bg-primary/60 dark:hover:bg-primary/25'
         "
         @click="emit('toggle')"
         >{{ name }}</component

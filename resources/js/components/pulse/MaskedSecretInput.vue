@@ -28,7 +28,8 @@ const show = ref(false);
                 maxlength="500"
                 class="pr-10 font-mono text-sm"
                 :placeholder="
-                    placeholder ?? (storedLast4 ? `Stored: ••••${storedLast4}` : undefined)
+                    placeholder ??
+                    (storedLast4 ? `Stored: ••••${storedLast4}` : undefined)
                 "
             />
             <button

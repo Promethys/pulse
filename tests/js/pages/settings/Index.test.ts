@@ -53,6 +53,9 @@ describe('settings/Index', () => {
 describe('settings/Index Sources destination', () => {
     it('offers Sources so mobile users can manage their sources', () => {
         render(SettingsIndex);
-        expect(screen.getByRole('link', { name: /^Sources$/ })).toHaveAttribute('href', '/sources');
+        expect(screen.getByRole('link', { name: /^Sources$/ })).toHaveAttribute(
+            'href',
+            '/sources',
+        );
     });
 });

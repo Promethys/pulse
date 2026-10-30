@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { categoryLabel } from '@/lib/categories';
 import type { SearchFilterValues, SearchOptions } from '@/types';
 
 const props = defineProps<{
@@ -40,6 +41,22 @@ function updateSource(value: AcceptableValue) {
     });
 }
 
+function updateKind(value: AcceptableValue) {
+    if (value !== 'all' && value !== 'tip' && value !== 'topic') return;
+    emit('update:modelValue', {
+        ...props.modelValue,
+        kind: value === 'all' ? null : value,
+        ...(value === 'tip' ? { category: null } : {}),
+    });
+}
+
+function updateCategory(value: AcceptableValue) {
+    emit('update:modelValue', {
+        ...props.modelValue,
+        category: typeof value === 'string' && value !== 'all' ? value : null,
+    });
+}
+
 function updateDate(field: 'from' | 'to', value: string | null) {
     emit('update:modelValue', { ...props.modelValue, [field]: value });
 }
@@ -64,7 +81,7 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 />
             </div>
         </div>
-        <div>
+        <div v-if="modelValue.type === 'news'">
             <Label :for="`${id}-source`" class="mb-2 block">Source</Label>
             <Select
                 :model-value="modelValue.source ?? 'all'"
@@ -85,6 +102,48 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 </SelectContent>
             </Select>
         </div>
+        <template v-else>
+            <div>
+                <Label :for="`${id}-kind`" class="mb-2 block">Kind</Label>
+                <Select
+                    :model-value="modelValue.kind ?? 'all'"
+                    @update:model-value="updateKind"
+                >
+                    <SelectTrigger :id="`${id}-kind`" class="w-full">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="tip">Tips</SelectItem>
+                        <SelectItem value="topic">Topics</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <Label :for="`${id}-category`" class="mb-2 block"
+                    >Category</Label
+                >
+                <Select
+                    :model-value="modelValue.category ?? 'all'"
+                    :disabled="modelValue.kind === 'tip'"
+                    @update:model-value="updateCategory"
+                >
+                    <SelectTrigger :id="`${id}-category`" class="w-full">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All categories</SelectItem>
+                        <SelectItem
+                            v-for="category in options.categories"
+                            :key="category"
+                            :value="category"
+                        >
+                            {{ categoryLabel(category) }}
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </template>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
             <div>
                 <Label :for="`${id}-from`" class="mb-2 block">From</Label>

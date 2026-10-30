@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { Button, buttonVariants } from '@/components/ui/button';
 import type { Pagination } from '@/types';
 
 withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
@@ -13,26 +14,28 @@ withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
         :aria-label="label"
         class="mt-6 flex items-center justify-between gap-4 text-sm"
     >
-        <Link
-            v-if="pagination.prev_url"
-            :href="pagination.prev_url"
-            class="text-muted-foreground hover:underline"
-            >Previous</Link
-        >
-        <span v-else class="text-muted-foreground/50" aria-disabled="true"
+        <Button v-if="pagination.prev_url" variant="outline" size="sm" as-child>
+            <Link :href="pagination.prev_url">Previous</Link>
+        </Button>
+        <span
+            v-else
+            :class="buttonVariants({ variant: 'outline', size: 'sm' })"
+            class="pointer-events-none opacity-50"
+            aria-disabled="true"
             >Previous</span
         >
-        <span
+        <span class="text-muted-foreground"
             >Page {{ pagination.current_page }} of
             {{ pagination.last_page }}</span
         >
-        <Link
-            v-if="pagination.next_url"
-            :href="pagination.next_url"
-            class="text-muted-foreground hover:underline"
-            >Next</Link
-        >
-        <span v-else class="text-muted-foreground/50" aria-disabled="true"
+        <Button v-if="pagination.next_url" variant="outline" size="sm" as-child>
+            <Link :href="pagination.next_url">Next</Link>
+        </Button>
+        <span
+            v-else
+            :class="buttonVariants({ variant: 'outline', size: 'sm' })"
+            class="pointer-events-none opacity-50"
+            aria-disabled="true"
             >Next</span
         >
     </nav>

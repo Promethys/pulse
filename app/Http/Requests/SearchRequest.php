@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\LearningKind;
 use App\Reading\SearchFilters;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class SearchRequest extends FormRequest
 {
@@ -18,6 +20,9 @@ final class SearchRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'type' => ['nullable', Rule::in(['news', 'learning'])],
+            'kind' => ['nullable', Rule::enum(LearningKind::class)],
+            'category' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:200'],
             'tags' => ['sometimes', 'array'],
             'tags.*' => ['required', 'string'],
@@ -45,12 +50,18 @@ final class SearchRequest extends FormRequest
 
     public function filters(): SearchFilters
     {
+        /** @var array{q?: string|null, tags?: array<int, string>, source?: string|null, from?: string|null, to?: string|null, type?: string|null, kind?: string|null, category?: string|null} $values */
+        $values = $this->validated();
+
         return new SearchFilters(
-            $this->validated('q'),
-            array_values($this->validated('tags', [])),
-            $this->validated('source'),
-            $this->validated('from'),
-            $this->validated('to'),
+            $values['q'] ?? null,
+            array_values($values['tags'] ?? []),
+            $values['source'] ?? null,
+            $values['from'] ?? null,
+            $values['to'] ?? null,
+            $values['type'] ?? 'news',
+            $values['kind'] ?? null,
+            $values['category'] ?? null,
         );
     }
 }

@@ -368,6 +368,7 @@ class SourcesActionsTest extends TestCase
         $this->assertStringNotContainsString(rawurlencode($key), $response->getContent());
         Log::shouldHaveReceived('warning')->once()->withArgs(function (string $message, array $context) use ($key): bool {
             $serialized = json_encode([$message, $context], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+
             return str_contains($serialized, 'Upstream refused')
                 && ! str_contains($serialized, $key) && ! str_contains($serialized, rawurlencode($key));
         });

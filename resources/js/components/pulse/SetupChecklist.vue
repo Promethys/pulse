@@ -58,8 +58,18 @@ const done = computed(
             <ul class="mt-3 divide-y divide-border">
                 <li v-for="item in items" :key="item.key">
                     <component
-                        :is="!state[item.key] && (item.key === 'interests' || item.key === 'sources') ? Link : 'div'"
-                        :href="!state[item.key] && (item.key === 'interests' || item.key === 'sources') ? '/sources' : undefined"
+                        :is="
+                            !state[item.key] &&
+                            (item.key === 'interests' || item.key === 'sources')
+                                ? Link
+                                : 'div'
+                        "
+                        :href="
+                            !state[item.key] &&
+                            (item.key === 'interests' || item.key === 'sources')
+                                ? '/sources'
+                                : undefined
+                        "
                         class="flex items-center gap-3 py-2.5"
                     >
                         <span

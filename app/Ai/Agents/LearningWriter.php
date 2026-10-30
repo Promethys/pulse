@@ -39,7 +39,7 @@ class LearningWriter implements Agent, HasStructuredOutput
             'Tip:',
             '- One practical, specific tip (git, the command line, Laravel, PHP, Claude Code, debugging, tooling…), not related to the topic.',
             '- title: plain text, at most 80 characters.',
-            '- body: Markdown, a few lines, at most 600 characters; a short code snippet is welcome.',
+            '- body: Markdown, a few lines, at most 600 characters; a short code snippet is welcome, always in a fenced block naming its language (for example ```php).',
             '',
             'Topic:',
             '- body: Markdown, about 5 lines, at most 900 characters, explaining the idea, why it matters and when to use it.',

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { Search as SearchIcon, SlidersHorizontal, X } from '@lucide/vue';
+import type { AcceptableValue } from 'reka-ui';
 import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
@@ -8,6 +9,8 @@ import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
 import SearchFilters from '@/components/pulse/SearchFilters.vue';
+import TipCard from '@/components/pulse/TipCard.vue';
+import TopicCard from '@/components/pulse/TopicCard.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +22,14 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import type { SearchFilterValues, SearchProps } from '@/types';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatDate } from '@/lib/dates';
+import type {
+    LearningEntry,
+    NewsItem,
+    SearchFilterValues,
+    SearchProps,
+} from '@/types';
 
 const props = defineProps<SearchProps>();
 const page = usePage();
@@ -34,11 +44,19 @@ const active = computed(
     () =>
         filters.value.tags.length +
         (filters.value.source ? 1 : 0) +
+        (filters.value.kind ? 1 : 0) +
+        (filters.value.category ? 1 : 0) +
         (filters.value.from || filters.value.to ? 1 : 0),
 );
 const count = computed(
     () =>
         `${props.pagination.total} ${props.pagination.total === 1 ? 'result' : 'results'}`,
+);
+const newsResults = computed(() =>
+    props.type === 'news' ? (props.results as NewsItem[]) : [],
+);
+const learningResults = computed(() =>
+    props.type === 'learning' ? (props.results as LearningEntry[]) : [],
 );
 let debounce: ReturnType<typeof setTimeout> | undefined;
 
@@ -56,9 +74,18 @@ function search() {
     router.get(
         '/search',
         {
+            ...(value.type === 'learning' ? { type: value.type } : {}),
+            ...(value.type === 'learning' && value.kind
+                ? { kind: value.kind }
+                : {}),
+            ...(value.type === 'learning' && value.category
+                ? { category: value.category }
+                : {}),
             ...(value.q ? { q: value.q } : {}),
             ...(value.tags.length ? { tags: value.tags } : {}),
-            ...(value.source ? { source: value.source } : {}),
+            ...(value.type === 'news' && value.source
+                ? { source: value.source }
+                : {}),
             ...(value.from ? { from: value.from } : {}),
             ...(value.to ? { to: value.to } : {}),
         },
@@ -83,8 +110,24 @@ function updateFilters(value: SearchFilterValues) {
     search();
 }
 
+function switchType(value: AcceptableValue) {
+    if (value === filters.value.type) return;
+
+    if (value !== 'news' && value !== 'learning') return;
+    updateFilters({
+        ...filters.value,
+        type: value,
+        source: null,
+        kind: null,
+        category: null,
+    });
+}
+
 function reset() {
     updateFilters({
+        type: filters.value.type,
+        kind: null,
+        category: null,
         q: filters.value.q,
         tags: [],
         source: null,
@@ -113,8 +156,16 @@ onBeforeUnmount(() => clearTimeout(debounce));
                         <Input
                             type="search"
                             role="searchbox"
-                            aria-label="Search titles and summaries"
-                            placeholder="Search titles and summaries…"
+                            :aria-label="
+                                filters.type === 'learning'
+                                    ? 'Search titles and bodies'
+                                    : 'Search titles and summaries'
+                            "
+                            :placeholder="
+                                filters.type === 'learning'
+                                    ? 'Search titles and bodies…'
+                                    : 'Search titles and summaries…'
+                            "
                             class="h-11 rounded-full pr-10 pl-10 [&::-webkit-search-cancel-button]:appearance-none"
                             :model-value="filters.q ?? ''"
                             :aria-invalid="!!errors.q"
@@ -185,6 +236,19 @@ onBeforeUnmount(() => clearTimeout(debounce));
                     :message="errors.q"
                     class="mt-2"
                 />
+                <Tabs
+                    :model-value="filters.type"
+                    @update:model-value="switchType"
+                >
+                    <TabsList class="mt-3 w-full md:w-auto">
+                        <TabsTrigger value="news"
+                            >News {{ counts.news }}</TabsTrigger
+                        >
+                        <TabsTrigger value="learning"
+                            >Learning {{ counts.learning }}</TabsTrigger
+                        >
+                    </TabsList>
+                </Tabs>
                 <div class="mt-3 flex items-center justify-between gap-2">
                     <p class="text-xs text-muted-foreground">{{ count }}</p>
                     <button
@@ -197,11 +261,22 @@ onBeforeUnmount(() => clearTimeout(debounce));
                     </button>
                 </div>
                 <NewsItemRow
-                    v-for="item in results"
+                    v-for="item in newsResults"
                     :key="item.id"
                     :item="item"
                     show-date
                 />
+                <div v-if="learningResults.length" class="mt-4 space-y-6">
+                    <section v-for="entry in learningResults" :key="entry.id">
+                        <h2
+                            class="mb-3 text-sm font-semibold text-muted-foreground"
+                        >
+                            {{ formatDate(entry.date) }}
+                        </h2>
+                        <TipCard v-if="entry.kind === 'tip'" :tip="entry" />
+                        <TopicCard v-else :topic="entry" />
+                    </section>
+                </div>
                 <div v-if="results.length === 0" class="mt-4">
                     <EmptyState
                         title="No matches"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Search as SearchIcon } from '@lucide/vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
@@ -9,6 +9,7 @@ import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import TipCard from '@/components/pulse/TipCard.vue';
 import TopicCard from '@/components/pulse/TopicCard.vue';
+import { Button } from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -20,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatDate } from '@/lib/dates';
 import { categoryLabel } from '@/lib/categories';
 import { index } from '@/routes/learning';
+import { index as searchIndex } from '@/routes/search';
 import type {
     LearningEntry,
     LearningFilterValues,
@@ -124,6 +126,13 @@ function reset() {
                         >
                     </SelectContent>
                 </Select>
+                <Button variant="outline" as-child>
+                    <Link
+                        :href="searchIndex.url({ query: { type: 'learning' } })"
+                    >
+                        <SearchIcon aria-hidden="true" /> Search learning
+                    </Link>
+                </Button>
             </div>
             <div
                 v-if="options.tags.length"

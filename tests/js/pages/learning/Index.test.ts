@@ -61,6 +61,15 @@ function isPressed(button: HTMLElement): boolean {
 }
 
 describe('Learning Index', () => {
+    it('links to the learning tab of unified search even with active browsing filters', () => {
+        const props = learningProps();
+        props.filters = { kind: 'topic', category: 'Testing', tag: 'php' };
+        renderPage(props);
+        expect(
+            screen.getByRole('link', { name: 'Search learning' }),
+        ).toHaveAttribute('href', '/search?type=learning');
+    });
+
     it('groups received tips and topics under one heading per date with responsive grids', () => {
         renderPage();
         expect(

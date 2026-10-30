@@ -48,9 +48,13 @@ describe('AppSidebar', () => {
             screen
                 .getAllByRole('link')
                 .filter((link) =>
-                    ['Today', 'Archive', 'Search', 'Learning', 'Sources'].includes(
-                        link.textContent?.trim() ?? '',
-                    ),
+                    [
+                        'Today',
+                        'Archive',
+                        'Search',
+                        'Learning',
+                        'Sources',
+                    ].includes(link.textContent?.trim() ?? ''),
                 )
                 .map((link) => link.textContent?.trim()),
         ).toEqual(['Today', 'Archive', 'Search', 'Learning', 'Sources']);
@@ -62,14 +66,21 @@ describe('AppSidebar', () => {
     });
 
     it('links Sources on desktop and highlights it after navigation', async () => {
-        expect(navItems.find((item) => item.title === 'Sources')?.available).toBe(true);
+        expect(
+            navItems.find((item) => item.title === 'Sources')?.available,
+        ).toBe(true);
         renderSidebar();
         const link = screen.getByRole('link', { name: 'Sources' });
         expect(link).toHaveAttribute('href', '/sources');
         page.url = '/sources?tab=mine';
         await nextTick();
-        expect(link).toHaveClass('bg-sidebar-primary', 'text-sidebar-primary-foreground');
-        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass('bg-sidebar-primary');
+        expect(link).toHaveClass(
+            'bg-sidebar-primary',
+            'text-sidebar-primary-foreground',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(
+            'bg-sidebar-primary',
+        );
     });
 
     it.each(['/'])(

@@ -32,13 +32,20 @@ describe('AppBottomNav', () => {
     });
 
     it('keeps available Sources out of the mobile bar', () => {
-        expect(navItems.find((item) => item.title === 'Sources')).toMatchObject({
-            available: true,
-            desktopOnly: true,
-        });
+        expect(navItems.find((item) => item.title === 'Sources')).toMatchObject(
+            {
+                available: true,
+                desktopOnly: true,
+            },
+        );
         render(AppBottomNav);
-        expect(screen.queryByRole('link', { name: 'Sources' })).not.toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
+        expect(
+            screen.queryByRole('link', { name: 'Sources' }),
+        ).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
+            'href',
+            '/settings',
+        );
     });
 
     it.each(['/'])('marks Today current on %s', (path) => {
