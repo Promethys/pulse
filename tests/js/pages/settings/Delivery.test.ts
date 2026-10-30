@@ -12,8 +12,8 @@ function renderPage(props = deliveryProps()) {
     const post = vi.spyOn(router, 'post').mockImplementation(() => {});
     const put = vi.spyOn(router, 'put').mockImplementation(() => {});
     const destroy = vi.spyOn(router, 'delete').mockImplementation(() => {});
-    render(Delivery, { props });
-    return { post, put, destroy, user: userEvent.setup() };
+    const rendered = render(Delivery, { props });
+    return { post, put, destroy, rendered, user: userEvent.setup() };
 }
 
 describe('Delivery settings', () => {
@@ -179,6 +179,34 @@ describe('Delivery settings', () => {
             expect.objectContaining({ enabled: false, kinds: ['news'] }),
             expect.any(Object),
         );
+    });
+
+    it('clears a replaced webhook URL once it is saved', async () => {
+        const props = deliveryProps();
+        const view = renderPage(props);
+        const field = screen.getByLabelText('Replace webhook URL');
+        await view.user.type(field, 'https://example.com/new');
+        await view.user.tab();
+        expect(view.put).toHaveBeenCalledOnce();
+        const [, data, options] = view.put.mock.calls[0];
+        expect(data).toMatchObject({ webhook_url: 'https://example.com/new' });
+        options?.onSuccess?.({} as never);
+        await view.rendered.rerender({
+            webhooks: [{ ...props.webhooks[0], name: 'Renamed' }],
+        });
+        expect(field).toHaveValue('');
+        await view.user.click(field);
+        await view.user.tab();
+        expect(view.put).toHaveBeenCalledOnce();
+    });
+
+    it('keeps a rejected webhook URL in the field', async () => {
+        const view = renderPage();
+        const field = screen.getByLabelText('Replace webhook URL');
+        await view.user.type(field, 'https://example.com/new');
+        await view.user.tab();
+        view.put.mock.calls[0][2]?.onError?.({ webhook_url: 'Invalid.' });
+        expect(field).toHaveValue('https://example.com/new');
     });
 
     it('tests a saved destination through its settings endpoint', async () => {

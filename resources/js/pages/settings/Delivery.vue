@@ -51,6 +51,7 @@ const disconnecting = ref<DeliveryGuild | null>(null);
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
 const updateErrors = ref<Record<string, string>>({});
+const webhookUrls = ref<Record<number, string>>({});
 const input = ref({
     type: 'discord_webhook',
     guild_id: '',
@@ -137,6 +138,7 @@ function update(
         address?: string;
         webhook_url?: string;
     },
+    onSuccess?: () => void,
 ) {
     updateErrors.value = {};
     router.put(
@@ -144,6 +146,7 @@ function update(
         { enabled: channel.enabled, kinds: channel.kinds, ...fields },
         {
             preserveScroll: true,
+            onSuccess,
             onError: (value) => {
                 updateErrors.value = value;
             },
@@ -158,8 +161,9 @@ function updateText(
     const target = event.target;
     if (!(target instanceof HTMLInputElement)) return;
     if (field === 'webhook_url' && !target.value.trim()) return;
-    update(channel, { [field]: target.value });
-    if (field === 'webhook_url') target.value = '';
+    update(channel, { [field]: target.value }, () => {
+        if (field === 'webhook_url') webhookUrls.value[channel.id] = '';
+    });
 }
 function selectForum(channel: DeliveryDestination, value: unknown) {
     if (typeof value === 'string') update(channel, { channel_id: value });
@@ -328,6 +332,7 @@ function disconnect() {
                                 >Replace webhook URL</Label
                             ><Input
                                 :id="`webhook-url-${channel.id}`"
+                                v-model="webhookUrls[channel.id]"
                                 type="password"
                                 autocomplete="off"
                                 placeholder="Keep the current URL"
