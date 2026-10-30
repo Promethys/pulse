@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3';
-import { fireEvent, render, screen, within } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
@@ -121,29 +121,28 @@ describe('Search', () => {
     it('applies source and date changes immediately', async () => {
         const get = vi.spyOn(router, 'get').mockImplementation(() => {});
         const user = userEvent.setup();
-        renderPage();
+        const props = searchProps();
+        props.filters = { ...props.filters, from: '2026-10-20' };
+        renderPage(props);
         await user.click(
             screen.getAllByRole('combobox', { name: 'Source' })[0],
         );
         await user.click(screen.getByRole('option', { name: 'Compiler News' }));
         expect(get).toHaveBeenLastCalledWith(
             '/search',
-            { source: 'compiler-news' },
-            visitOptions,
-        );
-        await fireEvent.update(
-            screen.getAllByLabelText('From')[0],
-            '2026-10-20',
-        );
-        expect(get).toHaveBeenLastCalledWith(
-            '/search',
             { source: 'compiler-news', from: '2026-10-20' },
             visitOptions,
         );
-        await fireEvent.update(screen.getAllByLabelText('To')[0], '2026-10-29');
+        await user.click(screen.getAllByRole('button', { name: 'From' })[0]);
+        await screen.findByRole('application');
+        await user.click(
+            screen.getByRole('button', {
+                name: /\b(?:22 October|October 22)\b/,
+            }),
+        );
         expect(get).toHaveBeenLastCalledWith(
             '/search',
-            { source: 'compiler-news', from: '2026-10-20', to: '2026-10-29' },
+            { source: 'compiler-news', from: '2026-10-22' },
             visitOptions,
         );
     });
@@ -213,8 +212,12 @@ describe('Search', () => {
         expect(
             within(sheet).getByRole('button', { name: 'PHP' }),
         ).toHaveAttribute('aria-pressed', 'false');
-        expect(within(sheet).getByLabelText('From')).toHaveValue('');
-        expect(within(sheet).getByLabelText('To')).toHaveValue('');
+        expect(
+            within(sheet).getByRole('button', { name: 'From' }),
+        ).toHaveTextContent('Pick a date');
+        expect(
+            within(sheet).getByRole('button', { name: 'To' }),
+        ).toHaveTextContent('Pick a date');
     });
 
     it('offers Clear filters only with an active filter and keeps the text', async () => {

@@ -2,8 +2,8 @@
 import type { AcceptableValue } from 'reka-ui';
 import { useId } from 'vue';
 import InputError from '@/components/InputError.vue';
+import DatePicker from '@/components/pulse/DatePicker.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -40,11 +40,8 @@ function updateSource(value: AcceptableValue) {
     });
 }
 
-function updateDate(field: 'from' | 'to', value: string | number) {
-    emit('update:modelValue', {
-        ...props.modelValue,
-        [field]: value ? String(value) : null,
-    });
+function updateDate(field: 'from' | 'to', value: string | null) {
+    emit('update:modelValue', { ...props.modelValue, [field]: value });
 }
 </script>
 
@@ -88,17 +85,14 @@ function updateDate(field: 'from' | 'to', value: string | number) {
                 </SelectContent>
             </Select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
             <div>
                 <Label :for="`${id}-from`" class="mb-2 block">From</Label>
-                <Input
+                <DatePicker
                     :id="`${id}-from`"
-                    type="date"
-                    :model-value="modelValue.from ?? ''"
-                    :aria-invalid="!!errors.from"
-                    :aria-describedby="
-                        errors.from ? `${id}-from-error` : undefined
-                    "
+                    :model-value="modelValue.from"
+                    :invalid="!!errors.from"
+                    :described-by="errors.from ? `${id}-from-error` : undefined"
                     @update:model-value="updateDate('from', $event)"
                 />
                 <InputError
@@ -109,12 +103,11 @@ function updateDate(field: 'from' | 'to', value: string | number) {
             </div>
             <div>
                 <Label :for="`${id}-to`" class="mb-2 block">To</Label>
-                <Input
+                <DatePicker
                     :id="`${id}-to`"
-                    type="date"
-                    :model-value="modelValue.to ?? ''"
-                    :aria-invalid="!!errors.to"
-                    :aria-describedby="errors.to ? `${id}-to-error` : undefined"
+                    :model-value="modelValue.to"
+                    :invalid="!!errors.to"
+                    :described-by="errors.to ? `${id}-to-error` : undefined"
                     @update:model-value="updateDate('to', $event)"
                 />
                 <InputError

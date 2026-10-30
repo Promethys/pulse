@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import SearchFilters from '@/components/pulse/SearchFilters.vue';
@@ -80,12 +80,20 @@ describe('SearchFilters', () => {
         'emits a %s date and preserves the other values',
         async (field) => {
             const initial = props();
+            initial.modelValue[field] = '2026-10-20';
             const view = render(SearchFilters, { props: initial });
-            const input = screen.getByLabelText(
-                field === 'from' ? 'From' : 'To',
+            const user = userEvent.setup();
+            await user.click(
+                screen.getByRole('button', {
+                    name: field === 'from' ? 'From' : 'To',
+                }),
             );
-            expect(input).toHaveAttribute('type', 'date');
-            await fireEvent.update(input, '2026-10-28');
+            await screen.findByRole('application');
+            await user.click(
+                screen.getByRole('button', {
+                    name: /\b(?:28 October|October 28)\b/,
+                }),
+            );
             expect(view.emitted()['update:modelValue']).toContainEqual([
                 { ...initial.modelValue, [field]: '2026-10-28' },
             ]);
