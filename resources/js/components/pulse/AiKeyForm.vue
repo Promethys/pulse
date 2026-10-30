@@ -114,7 +114,8 @@ async function testKey(): Promise<KeyTestResult> {
                         rel="noreferrer"
                         class="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
                     >
-                        Get a {{ item.label }} key
+                        Get {{ /^[aeiou]/i.test(item.label) ? 'an' : 'a' }}
+                        {{ item.label }} key
                         <ExternalLink class="size-3" aria-hidden="true" />
                     </a>
                 </template>

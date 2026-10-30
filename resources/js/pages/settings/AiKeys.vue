@@ -175,13 +175,20 @@ function remove() {
                             ><span>•••• {{ key.key_suffix }}</span>
                         </p>
                     </div>
-                    <TestButton label="Test" :on-test="() => testKey(key.id)" />
-                    <Button
-                        variant="ghost"
-                        class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
-                        @click="deleting = key.id"
-                        ><Trash2 aria-hidden="true" />Delete</Button
+                    <div
+                        class="flex w-full items-center justify-end gap-2 sm:w-auto"
                     >
+                        <TestButton
+                            label="Test"
+                            :on-test="() => testKey(key.id)"
+                        />
+                        <Button
+                            variant="ghost"
+                            class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                            @click="deleting = key.id"
+                            ><Trash2 aria-hidden="true" />Delete</Button
+                        >
+                    </div>
                 </li>
             </ul>
             <Button variant="outline" @click="openAdd"
@@ -202,6 +209,7 @@ function remove() {
                 <AiKeyForm
                     v-model="input"
                     :providers="providers"
+                    :explainer="false"
                     test-url="/settings/ai-keys/test"
                 />
                 <InputError

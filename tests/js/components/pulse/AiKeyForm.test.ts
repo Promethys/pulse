@@ -53,7 +53,7 @@ describe('AiKeyForm', () => {
         providers.forEach((provider) => {
             expect(
                 screen.getByRole('link', {
-                    name: `Get a ${provider.label} key`,
+                    name: `Get ${/^[aeiou]/i.test(provider.label) ? 'an' : 'a'} ${provider.label} key`,
                 }),
             ).toHaveAttribute('href', provider.key_url);
         });

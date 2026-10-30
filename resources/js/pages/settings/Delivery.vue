@@ -330,7 +330,7 @@ function disconnect() {
                                 :id="`webhook-url-${channel.id}`"
                                 type="password"
                                 autocomplete="off"
-                                placeholder="Leave blank to keep current"
+                                placeholder="Keep the current URL"
                                 @blur="
                                     updateText(channel, 'webhook_url', $event)
                                 "
