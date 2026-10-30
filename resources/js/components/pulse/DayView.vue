@@ -130,7 +130,11 @@ function selectDate(date: DateValue | undefined) {
                 v-else-if="day.learning.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                Today's learning could not be generated.
+                {{
+                    isToday
+                        ? "Today's learning could not be generated."
+                        : 'The learning could not be generated for this day.'
+                }}
             </p>
         </template>
         <section v-if="day.news" class="mt-8">
@@ -144,7 +148,11 @@ function selectDate(date: DateValue | undefined) {
                 v-else-if="day.news.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                Today's news could not be generated.
+                {{
+                    isToday
+                        ? "Today's news could not be generated."
+                        : 'The news could not be generated for this day.'
+                }}
             </p>
             <EmptyState
                 v-else-if="count === 0"
@@ -169,6 +177,9 @@ function selectDate(date: DateValue | undefined) {
                 </div>
             </template>
         </section>
+        <p v-else-if="!isToday" class="mt-8 text-sm text-muted-foreground">
+            No news this day.
+        </p>
         <p v-if="backLink" class="mt-10 text-center text-sm">
             <Link
                 :href="index.url()"

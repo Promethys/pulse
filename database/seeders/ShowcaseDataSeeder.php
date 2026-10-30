@@ -322,7 +322,7 @@ class ShowcaseDataSeeder extends Seeder
             default => ['Design boundaries should isolate decisions that change for different reasons. Keep an `interface` small and describe the behavior callers can rely on.', "```php\ninterface OrderReader\n{\n    public function find(int \$id): Order;\n}\n```", 'Follow one real use case through the boundary and check whether changing an adapter affects domain rules.'],
         };
 
-        return "### {$topic->title}\n\n{$intro}\n\n{$code}\n\n**In practice:** {$practice}";
+        return "{$intro}\n\n{$code}\n\n**In practice:** {$practice}";
     }
 
     private function seedDeliveries(Post $post, int $offset): void

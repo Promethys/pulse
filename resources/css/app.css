@@ -186,7 +186,7 @@
         & pre {
             overflow-x: auto;
             border-radius: var(--radius-lg);
-            background-color: var(--card);
+            background-color: var(--muted);
             padding: 0.75rem;
             font-size: 0.75rem;
         }

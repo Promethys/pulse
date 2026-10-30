@@ -117,11 +117,11 @@ describe('Learning Index', () => {
     });
 
     it.each([
-        ['Tips', 'tip'],
-        ['Topics', 'topic'],
+        ['Tips', { kind: 'tip', tag: 'php' }],
+        ['Topics', { kind: 'topic', category: 'Testing', tag: 'php' }],
     ] as const)(
-        'selects %s and resets pagination while retaining category and tag',
-        async (name, kind) => {
+        'selects %s and resets pagination, tips having no category',
+        async (name, params) => {
             const get = vi.spyOn(router, 'get').mockImplementation(() => {});
             const props = learningProps();
             props.filters = { kind: null, category: 'Testing', tag: 'php' };
@@ -133,7 +133,7 @@ describe('Learning Index', () => {
             await user.click(screen.getByRole('button', { name }));
             expect(get).toHaveBeenLastCalledWith(
                 '/learning',
-                { kind, category: 'Testing', tag: 'php' },
+                params,
                 visitOptions,
             );
             expect(isPressed(screen.getByRole('button', { name }))).toBe(true);
@@ -142,6 +142,16 @@ describe('Learning Index', () => {
             ).toBe(false);
         },
     );
+
+    it('disables the category filter on tips', () => {
+        const props = learningProps();
+        props.filters.kind = 'tip';
+        renderPage(props);
+
+        expect(
+            screen.getByRole('combobox', { name: 'Category' }),
+        ).toBeDisabled();
+    });
 
     it('All clears the kind without sending empty filters or a page', async () => {
         const get = vi.spyOn(router, 'get').mockImplementation(() => {});

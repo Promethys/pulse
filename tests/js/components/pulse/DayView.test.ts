@@ -265,7 +265,7 @@ describe('DayView', () => {
 
     it.each([
         ['pending', 'Your news is being prepared.'],
-        ['failed', "Today's news could not be generated."],
+        ['failed', 'The news could not be generated for this day.'],
     ] as const)(
         'shows %s news without a quiet-night fallback',
         (status, message) => {
@@ -346,5 +346,26 @@ describe('DayView archive navigation', () => {
         expect(
             screen.queryByRole('link', { name: 'Back to archive' }),
         ).not.toBeInTheDocument();
+    });
+
+    it('says today only on today and marks a past day without news', async () => {
+        const props = dayViewProps();
+        props.day.news = { status: 'failed', item_count: 0, sections: [] };
+        const rendered = renderDay({ ...props, isToday: true });
+
+        expect(
+            screen.getByText("Today's news could not be generated."),
+        ).toBeVisible();
+
+        await rendered.view.rerender({
+            isToday: false,
+            day: { ...props.day, news: null },
+        });
+
+        expect(screen.getByText('No news this day.')).toBeVisible();
+
+        await rendered.view.rerender({ isToday: true });
+
+        expect(screen.queryByText('No news this day.')).not.toBeInTheDocument();
     });
 });

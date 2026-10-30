@@ -19,7 +19,7 @@ withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
             class="text-muted-foreground hover:underline"
             >Previous</Link
         >
-        <span v-else class="text-muted-foreground" aria-disabled="true"
+        <span v-else class="text-muted-foreground/50" aria-disabled="true"
             >Previous</span
         >
         <span
@@ -32,7 +32,7 @@ withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
             class="text-muted-foreground hover:underline"
             >Next</Link
         >
-        <span v-else class="text-muted-foreground" aria-disabled="true"
+        <span v-else class="text-muted-foreground/50" aria-disabled="true"
             >Next</span
         >
     </nav>

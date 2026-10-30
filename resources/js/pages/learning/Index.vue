@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Search as SearchIcon } from '@lucide/vue';
 import { Head, router } from '@inertiajs/vue3';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatDate } from '@/lib/dates';
+import { categoryLabel } from '@/lib/categories';
 import { index } from '@/routes/learning';
 import type {
     LearningEntry,
@@ -66,6 +68,7 @@ function filter() {
 function updateKind(value: AcceptableValue | AcceptableValue[]) {
     if (value !== 'all' && value !== 'tip' && value !== 'topic') return;
     filters.value.kind = value === 'all' ? null : value;
+    if (value === 'tip') filters.value.category = null;
     filter();
 }
 
@@ -105,6 +108,7 @@ function reset() {
                 </ToggleGroup>
                 <Select
                     :model-value="filters.category ?? 'all'"
+                    :disabled="filters.kind === 'tip'"
                     @update:model-value="updateCategory"
                 >
                     <SelectTrigger aria-label="Category" class="w-48">
@@ -116,7 +120,7 @@ function reset() {
                             v-for="category in options.categories"
                             :key="category"
                             :value="category"
-                            >{{ category }}</SelectItem
+                            >{{ categoryLabel(category) }}</SelectItem
                         >
                     </SelectContent>
                 </Select>
@@ -153,7 +157,10 @@ function reset() {
                 <h2 class="mb-3 text-sm font-semibold text-muted-foreground">
                     {{ formatDate(group.date) }}
                 </h2>
-                <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+                <div
+                    class="grid grid-cols-1 items-start gap-4"
+                    :class="{ 'md:grid-cols-2': !filters.kind }"
+                >
                     <template v-for="entry in group.entries" :key="entry.id">
                         <TipCard v-if="entry.kind === 'tip'" :tip="entry" />
                         <TopicCard v-else :topic="entry" />
@@ -165,7 +172,11 @@ function reset() {
             v-else-if="active"
             title="No matches"
             description="Try fewer filters."
-        />
+        >
+            <template #icon>
+                <SearchIcon class="size-5" aria-hidden="true" />
+            </template>
+        </EmptyState>
         <EmptyState
             v-else
             title="No tips yet"

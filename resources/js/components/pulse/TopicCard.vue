@@ -6,6 +6,7 @@ import ClampedProse from '@/components/pulse/ClampedProse.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { index, show } from '@/routes/learning';
+import { categoryLabel } from '@/lib/categories';
 import type { LearningPost } from '@/types';
 
 defineProps<{ topic: LearningPost }>();
@@ -21,7 +22,7 @@ const expanded = ref(false);
             >
                 <BookOpen class="size-3.5" aria-hidden="true" />
                 Topic<template v-if="topic.category">
-                    · {{ topic.category }}</template
+                    · {{ categoryLabel(topic.category) }}</template
                 >
             </div>
             <h3

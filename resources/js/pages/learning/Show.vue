@@ -34,7 +34,7 @@ defineProps<LearningShowProps>();
                 <div class="pulse-prose" v-html="entry.body_html" />
                 <div v-if="entry.links.length">
                     <h2
-                        class="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                        class="mb-1 font-sans text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                     >
                         Suggested reading
                     </h2>
