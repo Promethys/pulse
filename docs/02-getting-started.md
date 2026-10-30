@@ -22,6 +22,14 @@ docker compose exec app php artisan db:seed --class=TagTableSeeder
 docker compose exec app php artisan db:seed --class=LearningTopicTableSeeder
 ```
 
+Start the frontend and open <http://localhost:8000>:
+
+```bash
+docker compose exec app npm run dev
+```
+
+Register an account, verify its email and follow the five onboarding steps: Interests, Sources, About you, AI key and Delivery. At least one live interest is required; About you and AI key can be skipped. In-app delivery is enabled automatically, and email is optional. With the default `MAIL_MAILER=log`, verification messages are written to `storage/logs/laravel.log`; configure `MAIL_*` for real email delivery.
+
 Then check that the sources respond and the instance AI providers work:
 
 ```bash
@@ -31,7 +39,7 @@ docker compose exec app php artisan digest:ai
 
 Both commands only read: they never store anything.
 
-For a local preview with 90 days of fictional digest history, run `docker compose exec app php artisan db:seed --class=ShowcaseDataSeeder`, then sign in as `showcase@example.com` with password `password`. The seeder runs only in `local` and `testing`; rerunning it refreshes that account's history through the latest due digest in Europe/Paris without changing other accounts.
+For a local preview with 90 days of fictional digest history, run `docker compose exec app php artisan db:seed --class=ShowcaseDataSeeder`, then sign in as `showcase@example.com` with password `password`. The seeder runs only in `local` and `testing`; rerunning it refreshes that account's history through the latest due digest in Europe/Paris without changing other accounts. It seeds the catalog, includes quiet and failed days, missing digests and a failed email delivery, and is never called by `DatabaseSeeder`.
 
 ## The Docker setup
 

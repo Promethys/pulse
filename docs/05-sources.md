@@ -14,6 +14,16 @@ A catalog source has `user_id = null`; a custom source belongs to a user. `is_de
 
 The newsletter fetcher reads only `credentials.api_key` on its own source, never `RESEND_API_KEY`. `pulse:adopt` can copy that environment value into the source's encrypted credentials. Without credentials the source fails with a clear message.
 
+## Managing sources in the web app
+
+`/sources` has By interest and My sources tabs; `/sources?tab=mine` opens custom sources directly. The page shows health, last success and fetch errors. Health is `failing` when an error is stored, `ok` after a successful fetch within 48 hours, and `unknown` otherwise. Add or remove interests there to update catalog subscriptions.
+
+Catalog sources can be disabled for the account through its subscription; users cannot edit or delete catalog definitions. Users can add, edit, disable or delete their own custom sources, up to 30 per account. Deleting a custom source removes its subscriptions and source links while preserving shared items and past digests.
+
+Custom sources are either a public RSS/Atom feed or a Resend newsletter inbox. Each requires a name and at least one interest; a feed requires its URL, and a new inbox requires the user's Resend key. The type cannot change after creation. Leaving the key empty on edit keeps the stored key; the resource reports only `has_key`. Pulse does not provision an inbox address.
+
+Test now reads the last 30 days without saving anything and returns up to five headlines. The endpoint allows six requests per minute and uses the same public URL checks as collection.
+
 ## Interests
 
 `InterestTableSeeder` creates 53 interests across nine categories, initially `draft`. Each has a `has_learning` flag. `Interest::refreshStatuses()` makes an interest `live` when it has at least three enabled default catalog sources; otherwise it is `draft`. `SourceTableSeeder` runs this refresh after linking sources to interests.
@@ -47,7 +57,7 @@ Each source has a default tag (used when the AI model gives none) and a `max_ite
 
 ## Adding, changing or disabling a source
 
-Use Tinker to manage source definitions:
+Use the [web app](#managing-sources-in-the-web-app) for personal sources and subscriptions. To manage catalog definitions at the instance level, use Tinker:
 
 ```bash
 docker compose exec app php artisan tinker

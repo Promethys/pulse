@@ -1,6 +1,6 @@
 # Pulse
 
-Pulse turns the tech sources you follow into two short daily posts: the news and a tip + topic of the day. Each account has its own timezone and post times (09:00 and 09:30 by default). The web app provides account registration, account settings and a Discord install flow.
+Pulse turns the tech sources you follow into two short daily posts: the news and a tip + topic of the day. Each account has its own timezone and post times (09:00 and 09:30 by default). The Vue 3/Inertia web app provides registration, onboarding, daily reading, history, search and account settings.
 
 ## How a day works
 
@@ -12,6 +12,16 @@ Pulse turns the tech sources you follow into two short daily posts: the news and
 6. Items, personal selections, topic history, posts and delivery progress are stored in PostgreSQL.
 
 See [Architecture](04-architecture.md) for the details.
+
+## Web app
+
+- **Today and day view**: read news grouped by tag alongside the tip and topic, with previous/next navigation and a calendar. Today uses the account's timezone and shows the latest saved day when today has no post.
+- **Archive**: browse saved days, including quiet, pending and failed news posts.
+- **Search**: search personal news titles and summaries or learning titles and bodies, with tags and date filters. News also filters by source; learning by kind and category.
+- **Tags and Learning**: browse news by tag with a 12-week activity chart, or tips and topics by kind, category and tag, with full learning detail pages.
+- **Sources and Settings**: choose interests, manage catalog subscriptions and custom sources, configure the digest, order AI keys and manage Discord and email delivery. In-app delivery is always available.
+
+New accounts verify their email, then complete onboarding before entering the app. An AI key can be added later, but scheduled digests require personal keys or instance AI access. See [Architecture](04-architecture.md#web-app).
 
 ## Scope
 
