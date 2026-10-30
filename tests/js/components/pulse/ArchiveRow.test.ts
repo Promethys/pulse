@@ -168,3 +168,16 @@ describe('ArchiveRow', () => {
         },
     );
 });
+
+describe('ArchiveRow tag chips', () => {
+    it('keeps the tag a plain span inside the single row link', () => {
+        renderRow();
+        const chip = screen.getByText('Programming');
+        expect(chip.tagName).toBe('SPAN');
+        expect(screen.getAllByRole('link')).toHaveLength(1);
+        expect(screen.getByRole('link')).toContainElement(chip);
+        expect(
+            screen.queryByRole('link', { name: 'Programming' }),
+        ).not.toBeInTheDocument();
+    });
+});

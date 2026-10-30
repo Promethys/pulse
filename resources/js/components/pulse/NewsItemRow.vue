@@ -44,6 +44,7 @@ const date = computed(() => dateParts(props.item.date));
                         :key="tag.id"
                         :slug="tag.slug"
                         :name="tag.name"
+                        linked
                     />
                 </span>
             </div>

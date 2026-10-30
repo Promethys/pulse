@@ -47,3 +47,20 @@ describe('TagChip toggle', () => {
         view.unmount();
     });
 });
+
+describe('TagChip link', () => {
+    it('links to the tag page without becoming a button', () => {
+        render(TagChip, { props: { ...tagProps(), linked: true } });
+        expect(
+            screen.getByRole('link', { name: 'Programming' }),
+        ).toHaveAttribute('href', '/tags/programming');
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('keeps the hover style on the link', () => {
+        render(TagChip, { props: { ...tagProps(), linked: true } });
+        expect(screen.getByRole('link', { name: 'Programming' })).toHaveClass(
+            'hover:bg-primary/60',
+        );
+    });
+});

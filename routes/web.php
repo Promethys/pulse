@@ -7,6 +7,7 @@ use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\TodayController;
 use App\Http\Middleware\EnsureOnboarded;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('days/{date}', DayController::class)->middleware('onboarded')->name('days.show');
     Route::get('archive', ArchiveController::class)->middleware('onboarded')->name('archive.index');
     Route::get('search', SearchController::class)->middleware('onboarded')->name('search.index');
+    Route::get('tags/{tag:slug}', TagController::class)->middleware('onboarded')->name('tags.show');
 
     Route::get('onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('onboarding/interests', [OnboardingController::class, 'interests'])->name('onboarding.interests');

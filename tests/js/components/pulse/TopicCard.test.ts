@@ -75,3 +75,12 @@ describe('TopicCard', () => {
         expect(title).not.toHaveClass('line-clamp-2');
     });
 });
+
+describe('tag links', () => {
+    it('links the topic tag to its page', () => {
+        render(TopicCard, { props: { topic: learningPostProps('topic') } });
+        expect(
+            screen.getByRole('link', { name: 'Programming' }),
+        ).toHaveAttribute('href', '/tags/programming');
+    });
+});

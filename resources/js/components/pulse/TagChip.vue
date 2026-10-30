@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { show } from '@/routes/tags';
+
 defineProps<{
     slug: string;
     name: string;
     active?: boolean;
+    linked?: boolean;
     onToggle?: () => void;
 }>();
 const emit = defineEmits<{ toggle: [] }>();
@@ -10,7 +14,8 @@ const emit = defineEmits<{ toggle: [] }>();
 
 <template>
     <component
-        :is="onToggle ? 'button' : 'span'"
+        :is="onToggle ? 'button' : linked ? Link : 'span'"
+        :href="linked && !onToggle ? show.url(slug) : undefined"
         :type="onToggle ? 'button' : undefined"
         :aria-pressed="onToggle ? !!active : undefined"
         class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors"

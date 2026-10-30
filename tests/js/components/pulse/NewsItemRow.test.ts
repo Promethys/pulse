@@ -68,3 +68,12 @@ describe('NewsItemRow search date', () => {
         ).toHaveTextContent(/Compiler News\s*·\s*28 Oct/);
     });
 });
+
+describe('tag links', () => {
+    it('links the news item tag to its page', () => {
+        render(NewsItemRow, { props: { item: newsItemProps() } });
+        expect(
+            screen.getByRole('link', { name: 'Programming' }),
+        ).toHaveAttribute('href', '/tags/programming');
+    });
+});

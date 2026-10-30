@@ -43,6 +43,7 @@ const expanded = ref(false);
                     :key="tag.id"
                     :slug="tag.slug"
                     :name="tag.name"
+                    linked
                 />
             </div>
         </CardContent>

@@ -57,3 +57,12 @@ describe('TipCard', () => {
         expect(title).not.toHaveClass('line-clamp-2');
     });
 });
+
+describe('tag links', () => {
+    it('links the tip tag to its page', () => {
+        render(TipCard, { props: { tip: learningPostProps('tip') } });
+        expect(
+            screen.getByRole('link', { name: 'Programming' }),
+        ).toHaveAttribute('href', '/tags/programming');
+    });
+});
