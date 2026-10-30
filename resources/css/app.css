@@ -143,6 +143,10 @@
     [role='button']:not([aria-disabled='true']) {
         cursor: pointer;
     }
+    ::selection {
+        background-color: var(--accent);
+        color: var(--accent-foreground);
+    }
     body {
         background-color: var(--color-background);
         color: var(--color-foreground);
