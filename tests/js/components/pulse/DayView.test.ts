@@ -359,12 +359,13 @@ describe('DayView archive navigation', () => {
 
         await rendered.view.rerender({
             isToday: false,
+            backLink: true,
             day: { ...props.day, news: null },
         });
 
         expect(screen.getByText('No news this day.')).toBeVisible();
 
-        await rendered.view.rerender({ isToday: true });
+        await rendered.view.rerender({ backLink: false });
 
         expect(screen.queryByText('No news this day.')).not.toBeInTheDocument();
     });

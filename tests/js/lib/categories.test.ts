@@ -8,6 +8,9 @@ describe('categoryLabel', () => {
         ['security', 'Security'],
         ['system-design', 'System design'],
         ['airflow', 'Airflow'],
+        ['devops', 'DevOps'],
+        ['php-internals', 'PHP internals'],
+        ['modern-sql', 'Modern SQL'],
     ])('labels %s as %s', (category, label) => {
         expect(categoryLabel(category)).toBe(label);
     });

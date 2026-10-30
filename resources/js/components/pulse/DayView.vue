@@ -177,7 +177,7 @@ function selectDate(date: DateValue | undefined) {
                 </div>
             </template>
         </section>
-        <p v-else-if="!isToday" class="mt-8 text-sm text-muted-foreground">
+        <p v-else-if="backLink" class="mt-8 text-sm text-muted-foreground">
             No news this day.
         </p>
         <p v-if="backLink" class="mt-10 text-center text-sm">

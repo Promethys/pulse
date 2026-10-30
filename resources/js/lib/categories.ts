@@ -1,7 +1,17 @@
-export function categoryLabel(category: string): string {
-    const label = category.replaceAll('-', ' ');
+const WORDS: Record<string, string> = {
+    ai: 'AI',
+    api: 'API',
+    apis: 'APIs',
+    devops: 'DevOps',
+    php: 'PHP',
+    sql: 'SQL',
+};
 
-    return label.startsWith('ai ') || label === 'ai'
-        ? `AI${label.slice(2)}`
-        : `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+export function categoryLabel(category: string): string {
+    const label = category
+        .split('-')
+        .map((word) => WORDS[word] ?? word)
+        .join(' ');
+
+    return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
 }
