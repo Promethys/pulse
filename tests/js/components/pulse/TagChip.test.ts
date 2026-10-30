@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/vue';
-import { describe, expect, it } from 'vite-plus/test';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { tagProps } from '../../support/dayProps';
 
@@ -10,5 +11,23 @@ describe('TagChip', () => {
         expect(screen.queryByText('programming')).not.toBeInTheDocument();
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+});
+
+describe('TagChip toggle', () => {
+    it('becomes a non-submitting button with a listener and reflects active state', async () => {
+        const toggle = vi.fn();
+        const view = render(TagChip, {
+            props: { ...tagProps(), active: false, onToggle: toggle },
+        });
+        const chip = screen.getByRole('button', { name: 'Programming' });
+        expect(chip).toHaveAttribute('type', 'button');
+        expect(chip).toHaveAttribute('aria-pressed', 'false');
+        await userEvent.setup().click(chip);
+        expect(toggle).toHaveBeenCalledTimes(1);
+        await view.rerender({ active: true });
+        expect(chip).toHaveAttribute('aria-pressed', 'true');
+        await userEvent.setup().click(chip);
+        expect(toggle).toHaveBeenCalledTimes(2);
     });
 });

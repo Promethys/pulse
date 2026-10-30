@@ -1,10 +1,25 @@
 <script setup lang="ts">
-defineProps<{ slug: string; name: string }>();
+defineProps<{
+    slug: string;
+    name: string;
+    active?: boolean;
+    onToggle?: () => void;
+}>();
+const emit = defineEmits<{ toggle: [] }>();
 </script>
 
 <template>
-    <span
-        class="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-secondary px-2.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-primary/60"
-        >{{ name }}</span
+    <component
+        :is="onToggle ? 'button' : 'span'"
+        :type="onToggle ? 'button' : undefined"
+        :aria-pressed="onToggle ? !!active : undefined"
+        class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors hover:bg-primary/60"
+        :class="
+            active
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-secondary text-secondary-foreground'
+        "
+        @click="emit('toggle')"
+        >{{ name }}</component
     >
 </template>

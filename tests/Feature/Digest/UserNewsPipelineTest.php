@@ -223,7 +223,7 @@ class UserNewsPipelineTest extends TestCase
         $post = Post::factory()->create(['user_id' => $this->user->id, 'date' => $this->date, 'kind' => PostKind::News, 'status' => PostStatus::Generated,
             'model_used' => 'previous:model', 'rendered' => (new RenderedPost('Saved title', ['Saved body'], []))->toArray()]);
         $pick = PostItem::factory()->create(['post_id' => $post->id]);
-        $before = $pick->getAttributes();
+        $before = $pick->fresh()->getAttributes();
         $this->source($this->user, 'unused');
         NewsCurator::fake()->preventStrayPrompts();
         $this->mock(PostDeliverer::class)->shouldReceive('deliver')->twice()->with(Mockery::on(fn (Post $saved) => $saved->is($post) && $saved->rendered === $post->rendered))->andReturn(1, 0);

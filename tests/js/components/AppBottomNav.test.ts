@@ -11,7 +11,7 @@ describe('AppBottomNav', () => {
 
         expect(
             screen.getAllByRole('link').map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Archive', 'Settings']);
+        ).toEqual(['Today', 'Archive', 'Search', 'Settings']);
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
             'href',
             '/',
@@ -26,7 +26,7 @@ describe('AppBottomNav', () => {
         );
         expect(
             screen.queryByRole('link', {
-                name: /Search|Learning|Sources|Catalog review/,
+                name: /Learning|Sources|Catalog review/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -87,7 +87,7 @@ describe('AppBottomNav', () => {
         page.url = '/archived';
         render(AppBottomNav);
 
-        expect(screen.getAllByRole('link')).toHaveLength(3);
+        expect(screen.getAllByRole('link')).toHaveLength(4);
         screen.getAllByRole('link').forEach((link) => {
             expect(link).not.toHaveAttribute('aria-current', 'page');
         });
@@ -145,6 +145,26 @@ describe('AppBottomNav archive destination', () => {
         render(AppBottomNav);
 
         expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+    });
+});
+
+describe('AppBottomNav search destination', () => {
+    it('links Search and marks it current after navigation', async () => {
+        render(AppBottomNav);
+        page.url = '/search?q=compiler&page=2';
+        await nextTick();
+        expect(screen.getByRole('link', { name: 'Search' })).toHaveAttribute(
+            'href',
+            '/search',
+        );
+        expect(screen.getByRole('link', { name: 'Search' })).toHaveAttribute(
             'aria-current',
             'page',
         );

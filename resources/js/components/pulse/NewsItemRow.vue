@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ExternalLink } from '@lucide/vue';
+import { computed } from 'vue';
 import TagChip from '@/components/pulse/TagChip.vue';
+import { dateParts } from '@/lib/dates';
 import type { NewsItem } from '@/types';
 
-defineProps<{ item: NewsItem }>();
+const props = defineProps<{ item: NewsItem; showDate?: boolean }>();
+const date = computed(() => dateParts(props.item.date));
 </script>
 
 <template>
@@ -28,6 +31,7 @@ defineProps<{ item: NewsItem }>();
             <span v-if="item.source" class="font-medium text-foreground/80">{{
                 item.source
             }}</span>
+            <span v-if="showDate">· {{ date.day }} {{ date.month }}</span>
             <span v-if="item.tags.length" class="flex gap-1">
                 <TagChip
                     v-for="tag in item.tags"

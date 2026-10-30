@@ -48,15 +48,15 @@ describe('AppSidebar', () => {
             screen
                 .getAllByRole('link')
                 .filter((link) =>
-                    ['Today', 'Archive'].includes(
+                    ['Today', 'Archive', 'Search'].includes(
                         link.textContent?.trim() ?? '',
                     ),
                 )
                 .map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Archive']);
+        ).toEqual(['Today', 'Archive', 'Search']);
         expect(
             screen.queryByRole('link', {
-                name: /Settings|Search|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
+                name: /Settings|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -197,6 +197,30 @@ describe('AppSidebar archive destination', () => {
         page.url = '/archive?page=2';
         await nextTick();
         expect(screen.getByRole('link', { name: 'Archive' })).toHaveClass(
+            'bg-sidebar-primary',
+            'text-sidebar-primary-foreground',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(
+            'bg-sidebar-primary',
+        );
+    });
+});
+
+describe('AppSidebar search destination', () => {
+    it('links Search and highlights it after navigation', async () => {
+        page.props = {
+            auth: {
+                user: { id: 1, name: 'Taylor', email: 'taylor@example.com' },
+            },
+        };
+        renderSidebar();
+        page.url = '/search?q=compiler';
+        await nextTick();
+        expect(screen.getByRole('link', { name: 'Search' })).toHaveAttribute(
+            'href',
+            '/search',
+        );
+        expect(screen.getByRole('link', { name: 'Search' })).toHaveClass(
             'bg-sidebar-primary',
             'text-sidebar-primary-foreground',
         );
