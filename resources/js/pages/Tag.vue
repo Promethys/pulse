@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Tag as TagIcon } from '@lucide/vue';
 import { computed } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
@@ -9,9 +10,10 @@ import Sparkline from '@/components/pulse/Sparkline.vue';
 import type { TagProps } from '@/types';
 
 const props = defineProps<TagProps>();
-const subtitle = computed(
-    () =>
-        `${props.count} ${props.count === 1 ? 'item' : 'items'} · newest first`,
+const subtitle = computed(() =>
+    props.count === 0
+        ? 'No items yet'
+        : `${props.count} ${props.count === 1 ? 'item' : 'items'} · newest first`,
 );
 </script>
 
@@ -34,7 +36,11 @@ const subtitle = computed(
             v-if="count === 0"
             title="Nothing here yet"
             description="Items with this tag will appear here."
-        />
+        >
+            <template #icon>
+                <TagIcon class="size-5" aria-hidden="true" />
+            </template>
+        </EmptyState>
         <template v-else>
             <NewsItemRow
                 v-for="item in items"

@@ -86,7 +86,7 @@ describe('Tag', () => {
         props.weeks = Array.from({ length: 12 }, () => 0);
         props.pagination.total = 0;
         renderPage(props);
-        expect(screen.getByText('0 items · newest first')).toBeVisible();
+        expect(screen.getByText('No items yet')).toBeVisible();
         expect(
             screen.getByRole('heading', { name: 'Nothing here yet' }),
         ).toBeVisible();
