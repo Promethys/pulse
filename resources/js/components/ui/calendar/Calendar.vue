@@ -47,7 +47,7 @@ const forwarded = useForwardPropsEmits(reactiveOmit(props, "class"), emits)
         <CalendarGridBody>
           <CalendarGridRow v-for="(week, index) in month.rows" :key="index" class="mt-2 flex w-full">
             <CalendarCell v-for="date in week" :key="date.toString()" :date="date" class="relative p-0 text-center text-sm">
-              <CalendarCellTrigger :day="date" :month="month.value" :class="cn(buttonVariants({ variant: 'ghost' }), 'size-9 p-0 font-normal aria-selected:opacity-100 data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[today]:bg-accent data-[today]:text-accent-foreground data-[disabled]:text-muted-foreground data-[disabled]:opacity-50 data-[outside-view]:text-muted-foreground data-[outside-view]:opacity-50')" />
+              <CalendarCellTrigger :day="date" :month="month.value" :class="cn(buttonVariants({ variant: 'ghost' }), 'size-9 p-0 font-normal aria-selected:opacity-100 data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[today]:font-semibold data-[today]:underline data-[disabled]:text-muted-foreground data-[disabled]:opacity-50 data-[outside-view]:text-muted-foreground data-[outside-view]:opacity-50')" />
             </CalendarCell>
           </CalendarGridRow>
         </CalendarGridBody>

@@ -98,4 +98,12 @@ describe('Day', () => {
         expect(calls).toHaveLength(1);
         expect(calls[0][0]).toBe('/days/2026-10-20');
     });
+
+    it('links back to the archive', () => {
+        renderPage();
+
+        expect(
+            screen.getByRole('link', { name: 'Back to archive' }),
+        ).toHaveAttribute('href', '/archive');
+    });
 });

@@ -9,7 +9,9 @@ defineProps<{ tip: LearningPost }>();
 </script>
 
 <template>
-    <Card class="gap-3 border-primary-strong/30 bg-primary/40 shadow-none">
+    <Card
+        class="gap-3 border-primary-strong/30 bg-primary/40 shadow-none dark:bg-primary/10"
+    >
         <CardHeader class="gap-1">
             <div
                 class="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary-strong uppercase"

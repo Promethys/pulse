@@ -6,6 +6,7 @@ import DayView from '@/components/pulse/DayView.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
+import { timeHasPassed } from '@/lib/dates';
 import type { TodayProps } from '@/types';
 
 const props = defineProps<TodayProps>();
@@ -17,6 +18,15 @@ const firstDigest = computed(() =>
         ? `Your first digest arrives tomorrow at ${props.next_digest.time} (${props.next_digest.timezone}).`
         : undefined,
 );
+const notice = computed(() => {
+    if (!props.next_digest) return null;
+
+    const { time, timezone } = props.next_digest;
+
+    return timeHasPassed(time, timezone)
+        ? "Today's digest isn't ready yet."
+        : `Today's digest arrives at ${time} (${timezone}).`;
+});
 </script>
 
 <template>
@@ -26,12 +36,10 @@ const firstDigest = computed(() =>
             <SetupChecklist :state="setup" />
         </div>
         <p
-            v-if="next_digest"
-            class="mb-6 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 text-sm text-muted-foreground"
+            v-if="notice"
+            class="mb-6 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 text-sm text-foreground dark:bg-primary/10"
         >
-            Today's digest arrives at {{ next_digest.time }} ({{
-                next_digest.timezone
-            }}).
+            {{ notice }}
         </p>
         <DayView
             :day="day"

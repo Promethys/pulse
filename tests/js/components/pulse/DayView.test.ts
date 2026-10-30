@@ -324,7 +324,7 @@ describe('DayView', () => {
 
 describe('DayView archive navigation', () => {
     it('links back to the archive below past content and hides the link for today', async () => {
-        const props = dayViewProps();
+        const props = { ...dayViewProps(), backLink: true };
         const rendered = renderDay(props);
         const link = screen.getByRole('link', { name: 'Back to archive' });
         expect(link).toHaveAttribute('href', '/archive');
@@ -342,10 +342,7 @@ describe('DayView archive navigation', () => {
             topic.compareDocumentPosition(link) &
                 Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
-        await rendered.view.rerender({
-            isToday: true,
-            day: { ...props.day, date: props.today },
-        });
+        await rendered.view.rerender({ backLink: false });
         expect(
             screen.queryByRole('link', { name: 'Back to archive' }),
         ).not.toBeInTheDocument();

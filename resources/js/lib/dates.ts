@@ -34,3 +34,18 @@ export function formatDate(date: string): string {
 
     return `${part('weekday')} ${part('day')} ${part('month')}`;
 }
+
+export function timeHasPassed(
+    time: string,
+    timezone: string,
+    now: Date = new Date(),
+): boolean {
+    const local = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZone: timezone,
+    }).format(now);
+
+    return local >= time;
+}

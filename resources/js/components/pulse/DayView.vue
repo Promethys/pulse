@@ -31,6 +31,7 @@ const props = defineProps<{
     day: Day;
     availableDates: string[];
     isToday: boolean;
+    backLink?: boolean;
     today: string;
 }>();
 const calendarOpen = ref(false);
@@ -112,7 +113,7 @@ function selectDate(date: DateValue | undefined) {
         </header>
         <div
             v-if="hasLearningCards"
-            class="grid items-start gap-4 md:grid-cols-2"
+            class="grid grid-cols-1 items-start gap-4 md:grid-cols-2"
         >
             <TipCard v-if="day.learning?.tip" :tip="day.learning.tip" />
             <TopicCard v-if="day.learning?.topic" :topic="day.learning.topic" />
@@ -167,7 +168,7 @@ function selectDate(date: DateValue | undefined) {
                 </div>
             </template>
         </section>
-        <p v-if="!isToday" class="mt-10 text-center text-sm">
+        <p v-if="backLink" class="mt-10 text-center text-sm">
             <Link
                 :href="index.url()"
                 class="inline-flex items-center gap-1 text-muted-foreground hover:underline"

@@ -15,6 +15,7 @@ const title = computed(() => formatDate(props.day.date));
         :day="day"
         :available-dates="available_dates"
         :is-today="false"
+        back-link
         today=""
     />
 </template>

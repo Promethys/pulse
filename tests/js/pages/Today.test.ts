@@ -1,7 +1,14 @@
 import { router } from '@inertiajs/vue3';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vite-plus/test';
 import Today from '@/pages/Today.vue';
 import { todayProps } from '../support/dayProps';
 import { page } from '../support/inertia';
@@ -13,6 +20,35 @@ function renderPage(props = todayProps()) {
 }
 
 describe('Today', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-10-30T07:00:00Z'));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('says the digest is late once its time has passed', () => {
+        vi.setSystemTime(new Date('2026-10-30T10:00:00Z'));
+        renderPage();
+
+        expect(
+            screen.getByText("Today's digest isn't ready yet."),
+        ).toBeVisible();
+        expect(screen.queryByText(/arrives at/)).not.toBeInTheDocument();
+    });
+
+    it('never offers the archive link for an older digest shown on Today', () => {
+        const props = todayProps();
+        props.is_today = false;
+        renderPage(props);
+
+        expect(
+            screen.queryByRole('link', { name: 'Back to archive' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('welcomes a reader with no digest using the configured time and timezone', () => {
         const props = todayProps();
         props.day = null;

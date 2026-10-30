@@ -35,7 +35,7 @@ const done = computed(
 </script>
 
 <template>
-    <Card class="gap-0 border-primary-strong/30 shadow-none">
+    <Card class="gap-0 border-primary-strong/30 py-0 shadow-none">
         <CardContent class="p-4">
             <div class="flex items-start justify-between gap-3">
                 <div>

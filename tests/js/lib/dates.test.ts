@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { dateParts, formatDate } from '@/lib/dates';
+import { dateParts, formatDate, timeHasPassed } from '@/lib/dates';
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -65,4 +65,17 @@ describe('dateParts', () => {
             });
         },
     );
+});
+
+describe('timeHasPassed', () => {
+    it.each([
+        ['09:00', 'Europe/Paris', '2026-10-30T07:59:00Z', false],
+        ['09:00', 'Europe/Paris', '2026-10-30T08:00:00Z', true],
+        ['09:00', 'Europe/Paris', '2026-10-30T10:00:00Z', true],
+        ['06:15', 'Pacific/Honolulu', '2026-10-30T10:00:00Z', false],
+        ['07:45', 'America/New_York', '2026-10-30T07:00:00Z', false],
+        ['00:15', 'Asia/Tokyo', '2026-10-30T15:00:00Z', false],
+    ])('compares %s in %s at %s', (time, timezone, now, passed) => {
+        expect(timeHasPassed(time, timezone, new Date(now))).toBe(passed);
+    });
 });
