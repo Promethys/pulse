@@ -18,11 +18,11 @@ function renderRow(channel = destinationProps()) {
         'onUpdate:enabled': onEnabled,
         onDelete,
     };
-    render(DestinationRow, {
+    const rendered = render(DestinationRow, {
         props,
         slots: { default: '<p>Destination controls</p>' },
     });
-    return { onTest, onEnabled, onDelete, user: userEvent.setup() };
+    return { onTest, onEnabled, onDelete, rendered, user: userEvent.setup() };
 }
 
 describe('DestinationRow', () => {
@@ -79,6 +79,26 @@ describe('DestinationRow', () => {
             'Test sent.',
         );
         expect(view.onDelete).not.toHaveBeenCalled();
+    });
+
+    it('shows the test result on its own line, outside the actions', async () => {
+        const view = renderRow();
+        const button = screen.getByRole('button', { name: 'Send a test' });
+        await view.user.click(button);
+        const result = await screen.findByRole('status');
+        expect(button.parentElement?.parentElement).not.toContainElement(
+            result,
+        );
+    });
+
+    it('clears the test result when the destination changes', async () => {
+        const view = renderRow();
+        await view.user.click(
+            screen.getByRole('button', { name: 'Send a test' }),
+        );
+        await screen.findByRole('status');
+        await view.rendered.rerender({ subtitle: '…wxyz' });
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
     it('confirms deletion using danger styling', async () => {

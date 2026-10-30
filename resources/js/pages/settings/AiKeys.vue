@@ -7,6 +7,7 @@ import AiKeyForm from '@/components/pulse/AiKeyForm.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import ProviderLogo from '@/components/pulse/ProviderLogo.vue';
 import TestButton from '@/components/pulse/TestButton.vue';
+import TestResult from '@/components/pulse/TestResult.vue';
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -36,6 +37,7 @@ import type { AiKeysProps } from '@/types/settings';
 const props = defineProps<AiKeysProps>();
 const adding = ref(false);
 const deleting = ref<number | null>(null);
+const testResults = ref<Record<number, KeyTestResult | null>>({});
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const input = ref<AiKeyInput>(emptyInput());
@@ -171,7 +173,9 @@ function remove() {
                         <p
                             class="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground"
                         >
-                            <span>{{ key.model }}</span
+                            <span class="min-w-0 wrap-anywhere">{{
+                                key.model
+                            }}</span
                             ><span>•••• {{ key.key_suffix }}</span>
                         </p>
                     </div>
@@ -179,7 +183,10 @@ function remove() {
                         class="flex w-full items-center justify-end gap-2 sm:w-auto"
                     >
                         <TestButton
+                            v-model:result="testResults[key.id]"
+                            hide-result
                             label="Test"
+                            :reset-key="key.key_suffix"
                             :on-test="() => testKey(key.id)"
                         />
                         <Button
@@ -189,6 +196,10 @@ function remove() {
                             ><Trash2 aria-hidden="true" />Delete</Button
                         >
                     </div>
+                    <TestResult
+                        :result="testResults[key.id]"
+                        class="w-full text-right"
+                    />
                 </li>
             </ul>
             <Button variant="outline" @click="openAdd"

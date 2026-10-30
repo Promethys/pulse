@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Check, Loader2, X, Zap } from '@lucide/vue';
 import { ref, watch } from 'vue';
+import TestResult from '@/components/pulse/TestResult.vue';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type { KeyTestResult } from '@/types/onboarding';
 
 const props = withDefaults(
@@ -11,11 +11,12 @@ const props = withDefaults(
         onTest: () => Promise<KeyTestResult>;
         disabled?: boolean;
         resetKey?: string;
+        hideResult?: boolean;
     }>(),
     { label: 'Send a test' },
 );
 const loading = ref(false);
-const result = ref<KeyTestResult | null>(null);
+const result = defineModel<KeyTestResult | null>('result', { default: null });
 let attempt = 0;
 watch(
     () => props.resetKey,
@@ -48,7 +49,7 @@ async function run() {
 </script>
 
 <template>
-    <div class="inline-flex flex-col gap-1">
+    <div class="inline-flex flex-col items-start gap-1">
         <Button
             type="button"
             variant="outline"
@@ -65,14 +66,6 @@ async function run() {
             <Zap v-else aria-hidden="true" />
             {{ loading ? 'Testing…' : label }}
         </Button>
-        <p
-            v-if="result"
-            role="status"
-            :class="
-                cn('text-xs', result.ok ? 'text-success' : 'text-destructive')
-            "
-        >
-            {{ result.message }}
-        </p>
+        <TestResult v-if="!hideResult" :result="result" />
     </div>
 </template>

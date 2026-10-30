@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, Mail, Trash2, Webhook } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import DiscordIcon from '@/components/pulse/DiscordIcon.vue';
 import TestButton from '@/components/pulse/TestButton.vue';
+import TestResult from '@/components/pulse/TestResult.vue';
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -24,6 +25,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ 'update:enabled': [value: boolean]; delete: [] }>();
 const confirming = ref(false);
+const testResult = ref<KeyTestResult | null>(null);
 
 function confirmDelete() {
     confirming.value = false;
@@ -103,7 +105,12 @@ const deliveredAt = computed(() => {
                 >Nothing delivered yet</span
             >
             <div class="flex flex-wrap gap-2">
-                <TestButton :on-test="onTest" />
+                <TestButton
+                    v-model:result="testResult"
+                    hide-result
+                    :on-test="onTest"
+                    :reset-key="subtitle"
+                />
                 <Button
                     variant="ghost"
                     class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
@@ -111,6 +118,7 @@ const deliveredAt = computed(() => {
                     ><Trash2 aria-hidden="true" />Delete</Button
                 >
             </div>
+            <TestResult :result="testResult" class="w-full sm:text-right" />
         </div>
         <AlertDialog v-model:open="confirming">
             <AlertDialogContent>

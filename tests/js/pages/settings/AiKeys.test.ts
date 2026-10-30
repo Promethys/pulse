@@ -12,8 +12,8 @@ function renderPage(props = aiKeysProps()) {
     const post = vi.spyOn(router, 'post').mockImplementation(() => {});
     const put = vi.spyOn(router, 'put').mockImplementation(() => {});
     const destroy = vi.spyOn(router, 'delete').mockImplementation(() => {});
-    render(AiKeys, { props });
-    return { post, put, destroy, user: userEvent.setup() };
+    const rendered = render(AiKeys, { props });
+    return { post, put, destroy, rendered, user: userEvent.setup() };
 }
 
 describe('AI keys settings', () => {
@@ -150,6 +150,36 @@ describe('AI keys settings', () => {
             typeof first === 'string' ? { method: first, url: second } : first,
         ).toMatchObject({ method: 'post', url: '/settings/ai-keys/11/test' });
         expect(view.post).not.toHaveBeenCalled();
+    });
+
+    it('shows the key test result on its own line, outside the actions', async () => {
+        http.submit.mockResolvedValueOnce({
+            ok: false,
+            message: 'The provider rejected this key.',
+        });
+        const view = renderPage();
+        const button = screen.getAllByRole('button', { name: /^Test$/ })[0];
+        await view.user.click(button);
+        const result = await screen.findByRole('status');
+        expect(button.parentElement?.parentElement).not.toContainElement(
+            result,
+        );
+        expect(button.closest('li')).toContainElement(result);
+    });
+
+    it('clears a key test result when the key is replaced', async () => {
+        http.submit.mockResolvedValueOnce({ ok: true, message: 'Key works.' });
+        const props = aiKeysProps();
+        const view = renderPage(props);
+        await view.user.click(
+            screen.getAllByRole('button', { name: /^Test$/ })[0],
+        );
+        await screen.findByRole('status');
+        const [first, ...others] = props.keys;
+        await view.rendered.rerender({
+            keys: [{ ...first, key_suffix: 'wxyz' }, ...others],
+        });
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
     it('requires delete confirmation and lets cancellation keep the key', async () => {
