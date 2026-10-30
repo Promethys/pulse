@@ -148,4 +148,35 @@ class DayQueryTest extends TestCase
             $this->assertSame($next, $day->next_date);
         }
     }
+
+    public function test_dates_returns_an_empty_list_when_only_another_user_has_posts(): void
+    {
+        $user = User::factory()->create();
+        Post::factory()->create(['date' => '2026-10-30']);
+
+        $this->assertSame([], app(DayQuery::class)->dates($user));
+    }
+
+    public function test_dates_includes_every_owned_post_date_once_newest_first_regardless_of_kind_or_status(): void
+    {
+        $user = User::factory()->create();
+        foreach ([
+            ['2026-10-20', PostKind::News, PostStatus::Generated],
+            ['2026-10-29', PostKind::Learning, PostStatus::Failed],
+            ['2026-10-01', PostKind::News, PostStatus::Failed],
+            ['2026-10-30', PostKind::News, PostStatus::Pending],
+            ['2026-10-20', PostKind::Learning, PostStatus::Generated],
+            ['2026-10-28', PostKind::Learning, PostStatus::Pending],
+        ] as [$date, $kind, $status]) {
+            Post::factory()->for($user)->create(['date' => $date, 'kind' => $kind, 'status' => $status]);
+        }
+        foreach (['2026-10-31', '2026-10-27', '2026-10-20'] as $date) {
+            Post::factory()->create(['date' => $date]);
+        }
+
+        $this->assertSame(
+            ['2026-10-30', '2026-10-29', '2026-10-28', '2026-10-20', '2026-10-01'],
+            app(DayQuery::class)->dates($user),
+        );
+    }
 }

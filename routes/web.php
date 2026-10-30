@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\TodayController;
 use App\Http\Middleware\EnsureOnboarded;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\Request;
@@ -16,11 +18,12 @@ Route::get('/', function (Request $request) {
     }
 
     return app(EnsureEmailIsVerified::class)->handle($request,
-        fn () => app(EnsureOnboarded::class)->handle($request, fn () => Inertia::render('Today')->toResponse($request)));
+        fn () => app(EnsureOnboarded::class)->handle($request, fn () => app(TodayController::class)($request)->toResponse($request)));
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', fn () => redirect('/', 301))->middleware('onboarded')->name('dashboard');
+    Route::get('days/{date}', DayController::class)->middleware('onboarded')->name('days.show');
 
     Route::get('onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('onboarding/interests', [OnboardingController::class, 'interests'])->name('onboarding.interests');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\LearningPost;
 use App\Models\PostItem;
 use App\Reading\Day;
 use Illuminate\Database\Eloquent\Collection;
@@ -40,14 +41,28 @@ final class DayResource extends JsonResource
                 'sections' => array_map(fn (array $section) => [
                     'slug' => $section['slug'],
                     'name' => $section['name'],
-                    'items' => PostItemResource::collection($section['items']),
+                    'items' => array_map(fn (PostItem $item) => [
+                        ...(new PostItemResource($item))->resolve($request),
+                        'tags' => TagResource::collection($item->tags)->resolve($request),
+                    ], $section['items']),
                 ], $news['sections']),
             ],
             'learning' => $learning === null ? null : [
                 'status' => $learning['status']->value,
-                'tip' => $learning['tip'] === null ? null : new LearningPostResource($learning['tip']),
-                'topic' => $learning['topic'] === null ? null : new LearningPostResource($learning['topic']),
+                'tip' => $this->learningPost($learning['tip'], $request),
+                'topic' => $this->learningPost($learning['topic'], $request),
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function learningPost(?LearningPost $post, Request $request): ?array
+    {
+        return $post === null ? null : [
+            ...(new LearningPostResource($post))->resolve($request),
+            'tags' => TagResource::collection($post->tags)->resolve($request),
         ];
     }
 }

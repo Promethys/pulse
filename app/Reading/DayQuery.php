@@ -17,6 +17,16 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class DayQuery
 {
+    /**
+     * @return list<string>
+     */
+    public function dates(User $user): array
+    {
+        return array_values(Post::query()->where('user_id', $user->id)
+            ->select('date')->distinct()->orderByDesc('date')->get()
+            ->map(fn (Post $post) => $post->date->toDateString())->all());
+    }
+
     public function for(User $user, CarbonImmutable|string $date): ?Day
     {
         $date = $date instanceof CarbonImmutable ? $date->toDateString() : $date;
