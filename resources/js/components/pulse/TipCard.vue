@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Lightbulb } from '@lucide/vue';
 import ClampedProse from '@/components/pulse/ClampedProse.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
@@ -6,6 +7,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { LearningPost } from '@/types';
 
 defineProps<{ tip: LearningPost }>();
+
+const expanded = ref(false);
 </script>
 
 <template>
@@ -21,13 +24,16 @@ defineProps<{ tip: LearningPost }>();
             </div>
             <h3
                 :title="tip.title"
-                class="line-clamp-1 text-lg leading-snug font-semibold"
+                :class="[
+                    'text-lg leading-snug font-semibold',
+                    { 'line-clamp-2': !expanded },
+                ]"
             >
                 {{ tip.title }}
             </h3>
         </CardHeader>
         <CardContent class="space-y-3 text-sm leading-relaxed">
-            <ClampedProse :html="tip.body_html" />
+            <ClampedProse v-model:expanded="expanded" :html="tip.body_html" />
             <div
                 v-if="tip.tags.length"
                 class="flex flex-wrap items-center gap-1"

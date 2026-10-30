@@ -131,4 +131,45 @@ describe('ArchiveRow', () => {
             view.container.querySelector('.max-h-7'),
         ).not.toBeInTheDocument();
     });
+
+    it.each([
+        [3, null, null],
+        [5, '+2', null],
+        [8, '+5', '+2'],
+    ])(
+        'marks the hidden tags of a day with %i tags',
+        (count, mobile, desktop) => {
+            const day = archiveDay();
+            day.tags = Array.from({ length: count }, (_, index) => ({
+                ...tagProps(),
+                id: index + 1,
+                slug: `tag-${index}`,
+                name: `Tag ${index}`,
+            }));
+            render(ArchiveRow, { props: { day, today: '2026-10-30' } });
+
+            expect(screen.getByText('Tag 2')).not.toHaveClass('hidden');
+            if (count > 3) {
+                expect(screen.getByText('Tag 3')).toHaveClass(
+                    'hidden',
+                    'md:inline-flex',
+                );
+            }
+            if (mobile) {
+                expect(screen.getByText(mobile)).toHaveClass('md:hidden');
+            }
+            if (desktop) {
+                expect(screen.getByText(desktop)).toHaveClass(
+                    'hidden',
+                    'md:inline-flex',
+                );
+                expect(screen.getByText('Tag 7')).not.toHaveClass(
+                    'md:inline-flex',
+                );
+            }
+            expect(screen.queryAllByText(/^\+/)).toHaveLength(
+                [mobile, desktop].filter(Boolean).length,
+            );
+        },
+    );
 });

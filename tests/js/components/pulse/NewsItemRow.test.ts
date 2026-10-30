@@ -8,7 +8,7 @@ describe('NewsItemRow', () => {
         const item = newsItemProps();
         render(NewsItemRow, { props: { item } });
         const title = screen.getByRole('heading', { name: item.title });
-        expect(title).toHaveClass('line-clamp-1');
+        expect(title).toHaveClass('line-clamp-2');
         expect(title).toHaveAttribute('title', item.title);
         for (const link of [
             screen.getByRole('link', { name: new RegExp(item.title) }),

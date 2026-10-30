@@ -1,5 +1,6 @@
+import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/vue';
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import TopicCard from '@/components/pulse/TopicCard.vue';
 import { learningPostProps } from '../../support/dayProps';
 
@@ -8,7 +9,7 @@ describe('TopicCard', () => {
         const topic = learningPostProps('topic');
         render(TopicCard, { props: { topic } });
         const title = screen.getByRole('heading', { name: topic.title });
-        expect(title).toHaveClass('line-clamp-1');
+        expect(title).toHaveClass('line-clamp-2');
         expect(title).toHaveAttribute('title', topic.title);
         expect(title.closest('a')).toBeNull();
         expect(screen.getByText('Programming')).toBeVisible();
@@ -52,5 +53,25 @@ describe('TopicCard', () => {
         expect(
             screen.queryByText(/Databases|Topic\s*·|null|undefined/),
         ).not.toBeInTheDocument();
+    });
+
+    it('shows the full title once the card is expanded', async () => {
+        vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
+            300,
+        );
+        vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(
+            120,
+        );
+        const user = userEvent.setup();
+        render(TopicCard, { props: { topic: learningPostProps() } });
+        const title = screen.getByRole('heading', { level: 3 });
+
+        expect(title).toHaveClass('line-clamp-2');
+
+        await user.click(
+            await screen.findByRole('button', { name: 'Read more' }),
+        );
+
+        expect(title).not.toHaveClass('line-clamp-2');
     });
 });

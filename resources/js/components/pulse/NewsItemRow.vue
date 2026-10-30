@@ -11,7 +11,7 @@ defineProps<{ item: NewsItem }>();
         <a :href="item.url" target="_blank" rel="noreferrer" class="block">
             <h3
                 :title="item.title"
-                class="line-clamp-1 font-sans text-[15px] leading-snug font-semibold group-hover:underline"
+                class="line-clamp-2 font-sans text-[15px] leading-snug font-semibold group-hover:underline"
             >
                 {{ item.title }}
             </h3>

@@ -47,7 +47,7 @@ describe('AppBottomNav', () => {
         }
     });
 
-    it.each(['/', '/days/2026-10-01'])('marks Today current on %s', (path) => {
+    it.each(['/'])('marks Today current on %s', (path) => {
         page.url = path;
         render(AppBottomNav);
 
@@ -138,5 +138,19 @@ describe('AppBottomNav archive destination', () => {
         expect(
             screen.getByRole('link', { name: 'Settings' }),
         ).not.toHaveAttribute('aria-current', 'page');
+    });
+
+    it('marks Archive current on a past day', () => {
+        page.url = '/days/2026-10-01';
+        render(AppBottomNav);
+
+        expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveAttribute(
+            'aria-current',
+            'page',
+        );
     });
 });

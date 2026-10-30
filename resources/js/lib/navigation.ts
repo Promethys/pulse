@@ -47,7 +47,11 @@ export function isActive(currentPath: string, href: string): boolean {
     const path = currentPath.split(/[?#]/)[0];
 
     if (href === '/') {
-        return path === '/' || path.startsWith('/days/');
+        return path === '/';
+    }
+
+    if (href === '/archive' && path.startsWith('/days/')) {
+        return true;
     }
 
     return path === href || path.startsWith(`${href}/`);

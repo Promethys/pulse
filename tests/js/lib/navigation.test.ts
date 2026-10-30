@@ -59,8 +59,9 @@ describe('navigation', () => {
 
     it.each([
         ['/', '/', true],
-        ['/days/2026-10-01', '/', true],
-        ['/days/2026-10-01/items', '/', true],
+        ['/days/2026-10-01', '/', false],
+        ['/days/2026-10-01', '/archive', true],
+        ['/days/2026-10-01/items', '/archive', true],
         ['/daydream', '/', false],
         ['/days-old/2026-10-01', '/', false],
         ['/archive', '/', false],

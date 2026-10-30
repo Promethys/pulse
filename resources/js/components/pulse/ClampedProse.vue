@@ -5,7 +5,7 @@ import { onMounted, ref, useTemplateRef } from 'vue';
 defineProps<{ html: string }>();
 
 const prose = useTemplateRef<HTMLElement>('prose');
-const expanded = ref(false);
+const expanded = defineModel<boolean>('expanded', { default: false });
 const overflowing = ref(false);
 
 function measure() {

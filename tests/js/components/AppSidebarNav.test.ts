@@ -79,7 +79,7 @@ describe('AppSidebar', () => {
         }
     });
 
-    it.each(['/', '/days/2026-10-01'])(
+    it.each(['/'])(
         'highlights Today on %s and clears it after navigation to settings',
         async (path) => {
             page.url = path;

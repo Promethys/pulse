@@ -8,6 +8,9 @@ import { home } from '@/routes';
 import { show } from '@/routes/days';
 import type { ArchiveDay } from '@/types';
 
+const MOBILE_TAGS = 3;
+const DESKTOP_TAGS = 6;
+
 const props = defineProps<{ day: ArchiveDay; today: string }>();
 const parts = computed(() => dateParts(props.day.date));
 const weekday = computed(() =>
@@ -21,6 +24,8 @@ const href = computed(() =>
 const tagNames = computed(() =>
     props.day.tags.map((tag) => tag.name).join(', '),
 );
+const hiddenOnMobile = computed(() => props.day.tags.length - MOBILE_TAGS);
+const hiddenOnDesktop = computed(() => props.day.tags.length - DESKTOP_TAGS);
 const label = computed(() => {
     if (props.day.item_count > 0) {
         return `${props.day.item_count} ${props.day.item_count === 1 ? 'item' : 'items'}`;
@@ -64,11 +69,26 @@ const label = computed(() => {
                 class="mt-1.5 flex max-h-7 flex-wrap gap-1 overflow-hidden"
             >
                 <TagChip
-                    v-for="tag in day.tags"
+                    v-for="(tag, index) in day.tags"
                     :key="tag.id"
                     :slug="tag.slug"
                     :name="tag.name"
+                    :class="{
+                        'hidden md:inline-flex':
+                            index >= MOBILE_TAGS && index < DESKTOP_TAGS,
+                        hidden: index >= DESKTOP_TAGS,
+                    }"
                 />
+                <span
+                    v-if="hiddenOnMobile > 0"
+                    class="inline-flex h-7 items-center text-xs text-muted-foreground md:hidden"
+                    >+{{ hiddenOnMobile }}</span
+                >
+                <span
+                    v-if="hiddenOnDesktop > 0"
+                    class="hidden h-7 items-center text-xs text-muted-foreground md:inline-flex"
+                    >+{{ hiddenOnDesktop }}</span
+                >
             </div>
         </div>
         <ChevronRight class="size-4 text-muted-foreground" aria-hidden="true" />

@@ -50,4 +50,18 @@ describe('ClampedProse', () => {
 
         expect(prose).toHaveClass('line-clamp-6');
     });
+
+    it('reports the expanded state to its parent', async () => {
+        stubHeights(300, 120);
+        const user = userEvent.setup();
+        const view = render(ClampedProse, {
+            props: { html: '<p>Long text</p>' },
+        });
+
+        await user.click(
+            await screen.findByRole('button', { name: 'Read more' }),
+        );
+
+        expect(view.emitted('update:expanded')).toEqual([[true]]);
+    });
 });

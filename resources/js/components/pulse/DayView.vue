@@ -84,6 +84,7 @@ function selectDate(date: DateValue | undefined) {
                         <Button
                             variant="outline"
                             size="icon"
+                            class="data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary"
                             aria-label="Pick a date"
                             ><CalendarDays aria-hidden="true"
                         /></Button>
