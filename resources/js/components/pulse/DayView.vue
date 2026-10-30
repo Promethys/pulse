@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { parseDate } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
-import { CalendarDays, ChevronLeft, ChevronRight } from '@lucide/vue';
+import {
+    ArrowLeft,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
@@ -18,6 +23,7 @@ import {
 } from '@/components/ui/popover';
 import { formatDate } from '@/lib/dates';
 import { home } from '@/routes';
+import { index } from '@/routes/archive';
 import { show } from '@/routes/days';
 import type { Day } from '@/types';
 
@@ -161,5 +167,14 @@ function selectDate(date: DateValue | undefined) {
                 </div>
             </template>
         </section>
+        <p v-if="!isToday" class="mt-10 text-center text-sm">
+            <Link
+                :href="index.url()"
+                class="inline-flex items-center gap-1 text-muted-foreground hover:underline"
+            >
+                <ArrowLeft class="size-4" aria-hidden="true" />
+                Back to archive
+            </Link>
+        </p>
     </div>
 </template>

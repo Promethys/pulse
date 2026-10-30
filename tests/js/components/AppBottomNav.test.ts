@@ -11,10 +11,14 @@ describe('AppBottomNav', () => {
 
         expect(
             screen.getAllByRole('link').map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Settings']);
+        ).toEqual(['Today', 'Archive', 'Settings']);
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
             'href',
             '/',
+        );
+        expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
+            'href',
+            '/archive',
         );
         expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
             'href',
@@ -22,7 +26,7 @@ describe('AppBottomNav', () => {
         );
         expect(
             screen.queryByRole('link', {
-                name: /Archive|Search|Learning|Sources|Catalog review/,
+                name: /Search|Learning|Sources|Catalog review/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -83,7 +87,7 @@ describe('AppBottomNav', () => {
         page.url = '/archived';
         render(AppBottomNav);
 
-        expect(screen.getAllByRole('link')).toHaveLength(2);
+        expect(screen.getAllByRole('link')).toHaveLength(3);
         screen.getAllByRole('link').forEach((link) => {
             expect(link).not.toHaveAttribute('aria-current', 'page');
         });
@@ -116,4 +120,23 @@ describe('AppBottomNav mobile settings destination', () => {
             ).not.toHaveAttribute('aria-current', 'page');
         },
     );
+});
+
+describe('AppBottomNav archive destination', () => {
+    it('marks Archive current after navigation and clears Today', async () => {
+        render(AppBottomNav);
+        page.url = '/archive?page=2';
+        await nextTick();
+        expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveAttribute(
+            'aria-current',
+            'page',
+        );
+        expect(
+            screen.getByRole('link', { name: 'Settings' }),
+        ).not.toHaveAttribute('aria-current', 'page');
+    });
 });

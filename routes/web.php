@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\OnboardingController;
@@ -24,6 +25,7 @@ Route::get('/', function (Request $request) {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', fn () => redirect('/', 301))->middleware('onboarded')->name('dashboard');
     Route::get('days/{date}', DayController::class)->middleware('onboarded')->name('days.show');
+    Route::get('archive', ArchiveController::class)->middleware('onboarded')->name('archive.index');
 
     Route::get('onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('onboarding/interests', [OnboardingController::class, 'interests'])->name('onboarding.interests');

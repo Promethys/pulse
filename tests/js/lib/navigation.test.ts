@@ -18,7 +18,7 @@ describe('navigation', () => {
                 title: 'Archive',
                 href: '/archive',
                 icon: Archive,
-                available: false,
+                available: true,
             },
             {
                 title: 'Search',
@@ -49,7 +49,7 @@ describe('navigation', () => {
         ]);
         expect(
             navItems.filter((item) => item.available).map((item) => item.title),
-        ).toEqual(['Today', 'Settings']);
+        ).toEqual(['Today', 'Archive', 'Settings']);
         expect(
             navItems
                 .filter((item) => item.desktopOnly)

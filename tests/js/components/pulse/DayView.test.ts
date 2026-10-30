@@ -321,3 +321,33 @@ describe('DayView', () => {
         },
     );
 });
+
+describe('DayView archive navigation', () => {
+    it('links back to the archive below past content and hides the link for today', async () => {
+        const props = dayViewProps();
+        const rendered = renderDay(props);
+        const link = screen.getByRole('link', { name: 'Back to archive' });
+        expect(link).toHaveAttribute('href', '/archive');
+        const news = screen.getByRole('link', {
+            name: props.day.news!.sections[0].items[0].title,
+        });
+        expect(
+            news.compareDocumentPosition(link) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        const topic = screen.getByRole('heading', {
+            name: props.day.learning!.topic!.title,
+        });
+        expect(
+            topic.compareDocumentPosition(link) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        await rendered.view.rerender({
+            isToday: true,
+            day: { ...props.day, date: props.today },
+        });
+        expect(
+            screen.queryByRole('link', { name: 'Back to archive' }),
+        ).not.toBeInTheDocument();
+    });
+});

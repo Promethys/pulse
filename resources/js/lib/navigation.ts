@@ -19,7 +19,7 @@ export type NavigationItem = {
 
 export const navItems: NavigationItem[] = [
     { title: 'Today', href: '/', icon: Sun, available: true },
-    { title: 'Archive', href: '/archive', icon: Archive, available: false },
+    { title: 'Archive', href: '/archive', icon: Archive, available: true },
     { title: 'Search', href: '/search', icon: Search, available: false },
     {
         title: 'Learning',

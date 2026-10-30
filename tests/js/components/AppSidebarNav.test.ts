@@ -40,9 +40,23 @@ describe('AppSidebar', () => {
             'href',
             '/',
         );
+        expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
+            'href',
+            '/archive',
+        );
+        expect(
+            screen
+                .getAllByRole('link')
+                .filter((link) =>
+                    ['Today', 'Archive'].includes(
+                        link.textContent?.trim() ?? '',
+                    ),
+                )
+                .map((link) => link.textContent?.trim()),
+        ).toEqual(['Today', 'Archive']);
         expect(
             screen.queryByRole('link', {
-                name: /Settings|Archive|Search|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
+                name: /Settings|Search|Learning|Sources|Catalog review|Dashboard|Repository|Documentation/,
             }),
         ).not.toBeInTheDocument();
     });
@@ -58,8 +72,8 @@ describe('AppSidebar', () => {
                 screen.getByRole('link', { name: 'Sources' }),
             ).toHaveAttribute('href', '/sources');
             expect(
-                screen.queryByRole('link', { name: 'Archive' }),
-            ).not.toBeInTheDocument();
+                screen.getByRole('link', { name: 'Archive' }),
+            ).toHaveAttribute('href', '/archive');
         } finally {
             sources.available = available;
         }
@@ -169,5 +183,25 @@ describe('AppSidebar', () => {
             'md:pb-12',
         );
         expect(screen.queryByText('Legacy breadcrumb')).not.toBeInTheDocument();
+    });
+});
+
+describe('AppSidebar archive destination', () => {
+    it('highlights Archive after navigation and clears Today', async () => {
+        page.props = {
+            auth: {
+                user: { id: 1, name: 'Taylor', email: 'taylor@example.com' },
+            },
+        };
+        renderSidebar();
+        page.url = '/archive?page=2';
+        await nextTick();
+        expect(screen.getByRole('link', { name: 'Archive' })).toHaveClass(
+            'bg-sidebar-primary',
+            'text-sidebar-primary-foreground',
+        );
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(
+            'bg-sidebar-primary',
+        );
     });
 });
