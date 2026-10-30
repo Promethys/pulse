@@ -9,6 +9,9 @@ describe('SettingsLayout', () => {
         ['/settings/profile', 'Profile'],
         ['/settings/security?tab=password#form', 'Security'],
         ['/settings/appearance', 'Appearance'],
+        ['/settings/digest', 'Digest'],
+        ['/settings/delivery', 'Delivery'],
+        ['/settings/ai-keys', 'AI keys'],
     ])('marks only the current desktop section on %s', (path, label) => {
         page.url = path;
         render(SettingsLayout);
@@ -18,6 +21,9 @@ describe('SettingsLayout', () => {
         ).toBeInTheDocument();
         const links = [
             ['Profile', '/settings/profile'],
+            ['Digest', '/settings/digest'],
+            ['Delivery', '/settings/delivery'],
+            ['AI keys', '/settings/ai-keys'],
             ['Security', '/settings/security'],
             ['Appearance', '/settings/appearance'],
         ];
@@ -38,6 +44,9 @@ describe('SettingsLayout', () => {
         ['/settings/profile', 'Profile'],
         ['/settings/security', 'Security'],
         ['/settings/appearance', 'Appearance'],
+        ['/settings/digest', 'Digest'],
+        ['/settings/delivery', 'Delivery'],
+        ['/settings/ai-keys', 'AI keys'],
     ])(
         'offers the mobile back link and section heading on %s',
         (path, title) => {

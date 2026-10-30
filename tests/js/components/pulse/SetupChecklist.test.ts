@@ -49,16 +49,14 @@ describe('SetupChecklist', () => {
                     ).not.toBeInTheDocument();
                 }
             });
-            expect(screen.queryAllByRole('link')).toHaveLength(
-                Math.max(0, 2 - done),
-            );
+            expect(screen.queryAllByRole('link')).toHaveLength(4 - done);
             expect(screen.queryByRole('button')).not.toBeInTheDocument();
         },
     );
 });
 
 describe('SetupChecklist Sources links', () => {
-    it('links incomplete interests and sources, then keeps completed rows and future settings plain', async () => {
+    it('links incomplete rows to sources and settings, then keeps completed rows plain', async () => {
         const state = {
             interests: false,
             sources: false,
@@ -73,12 +71,18 @@ describe('SetupChecklist Sources links', () => {
             screen.getByRole('link', { name: /Review your sources/ }),
         ).toHaveAttribute('href', '/sources');
         expect(
-            screen.queryByRole('link', {
-                name: /Add an AI key|Choose where to receive it/,
-            }),
-        ).not.toBeInTheDocument();
+            screen.getByRole('link', { name: /Add an AI key/ }),
+        ).toHaveAttribute('href', '/settings/ai-keys');
+        expect(
+            screen.getByRole('link', { name: /Choose where to receive it/ }),
+        ).toHaveAttribute('href', '/settings/delivery');
         await view.rerender({
-            state: { ...state, interests: true, sources: true },
+            state: {
+                interests: true,
+                sources: true,
+                ai_key: true,
+                delivery: true,
+            },
         });
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
         expect(screen.getByText('Pick your interests')).toBeVisible();

@@ -24,7 +24,11 @@ import type {
 } from '@/types/onboarding';
 
 const props = withDefaults(
-    defineProps<{ providers: OnboardingProvider[]; explainer?: boolean }>(),
+    defineProps<{
+        providers: OnboardingProvider[];
+        explainer?: boolean;
+        testUrl?: string;
+    }>(),
     { explainer: true },
 );
 const model = defineModel<AiKeyInput>({ required: true });
@@ -72,7 +76,15 @@ async function testKey(): Promise<KeyTestResult> {
         model: model.value.model,
         api_key: model.value.api_key,
     });
-    return await http.submit(testAiKey());
+    try {
+        return await http.submit(
+            props.testUrl
+                ? { method: 'post', url: props.testUrl }
+                : testAiKey(),
+        );
+    } finally {
+        http.api_key = '';
+    }
 }
 </script>
 

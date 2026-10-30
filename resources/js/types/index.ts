@@ -7,3 +7,4 @@ export * from './search';
 export * from './tag';
 export * from './learning';
 export * from './sources';
+export * from './settings';

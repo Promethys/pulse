@@ -42,6 +42,7 @@ export default defineConfig({
         include: ['tests/js/**/*.test.ts'],
         setupFiles: ['tests/js/setup.ts'],
         restoreMocks: true,
+        maxWorkers: 4,
     },
     server: {
         watch: {

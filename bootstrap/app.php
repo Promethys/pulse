@@ -31,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['api_key']);
+        $exceptions->dontFlash(['api_key', 'webhook_url', 'settings']);
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

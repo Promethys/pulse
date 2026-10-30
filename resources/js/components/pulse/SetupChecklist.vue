@@ -30,6 +30,12 @@ const items: { key: keyof SetupState; label: string; hint: string }[] = [
         hint: 'Discord or email',
     },
 ];
+const destinations: Record<keyof SetupState, string> = {
+    interests: '/sources',
+    sources: '/sources',
+    ai_key: '/settings/ai-keys',
+    delivery: '/settings/delivery',
+};
 const done = computed(
     () => items.filter((item) => props.state[item.key]).length,
 );
@@ -58,16 +64,10 @@ const done = computed(
             <ul class="mt-3 divide-y divide-border">
                 <li v-for="item in items" :key="item.key">
                     <component
-                        :is="
-                            !state[item.key] &&
-                            (item.key === 'interests' || item.key === 'sources')
-                                ? Link
-                                : 'div'
-                        "
+                        :is="!state[item.key] ? Link : 'div'"
                         :href="
-                            !state[item.key] &&
-                            (item.key === 'interests' || item.key === 'sources')
-                                ? '/sources'
+                            !state[item.key]
+                                ? destinations[item.key]
                                 : undefined
                         "
                         class="flex items-center gap-3 py-2.5"

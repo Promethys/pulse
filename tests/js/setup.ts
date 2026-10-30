@@ -21,6 +21,15 @@ Object.assign(Element.prototype, {
     scrollIntoView: () => {},
 });
 
+vi.stubGlobal(
+    'ResizeObserver',
+    class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    },
+);
+
 beforeEach(() => {
     mockMatchMedia(false);
 });

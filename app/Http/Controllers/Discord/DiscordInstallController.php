@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
-class DiscordInstallController extends Controller
+final class DiscordInstallController extends Controller
 {
     public function install(Request $request, DiscordInstall $discord): RedirectResponse
     {
@@ -32,7 +32,7 @@ class DiscordInstallController extends Controller
         if ($request->query->has('error')) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('Pulse was not added to Discord.')]);
 
-            return to_route('dashboard');
+            return to_route('delivery.index');
         }
 
         $code = $request->query('code');
@@ -42,13 +42,13 @@ class DiscordInstallController extends Controller
         } catch (DiscordException) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('Pulse was not added to Discord.')]);
 
-            return to_route('dashboard');
+            return to_route('delivery.index');
         }
 
         $request->user()->discordGuilds()->updateOrCreate(['guild_id' => $guild['id']], ['name' => $guild['name']]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pulse was added to :name.', ['name' => $guild['name']])]);
 
-        return to_route('dashboard');
+        return to_route('delivery.index');
     }
 }

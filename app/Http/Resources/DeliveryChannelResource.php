@@ -34,11 +34,23 @@ final class DeliveryChannelResource extends JsonResource
                 DeliveryChannelType::DiscordWebhook => ['webhook' => '…'.substr($settings['webhook_url'] ?? '', -4)],
                 DeliveryChannelType::InApp => (object) [],
             },
-            'latest_delivery' => $this->when($hasLatest, function () {
+            'latest_delivery' => $this->when($hasLatest, function () use ($request, $settings) {
                 /** @var Delivery|null $delivery */
                 $delivery = $this->resource->getAttribute('latestDelivery');
 
-                return $delivery === null ? null : new DeliveryResource($delivery);
+                if ($delivery === null) {
+                    return null;
+                }
+                $data = (new DeliveryResource($delivery))->resolve($request);
+                if ($delivery->last_error !== null) {
+                    $secrets = array_filter([$settings['webhook_url'] ?? '', (string) config('services.discord.token')]);
+                    if (isset($settings['webhook_url'])) {
+                        $secrets[] = basename($settings['webhook_url']);
+                    }
+                    $data['last_error'] = str_replace($secrets, '[redacted]', $delivery->last_error);
+                }
+
+                return $data;
             }),
         ];
     }

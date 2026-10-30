@@ -131,7 +131,7 @@ class OnboardingGateTest extends TestCase
         $this->assertIsString($state);
         $response->assertRedirect(app(DiscordInstall::class)->authorizeUrl($state));
         $this->get(route('discord.callback', ['state' => $state, 'error' => 'access_denied']))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('delivery.index'));
         Http::assertNothingSent();
     }
 
