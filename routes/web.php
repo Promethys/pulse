@@ -8,6 +8,7 @@ use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SourcesController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TodayController;
 use App\Http\Middleware\EnsureOnboarded;
@@ -33,6 +34,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('learning', [LearningController::class, 'index'])->middleware('onboarded')->name('learning.index');
     Route::get('learning/{id}', [LearningController::class, 'show'])->whereNumber('id')->middleware('onboarded')->name('learning.show');
     Route::get('tags/{tag:slug}', TagController::class)->middleware('onboarded')->name('tags.show');
+
+    Route::middleware('onboarded')->prefix('sources')->name('sources.')->group(function () {
+        Route::get('/', [SourcesController::class, 'index'])->name('index');
+        Route::put('subscriptions/{source}', [SourcesController::class, 'subscription'])->name('subscription');
+        Route::put('interests', [SourcesController::class, 'interests'])->name('interests');
+        Route::post('test', [SourcesController::class, 'test'])->middleware('throttle:6,1')->name('test');
+        Route::post('/', [SourcesController::class, 'store'])->name('store');
+        Route::put('{source}', [SourcesController::class, 'update'])->name('update');
+        Route::delete('{source}', [SourcesController::class, 'destroy'])->name('destroy');
+    });
 
     Route::get('onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('onboarding/interests', [OnboardingController::class, 'interests'])->name('onboarding.interests');

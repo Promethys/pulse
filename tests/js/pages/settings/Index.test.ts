@@ -14,7 +14,7 @@ describe('settings/Index', () => {
             screen.getByRole('heading', { level: 1, name: 'Settings' }),
         ).toBeVisible();
         expect(screen.getAllByRole('link')).toHaveLength(
-            settingsSections.length,
+            settingsSections.length + 1,
         );
         settingsSections.forEach(({ label, href }) => {
             expect(
@@ -47,5 +47,12 @@ describe('settings/Index', () => {
                   : url.url,
         ).toBe(logout.url());
         expect(options).toMatchObject({ method: 'post' });
+    });
+});
+
+describe('settings/Index Sources destination', () => {
+    it('offers Sources so mobile users can manage their sources', () => {
+        render(SettingsIndex);
+        expect(screen.getByRole('link', { name: /^Sources$/ })).toHaveAttribute('href', '/sources');
     });
 });

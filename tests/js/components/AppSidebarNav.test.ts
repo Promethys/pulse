@@ -48,35 +48,28 @@ describe('AppSidebar', () => {
             screen
                 .getAllByRole('link')
                 .filter((link) =>
-                    ['Today', 'Archive', 'Search', 'Learning'].includes(
+                    ['Today', 'Archive', 'Search', 'Learning', 'Sources'].includes(
                         link.textContent?.trim() ?? '',
                     ),
                 )
                 .map((link) => link.textContent?.trim()),
-        ).toEqual(['Today', 'Archive', 'Search', 'Learning']);
+        ).toEqual(['Today', 'Archive', 'Search', 'Learning', 'Sources']);
         expect(
             screen.queryByRole('link', {
-                name: /Settings|Sources|Catalog review|Dashboard|Repository|Documentation/,
+                name: /Settings|Catalog review|Dashboard|Repository|Documentation/,
             }),
         ).not.toBeInTheDocument();
     });
 
-    it('includes Sources on desktop once it becomes available', () => {
-        const sources = navItems.find((item) => item.title === 'Sources')!;
-        const available = sources.available;
-        try {
-            sources.available = true;
-            renderSidebar();
-
-            expect(
-                screen.getByRole('link', { name: 'Sources' }),
-            ).toHaveAttribute('href', '/sources');
-            expect(
-                screen.getByRole('link', { name: 'Archive' }),
-            ).toHaveAttribute('href', '/archive');
-        } finally {
-            sources.available = available;
-        }
+    it('links Sources on desktop and highlights it after navigation', async () => {
+        expect(navItems.find((item) => item.title === 'Sources')?.available).toBe(true);
+        renderSidebar();
+        const link = screen.getByRole('link', { name: 'Sources' });
+        expect(link).toHaveAttribute('href', '/sources');
+        page.url = '/sources?tab=mine';
+        await nextTick();
+        expect(link).toHaveClass('bg-sidebar-primary', 'text-sidebar-primary-foreground');
+        expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass('bg-sidebar-primary');
     });
 
     it.each(['/'])(

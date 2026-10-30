@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { Check, X } from '@lucide/vue';
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,7 +57,11 @@ const done = computed(
             />
             <ul class="mt-3 divide-y divide-border">
                 <li v-for="item in items" :key="item.key">
-                    <div class="flex items-center gap-3 py-2.5">
+                    <component
+                        :is="!state[item.key] && (item.key === 'interests' || item.key === 'sources') ? Link : 'div'"
+                        :href="!state[item.key] && (item.key === 'interests' || item.key === 'sources') ? '/sources' : undefined"
+                        class="flex items-center gap-3 py-2.5"
+                    >
                         <span
                             :class="
                                 cn(
@@ -94,7 +99,7 @@ const done = computed(
                                 >{{ item.hint }}</span
                             >
                         </span>
-                    </div>
+                    </component>
                 </li>
             </ul>
         </CardContent>

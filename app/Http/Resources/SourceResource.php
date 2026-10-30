@@ -26,11 +26,12 @@ final class SourceResource extends JsonResource
             'is_custom' => $this->user_id !== null,
             'is_default' => $this->is_default,
             'enabled' => $this->enabled,
+            'has_key' => is_string($this->credentials['api_key'] ?? null) && $this->credentials['api_key'] !== '',
             'last_fetched_at' => $this->last_fetched_at?->toIso8601String(),
             'last_success_at' => $this->last_success_at?->toIso8601String(),
             'last_error' => $this->last_error,
             'health' => $this->last_error !== null ? 'failing' : ($this->last_success_at?->greaterThanOrEqualTo(now()->subHours(48)) ? 'ok' : 'unknown'),
-            'interests' => InterestResource::collection($this->whenLoaded('interests')),
+            'interests' => $this->whenLoaded('interests', fn () => InterestResource::collection($this->interests)->resolve($request)),
         ];
     }
 }

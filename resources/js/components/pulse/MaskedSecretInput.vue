@@ -8,6 +8,7 @@ defineProps<{
     id: string;
     label: string;
     hint?: string;
+    placeholder?: string;
     storedLast4?: string;
 }>();
 const model = defineModel<string>({ required: true });
@@ -27,7 +28,7 @@ const show = ref(false);
                 maxlength="500"
                 class="pr-10 font-mono text-sm"
                 :placeholder="
-                    storedLast4 ? `Stored: ••••${storedLast4}` : undefined
+                    placeholder ?? (storedLast4 ? `Stored: ••••${storedLast4}` : undefined)
                 "
             />
             <button

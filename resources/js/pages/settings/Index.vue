@@ -33,6 +33,12 @@ const logOut = () => {
             </Link>
         </li>
         <li>
+            <Link href="/sources" class="flex items-center justify-between p-4 text-sm font-medium">
+                Sources
+                <ChevronRight class="size-4 text-muted-foreground" aria-hidden="true" />
+            </Link>
+        </li>
+        <li>
             <button
                 type="button"
                 class="flex w-full items-center p-4 text-sm font-medium text-destructive"

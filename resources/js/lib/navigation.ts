@@ -31,7 +31,7 @@ export const navItems: NavigationItem[] = [
         title: 'Sources',
         href: '/sources',
         icon: Activity,
-        available: false,
+        available: true,
         desktopOnly: true,
     },
     {
