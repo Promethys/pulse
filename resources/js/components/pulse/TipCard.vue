@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Lightbulb } from '@lucide/vue';
+import ClampedProse from '@/components/pulse/ClampedProse.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { LearningPost } from '@/types';
@@ -24,7 +25,7 @@ defineProps<{ tip: LearningPost }>();
             </h3>
         </CardHeader>
         <CardContent class="space-y-3 text-sm leading-relaxed">
-            <div class="pulse-prose" v-html="tip.body_html" />
+            <ClampedProse :html="tip.body_html" />
             <div
                 v-if="tip.tags.length"
                 class="flex flex-wrap items-center gap-1"

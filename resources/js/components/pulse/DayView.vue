@@ -104,7 +104,10 @@ function selectDate(date: DateValue | undefined) {
                 /></Button>
             </div>
         </header>
-        <div v-if="hasLearningCards" class="grid gap-4 md:grid-cols-2">
+        <div
+            v-if="hasLearningCards"
+            class="grid items-start gap-4 md:grid-cols-2"
+        >
             <TipCard v-if="day.learning?.tip" :tip="day.learning.tip" />
             <TopicCard v-if="day.learning?.topic" :topic="day.learning.topic" />
         </div>
@@ -141,7 +144,11 @@ function selectDate(date: DateValue | undefined) {
                 description="Nothing notable came through. Enjoy the tip and topic instead."
             />
             <template v-else>
-                <div v-for="section in day.news.sections" :key="section.slug">
+                <div
+                    v-for="section in day.news.sections"
+                    :key="section.slug"
+                    class="mt-10 first:mt-0"
+                >
                     <SectionHeader
                         :title="section.name"
                         :count="section.items.length"

@@ -25,7 +25,7 @@ describe('TipCard', () => {
         expect(screen.getByRole('listitem')).toHaveTextContent('Measure first');
         const link = screen.getByRole('link', { name: 'Query plan guide' });
         expect(link).toHaveAttribute('href', 'https://docs.example.test/plans');
-        expect(link.closest('.pulse-prose')).toBeInTheDocument();
+        expect(link.closest('.pulse-prose')).toHaveClass('line-clamp-6');
     });
 
     it('accepts no tags without inventing a chip', () => {
