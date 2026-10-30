@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { BookOpen } from '@lucide/vue';
+import { ref } from 'vue';
 import ClampedProse from '@/components/pulse/ClampedProse.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
