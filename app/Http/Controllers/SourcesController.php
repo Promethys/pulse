@@ -13,6 +13,7 @@ use App\Enums\SourceType;
 use App\Http\Requests\CustomSourceRequest;
 use App\Http\Requests\Onboarding\ChooseInterestsRequest;
 use App\Http\Requests\TestSourceRequest;
+use App\Http\Requests\UpdateSourceSubscriptionRequest;
 use App\Http\Resources\InterestResource;
 use App\Models\Interest;
 use App\Models\Source;
@@ -46,9 +47,9 @@ final class SourcesController extends Controller
         ]);
     }
 
-    public function subscription(Request $request, Source $source): RedirectResponse
+    public function subscription(UpdateSourceSubscriptionRequest $request, Source $source): RedirectResponse
     {
-        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+        $data = $request->validated();
         $subscription = $request->user()->sourceSubscriptions()->where('source_id', $source->id)->firstOrFail();
         $subscription->update($data);
 
