@@ -44,7 +44,7 @@ const currentSection = computed(() =>
                     :class="
                         currentPath === section.href
                             ? 'bg-background text-foreground shadow-sm'
-                            : 'hover:text-foreground'
+                            : 'hover:bg-accent hover:text-accent-foreground'
                     "
                 >
                     {{ section.label }}

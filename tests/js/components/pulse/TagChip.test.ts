@@ -42,7 +42,7 @@ describe('TagChip toggle', () => {
         });
 
         expect(screen.getByRole('button', { name: 'PHP' })).not.toHaveClass(
-            'hover:bg-primary/60',
+            'hover:bg-accent',
         );
         view.unmount();
     });
@@ -70,7 +70,7 @@ describe('TagChip link', () => {
     it('keeps the hover style on the link', () => {
         render(TagChip, { props: { ...tagProps(), linked: true } });
         expect(screen.getByRole('link', { name: 'Programming' })).toHaveClass(
-            'hover:bg-primary/60',
+            'hover:bg-accent',
         );
     });
 });

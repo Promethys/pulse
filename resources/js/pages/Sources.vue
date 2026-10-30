@@ -168,7 +168,7 @@ function deleteSource() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                class="text-destructive hover:text-destructive"
+                                class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
                                 @click="confirmDelete(source)"
                                 ><Trash2 aria-hidden="true" /> Delete</Button
                             >

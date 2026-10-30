@@ -21,7 +21,7 @@ const { resolvedAppearance, updateAppearance } = useAppearance();
         <NavMain :items="navItems" />
         <button
             type="button"
-            class="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 hover:bg-sidebar-accent"
+            class="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground"
             @click="
                 updateAppearance(
                     resolvedAppearance === 'dark' ? 'light' : 'dark',

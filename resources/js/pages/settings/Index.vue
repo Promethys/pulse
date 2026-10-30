@@ -23,7 +23,7 @@ const logOut = () => {
         <li v-for="section in settingsSections" :key="section.href">
             <Link
                 :href="section.href"
-                class="flex items-center justify-between p-4 text-sm font-medium"
+                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
             >
                 {{ section.label }}
                 <ChevronRight
@@ -35,7 +35,7 @@ const logOut = () => {
         <li>
             <Link
                 href="/sources"
-                class="flex items-center justify-between p-4 text-sm font-medium"
+                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
             >
                 Sources
                 <ChevronRight
@@ -47,7 +47,7 @@ const logOut = () => {
         <li>
             <button
                 type="button"
-                class="flex w-full items-center p-4 text-sm font-medium text-destructive"
+                class="flex w-full items-center p-4 text-sm font-medium text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20"
                 @click="logOut"
             >
                 Log out

@@ -21,7 +21,7 @@ const page = usePage();
             :class="
                 isActive(page.url, item.href)
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                    : 'text-sidebar-foreground/75 hover:bg-sidebar-accent'
+                    : 'text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground'
             "
         >
             <component :is="item.icon" class="size-4" aria-hidden="true" />

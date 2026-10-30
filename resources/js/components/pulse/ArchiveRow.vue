@@ -45,7 +45,10 @@ const label = computed(() => {
 </script>
 
 <template>
-    <Link :href="href" class="flex items-center gap-4 p-4 hover:bg-muted/60">
+    <Link
+        :href="href"
+        class="flex items-center gap-4 p-4 hover:bg-accent hover:text-accent-foreground"
+    >
         <div
             class="flex w-12 shrink-0 flex-col items-center rounded-lg bg-primary py-1.5 text-primary-foreground"
         >
