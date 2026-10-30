@@ -169,7 +169,17 @@ onBeforeUnmount(() => clearTimeout(debounce));
                     :message="errors.q"
                     class="mt-2"
                 />
-                <p class="mt-3 text-xs text-muted-foreground">{{ count }}</p>
+                <div class="mt-3 flex items-center justify-between gap-2">
+                    <p class="text-xs text-muted-foreground">{{ count }}</p>
+                    <button
+                        v-if="active > 0"
+                        type="button"
+                        class="text-xs font-medium text-primary-strong underline-offset-2 hover:underline"
+                        @click="reset"
+                    >
+                        Clear filters
+                    </button>
+                </div>
                 <NewsItemRow
                     v-for="item in results"
                     :key="item.id"

@@ -217,6 +217,35 @@ describe('Search', () => {
         expect(within(sheet).getByLabelText('To')).toHaveValue('');
     });
 
+    it('offers Clear filters only with an active filter and keeps the text', async () => {
+        const get = vi.spyOn(router, 'get').mockImplementation(() => {});
+        const props = searchProps();
+        props.filters = { ...props.filters, q: 'compiler', tags: ['php'] };
+        renderPage(props);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+        expect(get).toHaveBeenLastCalledWith(
+            '/search',
+            { q: 'compiler' },
+            visitOptions,
+        );
+        expect(
+            screen.queryByRole('button', { name: 'Clear filters' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('hides Clear filters when only the text is set', () => {
+        const props = searchProps();
+        props.filters = { ...props.filters, q: 'compiler' };
+        renderPage(props);
+
+        expect(
+            screen.queryByRole('button', { name: 'Clear filters' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('uses server results with singular count and digest dates', () => {
         renderPage();
         expect(screen.getByText('1 result')).toBeVisible();
