@@ -15,7 +15,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
   <RadioGroupItem
     data-slot="radio-group-item"
     v-bind="forwarded"
-    :class="cn('aspect-square size-4 shrink-0 rounded-full border border-input text-primary shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50', props.class)"
+    :class="cn('aspect-square size-4 shrink-0 rounded-full border border-input text-primary-strong shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50', props.class)"
   >
     <RadioGroupIndicator class="flex items-center justify-center">
       <span class="size-2 rounded-full bg-current" />
