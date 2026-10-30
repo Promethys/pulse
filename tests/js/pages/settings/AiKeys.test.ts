@@ -81,7 +81,9 @@ describe('AI keys settings', () => {
             screen.getByRole('button', { name: 'Add a key' }),
         );
         const dialog = await screen.findByRole('dialog');
-        expect(within(dialog).getByText('Why your own key?')).toBeVisible();
+        expect(
+            within(dialog).queryByText('Why your own key?'),
+        ).not.toBeInTheDocument();
         expect(
             within(dialog).getByRole('button', { name: /^Add$/ }),
         ).toBeDisabled();
