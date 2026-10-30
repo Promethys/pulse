@@ -53,7 +53,7 @@ const date = computed(() => dateParts(props.item.date));
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Open source"
-                class="inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-muted hover:text-foreground"
+                class="-mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-muted hover:text-foreground"
             >
                 <ExternalLink class="size-3.5" aria-hidden="true" />
             </a>

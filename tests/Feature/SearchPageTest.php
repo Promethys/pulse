@@ -154,4 +154,13 @@ class SearchPageTest extends TestCase
             ->get('/search?from=2026-10-29&to=2026-10-28')
             ->assertSessionHasErrors(['to' => 'The end date must be on or after the start date.']);
     }
+
+    public function test_an_invalid_link_stays_on_search_whatever_page_came_before(): void
+    {
+        $user = User::factory()->onboarded()->create();
+
+        $this->actingAs($user)->from('/archive')
+            ->get('/search?from=2026-10-29&to=2026-10-28')
+            ->assertRedirect(route('search.index'));
+    }
 }

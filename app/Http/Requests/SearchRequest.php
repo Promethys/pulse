@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class SearchRequest extends FormRequest
 {
+    protected $redirectRoute = 'search.index';
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */

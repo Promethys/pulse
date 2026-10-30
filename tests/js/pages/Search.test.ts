@@ -256,6 +256,7 @@ describe('Search', () => {
         expect(
             screen.queryByRole('button', { name: 'Clear search' }),
         ).not.toBeInTheDocument();
+        expect(screen.getByRole('searchbox')).toHaveFocus();
     });
 
     it('hides Clear filters when only the text is set', () => {

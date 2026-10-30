@@ -66,7 +66,11 @@ function clear() {
                 {{ label }}
             </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" class="w-auto p-0">
+        <PopoverContent
+            align="start"
+            class="w-auto p-0"
+            :collision-padding="16"
+        >
             <Calendar
                 :model-value="selected"
                 :default-placeholder="selected"

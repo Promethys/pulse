@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { Search as SearchIcon, SlidersHorizontal, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
@@ -28,6 +28,7 @@ const filters = ref<SearchFilterValues>({
     tags: [...props.filters.tags],
 });
 const sheetOpen = ref(false);
+const searchBox = useTemplateRef<HTMLElement>('searchBox');
 const errors = computed(() => page.props.errors);
 const active = computed(
     () =>
@@ -74,6 +75,7 @@ function updateQuery(value: string | number) {
 function clearQuery() {
     filters.value.q = null;
     search();
+    searchBox.value?.querySelector('input')?.focus();
 }
 
 function updateFilters(value: SearchFilterValues) {
@@ -103,7 +105,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                 <div
                     class="sticky top-0 z-10 -mx-4 flex gap-2 bg-background/95 px-4 py-2 backdrop-blur md:static md:mx-0 md:px-0"
                 >
-                    <div class="relative flex-1">
+                    <div ref="searchBox" class="relative flex-1">
                         <SearchIcon
                             class="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
                             aria-hidden="true"
