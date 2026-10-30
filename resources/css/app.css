@@ -190,6 +190,13 @@
             padding: 0.75rem;
             font-size: 0.75rem;
         }
+        & pre.phiki {
+            background-color: var(--muted) !important;
+        }
+        .dark & pre.phiki,
+        .dark & pre.phiki span {
+            color: var(--phiki-dark-color) !important;
+        }
         & ul,
         & ol {
             padding-left: 1.25rem;

@@ -444,4 +444,25 @@ class ReadResourcesTest extends TestCase
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/', $actual);
         $this->assertTrue($expected->equalTo(CarbonImmutable::parse($actual)));
     }
+
+    public function test_learning_body_highlights_code_with_a_known_language_only(): void
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user)->create(['kind' => PostKind::Learning]);
+        $entry = LearningPost::query()->create([
+            'post_id' => $post->id,
+            'kind' => LearningKind::Tip,
+            'title' => 'Tip',
+            'links' => [],
+            'body' => "```php\n\$a = strlen('x');\n```\n\n```nosuchlang\n<b>plain</b>\n```\n\n```\nbare\n```",
+        ]);
+
+        $html = (new LearningPostResource($entry))->resolve(request())['body_html'];
+
+        $this->assertStringContainsString('data-language="php"', $html);
+        $this->assertStringContainsString('--phiki-dark-color', $html);
+        $this->assertStringContainsString('&lt;b&gt;plain&lt;/b&gt;', $html);
+        $this->assertStringNotContainsString('<b>plain</b>', $html);
+        $this->assertStringContainsString('bare', $html);
+    }
 }

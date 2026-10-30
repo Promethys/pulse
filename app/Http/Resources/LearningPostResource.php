@@ -8,6 +8,8 @@ use App\Models\LearningPost;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
+use Phiki\Adapters\CommonMark\PhikiExtension;
+use Phiki\Theme\Theme;
 
 /** @mixin LearningPost */
 final class LearningPostResource extends JsonResource
@@ -23,7 +25,9 @@ final class LearningPostResource extends JsonResource
             'date' => $this->whenLoaded('post', fn () => $this->post->date->toDateString()),
             'title' => $this->title,
             'body' => $this->body,
-            'body_html' => Str::markdown($this->body, ['html_input' => 'strip', 'allow_unsafe_links' => false]),
+            'body_html' => Str::markdown($this->body, ['html_input' => 'strip', 'allow_unsafe_links' => false], [
+                new PhikiExtension(['light' => Theme::GithubLight, 'dark' => Theme::GithubDark]),
+            ]),
             'category' => $this->topic?->category,
             'links' => $this->links ?? [],
             'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve($request)),
