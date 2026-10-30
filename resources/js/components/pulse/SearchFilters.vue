@@ -91,6 +91,7 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 <DatePicker
                     :id="`${id}-from`"
                     :model-value="modelValue.from"
+                    :max="modelValue.to"
                     :invalid="!!errors.from"
                     :described-by="errors.from ? `${id}-from-error` : undefined"
                     @update:model-value="updateDate('from', $event)"
@@ -106,6 +107,7 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 <DatePicker
                     :id="`${id}-to`"
                     :model-value="modelValue.to"
+                    :min="modelValue.from"
                     :invalid="!!errors.to"
                     :described-by="errors.to ? `${id}-to-error` : undefined"
                     @update:model-value="updateDate('to', $event)"

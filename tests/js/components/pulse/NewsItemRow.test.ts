@@ -62,7 +62,7 @@ describe('NewsItemRow search date', () => {
         render(NewsItemRow, {
             props: { item: newsItemProps(), showDate: true },
         });
-        expect(screen.getByText(/·\s*28 Oct/)).toBeVisible();
+        expect(screen.getByText('28 Oct')).toBeVisible();
         expect(
             screen.getByText('Compiler News').parentElement,
         ).toHaveTextContent(/Compiler News\s*·\s*28 Oct/);

@@ -25,32 +25,37 @@ const date = computed(() => dateParts(props.item.date));
         >
             {{ item.summary }}
         </p>
-        <div
-            class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground"
-        >
-            <span v-if="item.source" class="font-medium text-foreground/80">{{
-                item.source
-            }}</span>
-            <span v-if="showDate">· {{ date.day }} {{ date.month }}</span>
-            <span v-if="item.tags.length" class="flex gap-1">
-                <TagChip
-                    v-for="tag in item.tags"
-                    :key="tag.id"
-                    :slug="tag.slug"
-                    :name="tag.name"
-                />
-            </span>
-            <div class="ml-auto flex items-center">
-                <a
-                    :href="item.url"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Open source"
-                    class="inline-flex size-8 items-center justify-center rounded-full hover:bg-muted hover:text-foreground"
+        <div class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+            <div
+                class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5"
+            >
+                <span
+                    v-if="item.source"
+                    class="font-medium text-foreground/80"
+                    >{{ item.source }}</span
                 >
-                    <ExternalLink class="size-3.5" aria-hidden="true" />
-                </a>
+                <template v-if="showDate">
+                    <span aria-hidden="true">·</span>
+                    <span>{{ date.day }} {{ date.month }}</span>
+                </template>
+                <span v-if="item.tags.length" class="flex flex-wrap gap-1">
+                    <TagChip
+                        v-for="tag in item.tags"
+                        :key="tag.id"
+                        :slug="tag.slug"
+                        :name="tag.name"
+                    />
+                </span>
             </div>
+            <a
+                :href="item.url"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open source"
+                class="inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-muted hover:text-foreground"
+            >
+                <ExternalLink class="size-3.5" aria-hidden="true" />
+            </a>
         </div>
     </article>
 </template>

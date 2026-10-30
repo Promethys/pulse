@@ -13,11 +13,11 @@ const emit = defineEmits<{ toggle: [] }>();
         :is="onToggle ? 'button' : 'span'"
         :type="onToggle ? 'button' : undefined"
         :aria-pressed="onToggle ? !!active : undefined"
-        class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors hover:bg-primary/60"
+        class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors"
         :class="
             active
                 ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-secondary text-secondary-foreground'
+                : 'border-border bg-secondary text-secondary-foreground hover:bg-primary/60'
         "
         @click="emit('toggle')"
         >{{ name }}</component

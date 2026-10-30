@@ -239,6 +239,25 @@ describe('Search', () => {
         ).not.toBeInTheDocument();
     });
 
+    it('clears the text with its own button and keeps the filters', async () => {
+        const get = vi.spyOn(router, 'get').mockImplementation(() => {});
+        const props = searchProps();
+        props.filters = { ...props.filters, q: 'compiler', tags: ['php'] };
+        renderPage(props);
+        const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+        expect(get).toHaveBeenLastCalledWith(
+            '/search',
+            { tags: ['php'] },
+            visitOptions,
+        );
+        expect(
+            screen.queryByRole('button', { name: 'Clear search' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('hides Clear filters when only the text is set', () => {
         const props = searchProps();
         props.filters = { ...props.filters, q: 'compiler' };
@@ -256,7 +275,7 @@ describe('Search', () => {
         expect(
             screen.getByRole('link', { name: newsItemProps().title }),
         ).toHaveAttribute('href', newsItemProps().url);
-        expect(screen.getByText(/·\s*28 Oct/)).toBeVisible();
+        expect(screen.getByText('28 Oct')).toBeVisible();
     });
 
     it('uses the same empty state with no digests or no matches', () => {

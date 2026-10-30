@@ -18,6 +18,8 @@ const props = defineProps<{
     ariaLabel?: string;
     invalid?: boolean;
     describedBy?: string;
+    min?: string | null;
+    max?: string | null;
 }>();
 const emit = defineEmits<{ 'update:modelValue': [value: string | null] }>();
 
@@ -25,6 +27,8 @@ const open = ref(false);
 const selected = computed<CalendarDate | undefined>(() =>
     props.modelValue ? parseDate(props.modelValue) : undefined,
 );
+const minValue = computed(() => (props.min ? parseDate(props.min) : undefined));
+const maxValue = computed(() => (props.max ? parseDate(props.max) : undefined));
 const label = computed(() => {
     if (!props.modelValue) return 'Pick a date';
 
@@ -52,7 +56,7 @@ function clear() {
             <Button
                 :id="id"
                 variant="outline"
-                class="w-full justify-start font-normal data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary"
+                class="w-full justify-start font-normal data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary dark:aria-invalid:border-destructive dark:data-[state=open]:bg-primary dark:data-[state=open]:hover:bg-primary"
                 :class="{ 'text-muted-foreground': !modelValue }"
                 :aria-label="ariaLabel"
                 :aria-invalid="invalid || undefined"
@@ -66,6 +70,8 @@ function clear() {
             <Calendar
                 :model-value="selected"
                 :default-placeholder="selected"
+                :min-value="minValue"
+                :max-value="maxValue"
                 locale="en-GB"
                 calendar-label="Pick a date"
                 initial-focus

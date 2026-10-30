@@ -30,4 +30,20 @@ describe('TagChip toggle', () => {
         await userEvent.setup().click(chip);
         expect(toggle).toHaveBeenCalledTimes(2);
     });
+
+    it('keeps the active look under the pointer', () => {
+        const view = render(TagChip, {
+            props: {
+                slug: 'php',
+                name: 'PHP',
+                active: true,
+                onToggle: () => {},
+            },
+        });
+
+        expect(screen.getByRole('button', { name: 'PHP' })).not.toHaveClass(
+            'hover:bg-primary/60',
+        );
+        view.unmount();
+    });
 });

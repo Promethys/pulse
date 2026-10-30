@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { Search as SearchIcon, SlidersHorizontal } from '@lucide/vue';
+import { Search as SearchIcon, SlidersHorizontal, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
@@ -71,6 +71,11 @@ function updateQuery(value: string | number) {
     debounce = setTimeout(search, 300);
 }
 
+function clearQuery() {
+    filters.value.q = null;
+    search();
+}
+
 function updateFilters(value: SearchFilterValues) {
     filters.value = value;
     search();
@@ -108,7 +113,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                             role="searchbox"
                             aria-label="Search titles and summaries"
                             placeholder="Search titles and summaries…"
-                            class="h-11 rounded-full pl-10"
+                            class="h-11 rounded-full pr-10 pl-10 [&::-webkit-search-cancel-button]:appearance-none"
                             :model-value="filters.q ?? ''"
                             :aria-invalid="!!errors.q"
                             :aria-describedby="
@@ -116,6 +121,15 @@ onBeforeUnmount(() => clearTimeout(debounce));
                             "
                             @update:model-value="updateQuery"
                         />
+                        <button
+                            v-if="filters.q"
+                            type="button"
+                            aria-label="Clear search"
+                            class="absolute top-1/2 right-3 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                            @click="clearQuery"
+                        >
+                            <X class="size-4" aria-hidden="true" />
+                        </button>
                     </div>
                     <Sheet v-model:open="sheetOpen">
                         <SheetTrigger as-child>
@@ -127,7 +141,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                                 <SlidersHorizontal aria-hidden="true" />
                                 <span
                                     v-if="active > 0"
-                                    class="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground"
+                                    class="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary-strong text-[10px] font-semibold text-background"
                                     >{{ active }}</span
                                 >
                             </Button>

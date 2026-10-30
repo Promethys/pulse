@@ -145,4 +145,13 @@ class SearchPageTest extends TestCase
 
         return parse_url($url, PHP_URL_PATH) === '/search' && $actual == $expected;
     }
+
+    public function test_inverted_dates_get_a_readable_message(): void
+    {
+        $user = User::factory()->onboarded()->create();
+
+        $this->actingAs($user)->from('/search')
+            ->get('/search?from=2026-10-29&to=2026-10-28')
+            ->assertSessionHasErrors(['to' => 'The end date must be on or after the start date.']);
+    }
 }

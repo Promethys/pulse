@@ -148,12 +148,9 @@ describe('ArchiveRow', () => {
             }));
             render(ArchiveRow, { props: { day, today: '2026-10-30' } });
 
-            expect(screen.getByText('Tag 2')).not.toHaveClass('hidden');
+            expect(screen.getByText('Tag 2')).not.toHaveClass('max-md:hidden');
             if (count > 3) {
-                expect(screen.getByText('Tag 3')).toHaveClass(
-                    'hidden',
-                    'md:inline-flex',
-                );
+                expect(screen.getByText('Tag 3')).toHaveClass('max-md:hidden');
             }
             if (mobile) {
                 expect(screen.getByText(mobile)).toHaveClass('md:hidden');
@@ -163,9 +160,7 @@ describe('ArchiveRow', () => {
                     'hidden',
                     'md:inline-flex',
                 );
-                expect(screen.getByText('Tag 7')).not.toHaveClass(
-                    'md:inline-flex',
-                );
+                expect(screen.queryByText('Tag 7')).not.toBeInTheDocument();
             }
             expect(screen.queryAllByText(/^\+/)).toHaveLength(
                 [mobile, desktop].filter(Boolean).length,

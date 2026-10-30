@@ -74,4 +74,27 @@ describe('DatePicker', () => {
             screen.queryByRole('button', { name: 'Clear' }),
         ).not.toBeInTheDocument();
     });
+
+    it('disables days outside the allowed range', async () => {
+        const user = userEvent.setup();
+        render(DatePicker, {
+            props: {
+                modelValue: '2026-10-20',
+                ariaLabel: 'To',
+                min: '2026-10-15',
+                max: '2026-10-25',
+            },
+        });
+
+        await user.click(screen.getByRole('button', { name: 'To' }));
+        await screen.findByRole('application');
+        const disabled = (button: HTMLElement) =>
+            button.hasAttribute('disabled') ||
+            button.getAttribute('aria-disabled') === 'true' ||
+            button.hasAttribute('data-disabled');
+
+        expect(disabled(day(14))).toBe(true);
+        expect(disabled(day(26))).toBe(true);
+        expect(disabled(day(16))).toBe(false);
+    });
 });

@@ -25,6 +25,22 @@ final class SearchRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['from' => 'start date', 'to' => 'end date'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['to.after_or_equal' => 'The end date must be on or after the start date.'];
+    }
+
     public function filters(): SearchFilters
     {
         return new SearchFilters(

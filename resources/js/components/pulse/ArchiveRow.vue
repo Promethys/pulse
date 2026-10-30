@@ -69,15 +69,11 @@ const label = computed(() => {
                 class="mt-1.5 flex max-h-7 flex-wrap gap-1 overflow-hidden"
             >
                 <TagChip
-                    v-for="(tag, index) in day.tags"
+                    v-for="(tag, index) in day.tags.slice(0, DESKTOP_TAGS)"
                     :key="tag.id"
                     :slug="tag.slug"
                     :name="tag.name"
-                    :class="{
-                        'hidden md:inline-flex':
-                            index >= MOBILE_TAGS && index < DESKTOP_TAGS,
-                        hidden: index >= DESKTOP_TAGS,
-                    }"
+                    :class="{ 'max-md:hidden': index >= MOBILE_TAGS }"
                 />
                 <span
                     v-if="hiddenOnMobile > 0"
