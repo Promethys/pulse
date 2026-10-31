@@ -8,6 +8,10 @@ Digest behavior is stored per account: timezone, schedule, toggles, profile, max
 
 `APP_NAME` defaults to `Pulse` in `config/app.php` and is shared with Inertia as `name`. Browser page titles use `Pulse` in `resources/js/app.ts`; `VITE_APP_NAME` is no longer used.
 
+## Registration
+
+`REGISTRATION_ENABLED` defaults to `true`. Set it to `false` at runtime to close registration for everyone: `/register` returns a 404 and the Create an account links disappear, while existing accounts can still log in. Leave it unset during the front-end build, because the Wayfinder route helpers are generated from the routes that exist at that moment.
+
 ## Schedule and content
 
 | Variable | What it does | Default |
