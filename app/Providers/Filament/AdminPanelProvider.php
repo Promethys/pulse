@@ -14,6 +14,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -57,6 +58,10 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
             ])
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => '<style>.fi-modal-heading, .fi-modal-description, .fi-tooltip, .tippy-content { overflow-wrap: anywhere; }</style>',
+            )
             ->middleware([
                 ForceFullPageLoad::class,
                 EncryptCookies::class,
