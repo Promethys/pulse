@@ -201,23 +201,55 @@ class CatalogScoutTest extends TestCase
         $this->assertDatabaseHas('source_proposals', ['url' => 'https://backup.test/feed']);
     }
 
-    public function test_missing_search_provider_is_reported_after_persisting_scouted_at(): void
+    public function test_no_search_provider_falls_back_to_the_full_chain_without_search(): void
     {
         config(['digest.ai_providers' => 'zai:unsupported']);
         $interest = Interest::factory()->create();
-        SourceScout::fake()->preventStrayPrompts();
+        SourceScout::fake([json_encode(['proposals' => [$this->proposal('plain')]], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
 
-        $this->assertSame(0, app(CatalogScout::class)->scout($interest));
+        $this->assertSame(1, app(CatalogScout::class)->scout($interest));
 
         $this->assertTrue($interest->fresh()->scouted_at->equalTo(now()));
-        Exceptions::assertReported(AiConfigurationException::class);
-        SourceScout::assertNeverPrompted();
+        Exceptions::assertNotReported(AiConfigurationException::class);
+        SourceScout::assertPromptedTimes(1);
+    }
+
+    public function test_a_failed_search_falls_back_without_search(): void
+    {
+        $prompts = [];
+        SourceScout::fake(function (string $prompt) use (&$prompts) {
+            $prompts[] = $prompt;
+
+            if (count($prompts) === 1) {
+                throw new ProviderOverloadedException('Search quota exceeded');
+            }
+
+            return json_encode(['proposals' => [$this->proposal('plain')]], JSON_THROW_ON_ERROR);
+        })->preventStrayPrompts();
+
+        $this->assertSame(1, app(CatalogScout::class)->scout(Interest::factory()->create()));
+
+        $this->assertSame([CatalogScout::SEARCH_PROMPT, CatalogScout::PLAIN_PROMPT], $prompts);
+        $this->assertDatabaseHas('source_proposals', ['url' => 'https://plain.test/feed']);
+        Exceptions::assertNothingReported();
+    }
+
+    public function test_a_search_without_usable_proposals_falls_back_without_search(): void
+    {
+        SourceScout::fake([
+            'No feeds found',
+            json_encode(['proposals' => [$this->proposal('plain')]], JSON_THROW_ON_ERROR),
+        ])->preventStrayPrompts();
+
+        $this->assertSame(1, app(CatalogScout::class)->scout(Interest::factory()->create()));
+
+        SourceScout::assertPromptedTimes(2);
     }
 
     public function test_malformed_response_stores_nothing_but_marks_the_interest_scouted(): void
     {
         $interest = Interest::factory()->create();
-        SourceScout::fake(['No valid JSON today'])->preventStrayPrompts();
+        SourceScout::fake(['No valid JSON today', 'Still no JSON'])->preventStrayPrompts();
 
         $this->assertSame(0, app(CatalogScout::class)->scout($interest));
 

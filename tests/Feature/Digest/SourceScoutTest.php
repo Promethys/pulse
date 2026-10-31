@@ -48,4 +48,13 @@ class SourceScoutTest extends TestCase
         $this->assertMatchesRegularExpression('/(?:web|search)\s+results.*data/is', $instructions);
         $this->assertMatchesRegularExpression('/(?:never|not|ignore|do not).*instructions/is', $instructions);
     }
+
+    public function test_without_search_it_has_no_tools_and_only_suggests_known_feeds(): void
+    {
+        $agent = new SourceScout('Gardening', 5, [], webSearch: false);
+
+        $this->assertSame([], collect($agent->tools())->all());
+        $this->assertStringNotContainsString('web search', strtolower((string) $agent->instructions()));
+        $this->assertStringContainsString('confident', (string) $agent->instructions());
+    }
 }
