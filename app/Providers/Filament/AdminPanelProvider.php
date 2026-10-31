@@ -34,6 +34,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('Pulse admin')
+            ->brandLogo(fn () => view('filament.brand'))
+            ->favicon(asset('favicon.svg').'?v=2')
             ->colors([
                 'primary' => [
                     50 => 'oklch(0.975 0.012 230)',

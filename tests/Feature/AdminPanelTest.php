@@ -87,4 +87,15 @@ class AdminPanelTest extends TestCase
         $this->actingAs(User::factory()->onboarded()->create())->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page->where('auth.canAccessAdmin', false));
     }
+
+    public function test_the_panel_uses_the_pulse_logo_and_favicon(): void
+    {
+        $admin = User::factory()->onboarded()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get('/admin')
+            ->assertSee('alt="Pulse admin"', false)
+            ->assertSee(asset('favicon.svg').'?v=2', false)
+            ->assertSee('Pulse admin');
+    }
 }
