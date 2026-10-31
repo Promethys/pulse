@@ -87,6 +87,39 @@ docker compose exec app php artisan digest:sources --user=<email>
 
 Without `--user`, it fetches every enabled source; with `--user=<email>`, only enabled sources on that account's enabled subscriptions. It bypasses the collector's 25-minute cache and prints how many items each returned and any error, without storing anything, so it is safe to run at any time, including in production. It exits with an error code if any source failed.
 
+## Monthly catalog check
+
+`digest:tick` queues one `CheckCatalogSource` job for each enabled catalog source with no check in the current UTC month, and each result is stored in `source_checks`. `php artisan catalog:refresh` does the same by hand, and `--force` ignores the month.
+
+A check never changes `last_success_at`, because the daily collection uses it as its fetch window.
+
+A source is retired, meaning disabled with `retired_at` set and never deleted, after a failed check when either rule applies:
+
+- the previous check failed too;
+- it has an enabled subscription and no successful fetch for 30 days.
+
+The 30-day rule needs a subscription because unsubscribed sources are not collected daily. Subscribers see a retired source marked on `/sources`. Its switch is disabled and the server refuses changes to it.
+
+When a feed fails, Pulse looks for a moved feed by following redirects, then through `<link rel="alternate">` on `site_url`. A working URL becomes a pending `url_change` row in `source_proposals`. It never changes the source by itself.
+
+## Scout
+
+Once a month, `digest:tick` queues one `ScoutInterest` job for each live interest that was not scouted this UTC month. `php artisan catalog:scout --interest=<slug> --max=5` runs it by hand, including for draft interests.
+
+`SourceScout` first tries a provider of the instance chain that supports web search. If that fails or returns nothing usable, it retries the full chain without search, from what the model knows. A failed search only logs a line.
+
+Each suggestion goes through `ProposalChecker`: public URL, not already in the catalog (feed URL and domain), the feed parses, and at least 3 posts in the last 30 days. Passing suggestions become pending rows in `source_proposals`, failing ones are dropped. A URL already proposed in any status is skipped, so rejected feeds do not return.
+
+## Reviewing proposals
+
+Admins review proposals at `/admin/catalog`. Approving adds a catalog source with the chosen interests. A default source also subscribes the users of those interests who have no subscription to it, and never changes an existing one. Applying a URL change updates the source, and re-enables it when it was retired. Nothing enters the catalog without this review.
+
+## Suggestions from users
+
+A user can suggest one of their custom feeds for the catalog, and suggest a new interest, including during onboarding. A feed suggestion goes through `ProposalChecker` straight away, and a failure is shown to the user. A url that was already proposed, in any status, cannot be suggested again. Users have at most 10 open proposals.
+
+Feed suggestions join the review at `/admin/catalog`, and interest suggestions are reviewed at `/admin/interest-proposals`. Approving an interest creates it as `draft` and queues `ScoutInterest` for it, so it goes live once it has enough default sources.
+
 ## Rate limits
 
 - **Reddit catalog feeds** allow about one anonymous request per minute and announces the wait in `x-ratelimit-reset`. On a 429 the feed fetcher waits that long (or `Retry-After`) plus 2 seconds, capped at 60, with up to 3 attempts. These waits can add about a minute for the three subreddits.

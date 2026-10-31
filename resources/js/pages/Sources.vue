@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { Pencil, Plus, Rss, Trash2 } from '@lucide/vue';
+import { Pencil, Plus, Rss, Send, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import CategoryGroup from '@/components/pulse/CategoryGroup.vue';
@@ -8,6 +8,8 @@ import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SourceFormDialog from '@/components/pulse/SourceFormDialog.vue';
 import SourceRow from '@/components/pulse/SourceRow.vue';
+import SuggestInterestDialog from '@/components/pulse/SuggestInterestDialog.vue';
+import SuggestSourceDialog from '@/components/pulse/SuggestSourceDialog.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -33,6 +35,9 @@ const deleting = ref<ManagedSource | null>(null);
 const deletingOpen = ref(false);
 const deleteProcessing = ref(false);
 const interestsOpen = ref(false);
+const suggestInterestOpen = ref(false);
+const suggestSourceOpen = ref(false);
+const suggesting = ref<ManagedSource | null>(null);
 const selected = ref<string[]>([]);
 const interestsProcessing = ref(false);
 const interestErrors = ref<Record<string, string>>({});
@@ -118,9 +123,16 @@ function deleteSource() {
                 >
             </TabsList>
             <TabsContent value="interest" class="space-y-6">
-                <Button variant="outline" @click="openInterests"
-                    >Add or remove interests</Button
-                >
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" @click="openInterests"
+                        >Add or remove interests</Button
+                    >
+                    <Button
+                        variant="outline"
+                        @click="suggestInterestOpen = true"
+                        >Suggest an interest</Button
+                    >
+                </div>
                 <section v-for="group in catalog" :key="group.interest.slug">
                     <h2 class="mb-2 text-lg font-semibold">
                         {{ group.interest.name }}
@@ -160,6 +172,21 @@ function deleteSource() {
                     >
                         <template #actions>
                             <Button
+                                v-if="source.type === 'feed'"
+                                variant="ghost"
+                                size="sm"
+                                :disabled="source.suggested"
+                                @click="
+                                    suggesting = source;
+                                    suggestSourceOpen = true;
+                                "
+                                ><Send aria-hidden="true" />{{
+                                    source.suggested
+                                        ? 'Suggested'
+                                        : 'Suggest for the catalog'
+                                }}</Button
+                            >
+                            <Button
                                 variant="ghost"
                                 size="sm"
                                 @click="openForm(source)"
@@ -177,6 +204,15 @@ function deleteSource() {
                 </ul>
             </TabsContent>
         </Tabs>
+        <SuggestSourceDialog
+            v-model:open="suggestSourceOpen"
+            :source="suggesting"
+            :interests="interests"
+        />
+        <SuggestInterestDialog
+            v-model:open="suggestInterestOpen"
+            :categories="categories"
+        />
         <SourceFormDialog
             v-model:open="formOpen"
             :source="editing"

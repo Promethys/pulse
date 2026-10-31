@@ -1,7 +1,7 @@
 import {
-    Activity,
     Archive,
     GraduationCap,
+    Rss,
     Search,
     Settings,
     Sun,
@@ -35,7 +35,7 @@ describe('navigation', () => {
             {
                 title: 'Sources',
                 href: '/sources',
-                icon: Activity,
+                icon: Rss,
                 available: true,
                 desktopOnly: true,
             },

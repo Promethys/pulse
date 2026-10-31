@@ -22,11 +22,13 @@ export type OnboardingSource = {
     is_custom: boolean;
     is_default: boolean;
     enabled: boolean;
+    retired: boolean;
     last_fetched_at: string | null;
     last_success_at: string | null;
     last_error: string | null;
     health: string;
     subscription_enabled: boolean;
+    suggested?: boolean;
 };
 
 export type OnboardingSourceGroup = {

@@ -6,12 +6,14 @@ namespace App\Http\Controllers;
 
 use App\Actions\AddCustomSource;
 use App\Actions\ChooseInterests;
+use App\Actions\SuggestSource;
 use App\Actions\TestSource;
 use App\Actions\UpdateCustomSource;
 use App\Enums\InterestCategory;
 use App\Enums\SourceType;
 use App\Http\Requests\CustomSourceRequest;
 use App\Http\Requests\Onboarding\ChooseInterestsRequest;
+use App\Http\Requests\SuggestSourceRequest;
 use App\Http\Requests\TestSourceRequest;
 use App\Http\Requests\UpdateSourceSubscriptionRequest;
 use App\Http\Resources\InterestResource;
@@ -49,6 +51,8 @@ final class SourcesController extends Controller
 
     public function subscription(UpdateSourceSubscriptionRequest $request, Source $source): RedirectResponse
     {
+        abort_if($source->retired_at !== null, 403);
+
         $data = $request->validated();
         $subscription = $request->user()->sourceSubscriptions()->where('source_id', $source->id)->firstOrFail();
         $subscription->update($data);
@@ -68,6 +72,15 @@ final class SourcesController extends Controller
         /** @var array{type: string, name: string, url?: string|null, api_key?: string|null, interests: list<string>} $data */
         $data = $request->validated();
         $action->handle($request->user(), $data);
+
+        return back();
+    }
+
+    public function suggest(SuggestSourceRequest $request, Source $source, SuggestSource $action): RedirectResponse
+    {
+        $action->handle($request->user(), $source, Interest::query()->where('slug', $request->validated('interest'))->firstOrFail(),
+            $request->string('reason')->toString());
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Thanks! Your feed suggestion is waiting for review.')]);
 
         return back();
     }

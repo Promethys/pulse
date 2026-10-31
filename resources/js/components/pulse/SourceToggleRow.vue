@@ -29,6 +29,7 @@ const typeLabel = computed(
         </div>
         <Switch
             :model-value="modelValue"
+            :disabled="source.retired"
             :aria-label="`Use ${source.name}`"
             @update:model-value="$emit('update:modelValue', $event)"
         />

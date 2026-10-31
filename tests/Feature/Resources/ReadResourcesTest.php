@@ -100,7 +100,7 @@ class ReadResourcesTest extends TestCase
             $source->load('interests');
         }
         $data = $this->resolved(new SourceResource($source));
-        $keys = ['id', 'slug', 'name', 'type', 'url', 'site_url', 'is_custom', 'is_default', 'enabled', 'last_fetched_at', 'last_success_at', 'last_error', 'health', 'has_key'];
+        $keys = ['id', 'slug', 'name', 'type', 'url', 'site_url', 'is_custom', 'is_default', 'enabled', 'retired', 'last_fetched_at', 'last_success_at', 'last_error', 'health', 'has_key'];
         if ($loaded) {
             $keys[] = 'interests';
             $this->assertCount(1, $data['interests']);

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $position
  * @property bool $has_learning
  * @property InterestStatus $status
+ * @property CarbonImmutable|null $scouted_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, User> $users
@@ -51,6 +52,7 @@ class Interest extends Model
             'position' => 'integer',
             'has_learning' => 'boolean',
             'status' => InterestStatus::class,
+            'scouted_at' => 'datetime',
         ];
     }
 

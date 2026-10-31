@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
+use App\Http\Controllers\InterestProposalController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
@@ -36,12 +37,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('learning/{id}', [LearningController::class, 'show'])->whereNumber('id')->middleware('onboarded')->name('learning.show');
     Route::get('tags/{tag:slug}', TagController::class)->middleware('onboarded')->name('tags.show');
 
+    Route::post('interest-proposals', [InterestProposalController::class, 'store'])->middleware('throttle:suggestions')->name('interest-proposals.store');
+
     Route::middleware('onboarded')->prefix('sources')->name('sources.')->group(function () {
         Route::get('/', [SourcesController::class, 'index'])->name('index');
         Route::put('subscriptions/{source}', [SourcesController::class, 'subscription'])->name('subscription');
         Route::put('interests', [SourcesController::class, 'interests'])->name('interests');
         Route::post('test', [SourcesController::class, 'test'])->middleware('throttle:6,1')->name('test');
         Route::post('/', [SourcesController::class, 'store'])->name('store');
+        Route::post('{source}/suggest', [SourcesController::class, 'suggest'])->middleware('throttle:suggestions')->name('suggest');
         Route::put('{source}', [SourcesController::class, 'update'])->name('update');
         Route::delete('{source}', [SourcesController::class, 'destroy'])->name('destroy');
     });

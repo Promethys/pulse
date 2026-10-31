@@ -15,6 +15,7 @@ const statusClasses: Record<string, string> = {
     ok: 'bg-success',
     failing: 'bg-destructive',
     unknown: 'bg-muted-foreground/40',
+    retired: 'bg-muted-foreground',
 };
 const lastSuccess = computed(() =>
     props.source.last_success_at
@@ -61,6 +62,9 @@ function toggle(enabled: boolean) {
             >
                 {{ source.url }}
             </p>
+            <p v-if="source.retired" class="mt-1 text-xs text-muted-foreground">
+                Retired: this source stopped working.
+            </p>
             <p v-if="lastSuccess" class="mt-0.5 text-xs text-muted-foreground">
                 Last success {{ lastSuccess }}
             </p>
@@ -76,6 +80,7 @@ function toggle(enabled: boolean) {
         </div>
         <Switch
             :model-value="source.subscription_enabled"
+            :disabled="source.retired"
             :aria-label="`Use ${source.name}`"
             @update:model-value="toggle"
         />

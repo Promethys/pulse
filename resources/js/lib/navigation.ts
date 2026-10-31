@@ -1,7 +1,7 @@
 import {
-    Activity,
     Archive,
     GraduationCap,
+    Rss,
     Search,
     Settings,
     Sun,
@@ -30,7 +30,7 @@ export const navItems: NavigationItem[] = [
     {
         title: 'Sources',
         href: '/sources',
-        icon: Activity,
+        icon: Rss,
         available: true,
         desktopOnly: true,
     },

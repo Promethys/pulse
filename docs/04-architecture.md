@@ -24,7 +24,7 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 | `resources/js/pages/`, `resources/js/components/pulse/` | Inertia pages and shared digest components |
 | `resources/js/layouts/`, `resources/css/app.css` | App, auth and settings layouts, typography and light/dark tokens |
 | `app/Http/Controllers/Discord/` | Add to Discord install and callback |
-| `app/Console/Commands/` | `digest:*` commands and `pulse:adopt` |
+| `app/Console/Commands/` | `digest:*` commands, `catalog:refresh`, `catalog:scout` and `pulse:adopt` |
 | `app/Models/`, `app/Enums/` | Data model |
 | `database/seeders/` | Interests, sources, tags and learning topics |
 
@@ -91,6 +91,8 @@ With debug disabled, browser errors 403, 404, 419, 429, 500 and 503 render the I
 Registration creates a `digest_settings` row and an enabled `in_app` delivery channel for both news and learning in one transaction. Settings hold the timezone (default `UTC`), profile, news and learning toggles and times (default `09:00` and `09:30`), `max_items` (default 20) and nullable `onboarded_at`. Validation rules accept times in 15-minute steps and `max_items` from 1 to 20.
 
 `users.is_admin` and `users.uses_instance_ai` default to false. Both are excluded from mass assignment and serialization; they are set through Artisan commands (`pulse:adopt` grants both). `User::learningAvailable()` returns true only when the user has at least one interest with `has_learning = true`. Both the scheduler and learning pipeline enforce this check.
+
+The Filament admin panel lives at `/admin`, for verified users with `is_admin`. It has no login of its own: guests go to the app's login, so two-factor authentication still applies. Inertia visits to `/admin` become a full page load through `ForceFullPageLoad`, so link to it with a plain `<a>` when you can. The app's user menu links to the panel for those users (`auth.canAccessAdmin`), and the panel's user menu links back.
 
 Personal news selections live in `post_items`, with a copy of each selected item's title, summary, position and tags (`post_item_tag`). Shared items remain unchanged by curation. `learning_topic_usages` records one topic per user and day.
 

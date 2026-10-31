@@ -20,6 +20,7 @@ See [Architecture](04-architecture.md) for the details.
 - **Search**: search personal news titles and summaries or learning titles and bodies, with tags and date filters. News also filters by source; learning by kind and category.
 - **Tags and Learning**: browse news by tag with a 12-week activity chart, or tips and topics by kind, category and tag, with full learning detail pages.
 - **Sources and Settings**: choose interests, manage catalog subscriptions and custom sources, configure the digest, order AI keys and manage Discord and email delivery. In-app delivery is always available.
+- **Admin panel**: at `/admin`, for accounts with `is_admin`: review catalog proposals and suggested interests. Users can suggest feeds and interests, and a monthly scout proposes feeds. Nothing enters the catalog without review.
 
 New accounts verify their email, then complete onboarding before entering the app. An AI key can be added later, but scheduled digests require personal keys or instance AI access. See [Architecture](04-architecture.md#web-app).
 

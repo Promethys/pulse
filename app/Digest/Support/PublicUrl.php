@@ -45,6 +45,19 @@ final class PublicUrl
 
     public function get(PendingRequest $http, string $url, int $maxRedirects = 3): Response
     {
+        return $this->follow($http, $url, $maxRedirects)[1];
+    }
+
+    public function finalUrl(PendingRequest $http, string $url, int $maxRedirects = 3): string
+    {
+        return $this->follow($http, $url, $maxRedirects)[0];
+    }
+
+    /**
+     * @return array{string, Response}
+     */
+    private function follow(PendingRequest $http, string $url, int $maxRedirects): array
+    {
         $http = $http->withoutRedirecting();
 
         for ($hop = 0; $hop <= $maxRedirects; $hop++) {
@@ -55,7 +68,7 @@ final class PublicUrl
             $response = $http->get($url);
 
             if (! $response->redirect()) {
-                return $response;
+                return [$url, $response];
             }
 
             $location = $response->header('Location');

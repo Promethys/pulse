@@ -1,12 +1,34 @@
 import { router } from '@inertiajs/vue3';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import SettingsIndex from '@/pages/settings/Index.vue';
 import { settingsSections } from '@/lib/settingsSections';
 import { logout } from '@/routes';
+import { page } from '../../support/inertia';
+
+beforeEach(() => {
+    page.props = { auth: { user: {}, canAccessAdmin: false } };
+});
 
 describe('settings/Index', () => {
+    it('links admins to the panel with a full page load', () => {
+        page.props = { auth: { user: {}, canAccessAdmin: true } };
+        render(SettingsIndex);
+
+        const link = screen.getByRole('link', { name: 'Admin panel' });
+        expect(link).toHaveAttribute('href', '/admin');
+        expect(link).not.toHaveAttribute('data-inertia');
+    });
+
+    it('hides the panel link from other users', () => {
+        render(SettingsIndex);
+
+        expect(
+            screen.queryByRole('link', { name: 'Admin panel' }),
+        ).not.toBeInTheDocument();
+    });
+
     it('offers exactly one link per section and a Settings page heading', () => {
         render(SettingsIndex);
 
