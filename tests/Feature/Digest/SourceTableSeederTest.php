@@ -23,7 +23,8 @@ class SourceTableSeederTest extends TestCase
 
         $sources = Source::query()->orderBy('position')->get();
 
-        $this->assertCount(26, $sources);
+        $this->assertCount(23, $sources);
+        $this->assertFalse(Source::query()->where('slug', 'like', 'r-%')->exists());
         $this->assertSame('anthropic-news', $sources->first()?->slug);
         $this->assertSame('newsletters', $sources->last()?->slug);
         $this->assertSame(SourceType::ResendInbox, $sources->last()?->type);
@@ -47,7 +48,7 @@ class SourceTableSeederTest extends TestCase
         $this->seed(SourceTableSeeder::class);
 
         $source->refresh();
-        $this->assertSame(26, Source::query()->count());
+        $this->assertSame(23, Source::query()->count());
         $this->assertSame('https://edited.example.com/feed', $source->url);
         $this->assertSame(3, $source->max_items);
         $this->assertFalse($source->enabled);
@@ -64,7 +65,7 @@ class SourceTableSeederTest extends TestCase
 
         $this->seed(SourceTableSeeder::class);
 
-        $this->assertSame(26, Source::query()->count());
+        $this->assertSame(23, Source::query()->count());
         $this->assertTrue(Source::query()->where('slug', 'openai-news')->exists());
         $this->assertEquals($before, Source::query()->where('slug', 'laravel-news')->value('updated_at'));
     }
@@ -78,14 +79,14 @@ class SourceTableSeederTest extends TestCase
 
         $this->assertNotContains('openai-news', $slugs);
         $this->assertSame('anthropic-news', $slugs->first());
-        $this->assertCount(25, $slugs);
+        $this->assertCount(22, $slugs);
     }
 
     public function test_new_sources_are_defaults_except_newsletters(): void
     {
         $this->seed(SourceTableSeeder::class);
 
-        $this->assertSame(25, Source::query()->where('is_default', true)->count());
+        $this->assertSame(22, Source::query()->where('is_default', true)->count());
         $this->assertFalse(Source::query()->where('slug', 'newsletters')->firstOrFail()->is_default);
     }
 
@@ -94,9 +95,9 @@ class SourceTableSeederTest extends TestCase
         $this->seed([InterestTableSeeder::class, SourceTableSeeder::class]);
 
         $expected = [
-            'artificial-intelligence' => ['anthropic-news', 'openai-news', 'deepmind', 'huggingface', 'simon-willison', 'ainews', 'kilo', 'r-claudeai', 'r-localllama', 'mcp-blog'],
-            'programming' => ['mcp-blog', 'laravel-news', 'laravel-blog', 'freek', 'stitcher', 'filament-releases', 'laravel-io', 'r-laravel', 'pragmatic-engineer', 'bytebytego', 'martin-fowler', 'lobsters', 'github-trending', 'hacker-news'],
-            'programming-languages' => ['laravel-news', 'laravel-blog', 'freek', 'stitcher', 'filament-releases', 'laravel-io', 'r-laravel'],
+            'artificial-intelligence' => ['anthropic-news', 'openai-news', 'deepmind', 'huggingface', 'simon-willison', 'ainews', 'kilo', 'mcp-blog'],
+            'programming' => ['mcp-blog', 'laravel-news', 'laravel-blog', 'freek', 'stitcher', 'filament-releases', 'laravel-io', 'pragmatic-engineer', 'bytebytego', 'martin-fowler', 'lobsters', 'github-trending', 'hacker-news'],
+            'programming-languages' => ['laravel-news', 'laravel-blog', 'freek', 'stitcher', 'filament-releases', 'laravel-io'],
             'tech-companies' => ['hacker-news'],
             'devops' => ['railway'],
             'productivity' => ['notion'],
@@ -110,7 +111,7 @@ class SourceTableSeederTest extends TestCase
         }
 
         $this->assertSame(0, Source::query()->where('slug', 'newsletters')->firstOrFail()->interests()->count());
-        $this->assertDatabaseCount('interest_source', 34);
+        $this->assertDatabaseCount('interest_source', 30);
     }
 
     public function test_reseeding_preserves_edited_links_and_restores_empty_links(): void

@@ -1,6 +1,6 @@
 # Pulse
 
-A personal daily digest, built with Laravel. Every morning Pulse reads the tech sources you follow (blogs, release notes, Hacker News, Reddit, GitHub trending, newsletters), asks an AI model to keep only what matters, and posts:
+A personal daily digest, built with Laravel. Every morning Pulse reads the tech sources you follow (blogs, release notes, Hacker News, GitHub trending, newsletters), asks an AI model to keep only what matters, and posts:
 
 - **09:00** by default: the news of the night, grouped by topic, each item with a one-line summary and its source link;
 - **09:30** by default: a developer tip and a software-engineering topic of the day.

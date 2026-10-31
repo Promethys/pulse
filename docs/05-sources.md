@@ -43,7 +43,7 @@ The table seeders create missing rows and preserve existing definitions, includi
 
 ## Initial sources
 
-In priority order (`position`): Anthropic News, OpenAI News, Google DeepMind, Hugging Face, MCP Blog, Simon Willison, AINews (smol.ai), Laravel News, Laravel Blog, freek.dev, stitcher.io, Filament Releases, Notion Releases, Railway Blog, Kilo Blog, The Pragmatic Engineer, ByteByteGo, Martin Fowler, Hacker News (front page, 200+ points), Lobsters, Laravel.io Forum, r/laravel, r/ClaudeAI, r/LocalLLaMA, GitHub Trending, Newsletters.
+In priority order (`position`): Anthropic News, OpenAI News, Google DeepMind, Hugging Face, MCP Blog, Simon Willison, AINews (smol.ai), Laravel News, Laravel Blog, freek.dev, stitcher.io, Filament Releases, Notion Releases, Railway Blog, Kilo Blog, The Pragmatic Engineer, ByteByteGo, Martin Fowler, Hacker News (front page, 200+ points), Lobsters, Laravel.io Forum, GitHub Trending, Newsletters.
 
 Each source has a default tag (used when the AI model gives none) and a `max_items` limit.
 
@@ -52,7 +52,7 @@ Each source has a default tag (used when the AI model gives none) and a `max_ite
 | Anthropic News | Anthropic publishes no feed; this uses the community-generated feed from [Olshansk/rss-feeds](https://github.com/Olshansk/rss-feeds). |
 | AINews (smol.ai) | Its feed looked paused (last item 2026-09-09) when it was added. |
 | Filament | The Insights blog has no feed; only GitHub releases are followed. |
-| Reddit | Reddit ends RSS on **2026-11-13**. Disable the three `r-*` sources on that date. |
+| Reddit | The three Reddit sources were disabled when Reddit ended RSS on **2026-11-13**. Existing rows are kept for history and fresh installs do not seed them. |
 | Newsletters | Needs `credentials.api_key` on the source. Subscribe newsletters that have no feed with your Resend receiving address. |
 
 ## Adding, changing or disabling a source
@@ -70,7 +70,7 @@ App\Models\Source::create([
     'max_items' => 5, 'position' => 30,
 ]);
 
-App\Models\Source::where('slug', 'like', 'r-%')->update(['enabled' => false]);
+App\Models\Source::where('slug', 'my-blog')->update(['enabled' => false]);
 ```
 
 A source is collected only when a user has an enabled subscription to it. For a custom source, set `user_id` to its owner and create that user's subscription. To make a catalog source part of the initial list for fresh installs, also add it to `SourceTableSeeder` and link it to the appropriate interests.
@@ -122,5 +122,5 @@ Feed suggestions join the review at `/admin/catalog`, and interest suggestions a
 
 ## Rate limits
 
-- **Reddit catalog feeds** allow about one anonymous request per minute and announces the wait in `x-ratelimit-reset`. On a 429 the feed fetcher waits that long (or `Retry-After`) plus 2 seconds, capped at 60, with up to 3 attempts. These waits can add about a minute for the three subreddits.
+- On a 429, the feed fetcher waits for the time announced in `Retry-After` or `x-ratelimit-reset`, plus 2 seconds, capped at 60, with up to 3 attempts.
 - Feed requests have a 10-second timeout and send the `pulse-digest/1.0` User-Agent. Catalog feeds retry up to three times; custom feeds use the public URL checks. The Resend client uses a 15-second timeout and up to two attempts.
