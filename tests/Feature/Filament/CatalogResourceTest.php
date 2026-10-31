@@ -10,6 +10,7 @@ use App\Enums\SourceProposalOrigin;
 use App\Enums\SourceProposalStatus;
 use App\Filament\Resources\CatalogResource;
 use App\Filament\Resources\CatalogResource\Pages\ListCatalog;
+use App\Jobs\ImportProposal;
 use App\Models\Interest;
 use App\Models\Source;
 use App\Models\SourceProposal;
@@ -21,6 +22,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -435,6 +437,33 @@ class CatalogResourceTest extends TestCase
 
         $this->assertSame(SourceProposalStatus::Rejected, $pending->fresh()?->status);
         $this->assertSame(SourceProposalStatus::Approved, $approved->fresh()?->status);
+    }
+
+    public function test_import_queues_valid_rows_and_reports_rejected_ones(): void
+    {
+        Bus::fake();
+        Interest::factory()->create(['slug' => 'pets']);
+        $rows = [
+            ['interest' => 'pets', 'name' => 'Dogs', 'url' => 'https://dogs.test/feed', 'site_url' => null, 'reason' => 'Regular posts.'],
+            ['interest' => 'nope', 'name' => 'Cats', 'url' => 'https://cats.test/feed', 'site_url' => null, 'reason' => 'Regular posts.'],
+        ];
+
+        $this->catalogPageForTest()
+            ->callAction('import', ['json' => json_encode($rows, JSON_THROW_ON_ERROR)])
+            ->assertHasNoFormErrors()
+            ->assertNotified();
+
+        Bus::assertDispatchedTimes(ImportProposal::class, 1);
+        Bus::assertDispatched(ImportProposal::class, fn (ImportProposal $job) => $job->row['url'] === 'https://dogs.test/feed');
+    }
+
+    public function test_import_of_broken_json_queues_nothing(): void
+    {
+        Bus::fake();
+
+        $this->catalogPageForTest()->callAction('import', ['json' => 'not json'])->assertNotified();
+
+        Bus::assertNothingDispatched();
     }
 
     private function catalogPageForTest(): Testable
