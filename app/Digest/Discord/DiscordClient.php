@@ -17,6 +17,37 @@ final class DiscordClient
     private const NO_MENTIONS = ['parse' => []];
 
     /**
+     * @return array<string, mixed>
+     */
+    public function channel(string $channelId): array
+    {
+        return $this->send('get', "/channels/{$channelId}")->json();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function guild(string $guildId): array
+    {
+        return $this->send('get', "/guilds/{$guildId}")->json();
+    }
+
+    /**
+     * @return list<array{id: string, name: string}>
+     */
+    public function forumChannels(string $guildId): array
+    {
+        $channels = $this->tagList($this->send('get', "/guilds/{$guildId}/channels")->json());
+        $forums = array_filter($channels, fn (array $channel): bool => ($channel['type'] ?? null) === 15);
+        usort($forums, fn (array $first, array $second): int => ($first['position'] ?? 0) <=> ($second['position'] ?? 0));
+
+        return array_map(fn (array $channel): array => [
+            'id' => (string) $channel['id'],
+            'name' => (string) $channel['name'],
+        ], $forums);
+    }
+
+    /**
      * @return list<array<string, mixed>> the forum's tags, unchanged (id, name, emoji…)
      */
     public function forumTags(string $channelId): array
@@ -87,7 +118,7 @@ final class DiscordClient
         if ($response->failed()) {
             $message = $response->json('message') ?? mb_substr($response->body(), 0, 200);
 
-            throw new DiscordException("Discord HTTP {$response->status()} on {$method} {$path}: {$message}");
+            throw new DiscordException("Discord HTTP {$response->status()} on {$method} {$path}: {$message}", status: $response->status());
         }
 
         return $response;

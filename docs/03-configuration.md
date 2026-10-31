@@ -1,43 +1,84 @@
 # Configuration
 
-Pulse is configured through environment variables in `.env` (copied from `.env.example`). In `.env.example` the Pulse variables are commented out on purpose: an empty `KEY=` line makes Laravel read an empty string instead of the default value. Uncomment only what you set.
+Digest behavior is stored per account: timezone, schedule, toggles, profile, maximum news items, interests, subscriptions, AI keys and destinations. Instance services use environment variables in `.env` (copied from `.env.example`). Pulse variables are commented out in the example: an empty `KEY=` makes Laravel read an empty string instead of the default. Uncomment only what you set.
+
+`pulse:adopt` copies the starting values below into an account. Changing them afterward does not change that account's records. See [Getting started](02-getting-started.md#adopting-existing-data) for the required upgrade order.
+
+## App name
+
+`APP_NAME` defaults to `Pulse` in `config/app.php` and is shared with Inertia as `name`. Browser page titles use `Pulse` in `resources/js/app.ts`; `VITE_APP_NAME` is no longer used.
+
+## Registration
+
+`REGISTRATION_ENABLED` defaults to `true`. Set it to `false` at runtime to close registration for everyone: `/register` returns a 404 and the Create an account links disappear, while existing accounts can still log in. Leave it unset during the front-end build, because the Wayfinder route helpers are generated from the routes that exist at that moment.
+
+## Login limits
+
+Login allows 5 attempts per minute per account and IP, 30 per hour per account, and 30 per minute per IP. IPv6 addresses share limits within a /64 network. Passkeys allow 10 requests per minute per IP, and two-factor challenges 5 per minute per pending login, falling back to the session.
+
+## Trusted proxies
+
+`TRUSTED_PROXIES` says whose forwarded headers to believe, which decides the client IP and whether a request counts as HTTPS. Rate limits depend on it, so set it to match how you host Pulse.
+
+| Setup | Value |
+|---|---|
+| Behind one reverse proxy or platform router | leave unset (default `REMOTE_ADDR`, the direct peer) |
+| Also behind a CDN or edge network | `REMOTE_ADDR,` followed by the network's published IP ranges, comma separated |
+| Exposed directly, with no proxy | `none`, otherwise clients can forge their IP |
 
 ## Schedule and content
 
 | Variable | What it does | Default |
 |---|---|---|
-| `DIGEST_TIMEZONE` | Timezone for "today", the post times and the daily windows. | `Europe/Paris` |
-| `DIGEST_NEWS_TIME` | Local time of the news post. | `09:00` |
-| `DIGEST_LEARNING_TIME` | Local time of the tip + topic post. | `09:30` |
-| `DIGEST_MAX_ITEMS` | Maximum number of news items per day (0 is allowed on a quiet day). | `20` |
-| `DIGEST_MAX_ATTEMPTS` | How many times a failed post is retried in one morning. | `4` |
-| `DIGEST_PROFILE` | Who the digest is written for: role, stack, interests, level. Sent to the AI model with every prompt. Personal, so it lives only in `.env`. | empty |
+| `DIGEST_TIMEZONE` | Starting timezone for `pulse:adopt`. | `Europe/Paris` |
+| `DIGEST_NEWS_TIME` | Starting local news time for `pulse:adopt`. | `09:00` |
+| `DIGEST_LEARNING_TIME` | Starting local learning time for `pulse:adopt`. | `09:30` |
+| `DIGEST_MAX_ITEMS` | Starting news item limit for `pulse:adopt`. | `20` |
+| `DIGEST_PROFILE` | Starting reader profile for `pulse:adopt`; stored in the account's settings. | empty |
+| `DB_QUEUE_RETRY_AFTER` | Seconds before the database queue retries a reserved job; keep it above the 300-second digest job timeout. | `360` |
+| `DIGEST_MAX_ATTEMPTS` | Maximum failed generation attempts per post and failed delivery attempts per destination. | `4` |
+
+New accounts default to `UTC`, 09:00 news, 09:30 learning and 20 items. `/settings/digest` edits the profile (up to 2,000 characters), timezone, toggles, times and item limit; learning cannot be enabled without a learning interest. Settings validation accepts times in 15-minute steps and an item limit from 1 to 20. The scheduler and a queue worker are both required; see [Getting started](02-getting-started.md#running-digests).
 
 ## AI providers
 
 | Variable | What it does | Default |
 |---|---|---|
-| `DIGEST_AI_PROVIDERS` | Ordered failover chain, `provider:model` pairs separated by commas, e.g. `gemini:<model>,anthropic:claude-haiku-5-5`. Any provider defined in `config/ai.php` works. | required |
+| `DIGEST_AI_PROVIDERS` | Instance failover chain used by accounts with `uses_instance_ai` and no personal keys, `provider:model` pairs separated by commas, e.g. `gemini:<model>,anthropic:claude-haiku-5-5`. Any provider defined in `config/ai.php` works. | required for instance AI |
 | `DIGEST_AI_TIMEOUT` | HTTP timeout of one AI request, in seconds. | `120` |
 | `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, … | API key of each provider you list. The full list is in `config/ai.php`. | empty |
 
-See [AI providers](06-ai.md).
+Personal keys are managed at `/settings/ai-keys`, with up to five keys per account, one per provider. The page supports ordering, testing and deletion. See [AI providers](06-ai.md).
 
 ## Sources
 
 | Variable | What it does | Default |
 |---|---|---|
-| `RESEND_API_KEY` | Reads the newsletters received on your Resend receiving address (source `newsletters`). | empty (that source then fails with a clear message) |
+| `RESEND_API_KEY` | Starting key for `pulse:adopt`, copied into the newsletters source's encrypted credentials. | empty |
 
-The sources themselves are rows in the database, not configuration. See [Sources](05-sources.md).
+The inbox fetcher reads only its source's `credentials.api_key`; it never falls back to `RESEND_API_KEY`. Sources and subscriptions are database records. See [Sources](05-sources.md).
 
 ## Delivery
 
 | Variable | What it does | Default |
 |---|---|---|
 | `DISCORD_BOT_TOKEN` | Token of the Discord bot that posts and manages forum tags. | empty |
-| `DISCORD_NEWS_FORUM_ID` | Forum channel for the 09:00 news post. | empty |
-| `DISCORD_LEARNING_FORUM_ID` | Forum channel for the 09:30 tip + topic post. | empty |
+| `DISCORD_CLIENT_ID` | Discord application client id for the Add to Discord OAuth2 flow. | empty |
+| `DISCORD_CLIENT_SECRET` | Discord application client secret for the OAuth2 code exchange. | empty |
+| `DISCORD_NEWS_FORUM_ID` | Starting news forum for `pulse:adopt`. | empty |
+| `DISCORD_LEARNING_FORUM_ID` | Starting learning forum for `pulse:adopt`. | empty |
+
+Set both Discord client credentials to enable the Add to Discord flow; the delivery page hides the button when `DISCORD_CLIENT_ID` is unset. Register `<APP_URL>/discord/callback` as an OAuth2 redirect URL in the Discord developer portal. The install flow requests the `bot` scope with permissions integer `274877975568`. The bot token is still required for Discord API calls.
+
+At `/settings/delivery`, users can add forum destinations from installed Discord servers, add webhooks, configure one email destination, choose news, learning or both, and enable, test or delete external destinations. Each account can have up to 20 Discord destinations in total (bot and webhook combined). The in-app channel cannot be edited, disabled or deleted through these routes. Disconnecting a server removes its saved guild and bot destinations but leaves the bot in the Discord server.
+
+Destinations are per-user `delivery_channels` rows. Bot settings contain `guild_id` and `channel_id`; webhook settings contain `webhook_url`; email settings contain `address`. Settings are encrypted and hidden from serialization. Each destination accepts news, learning or both.
+
+Email delivery uses Laravel's mail configuration (`MAIL_*`, including the transport and sender settings in `config/mail.php`). Webhook delivery uses the stored Discord webhook URL. The `DiscordWebhookUrl` form rule and delivery driver accept only Discord webhook URLs, including supported Discord subdomains and optional API version paths; query strings and other hosts are rejected.
+
+## Web test limits
+
+Source tests, AI key tests (new or saved, including onboarding) and delivery tests use `throttle:6,1`: six requests per minute for authenticated users. Results are transient. Source and AI key tests do not save records; delivery tests send a real Discord post or email.
 
 ## Database
 

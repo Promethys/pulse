@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Tests\Feature\Digest;
 
 use App\Digest\Learning\LinkChecker;
+use App\Digest\Support\PublicUrl;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class LinkCheckerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Http::preventStrayRequests();
+    }
+
     public function test_a_public_link_that_answers_is_alive(): void
     {
         Http::fake(['public.test/*' => Http::response('', 200)]);
@@ -84,10 +91,10 @@ class LinkCheckerTest extends TestCase
 
     private function checker(): LinkChecker
     {
-        return new LinkChecker(fn (string $host) => match ($host) {
+        return new LinkChecker(new PublicUrl(fn (string $host) => match ($host) {
             'public.test' => ['93.184.216.34'],
             'internal.test' => ['93.184.216.34', '10.0.0.5'],
             default => [],
-        });
+        }));
     }
 }

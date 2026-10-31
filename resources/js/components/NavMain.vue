@@ -1,38 +1,31 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import {
-    SidebarGroup,
-    SidebarGroupLabel,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import type { NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import { isActive } from '@/lib/navigation';
+import type { NavigationItem } from '@/lib/navigation';
 
-defineProps<{
-    items: NavItem[];
-}>();
+defineProps<{ items: NavigationItem[] }>();
 
-const { isCurrentUrl } = useCurrentUrl();
+const page = usePage();
 </script>
 
 <template>
-    <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
-        <SidebarMenu>
-            <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton
-                    as-child
-                    :is-active="isCurrentUrl(item.href)"
-                    :tooltip="item.title"
-                >
-                    <Link :href="item.href">
-                        <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
-    </SidebarGroup>
+    <nav aria-label="Main navigation" class="flex flex-col gap-1">
+        <Link
+            v-for="item in items.filter(
+                (item) => item.available && !item.mobileOnly,
+            )"
+            :key="item.href"
+            :href="item.href"
+            :aria-current="isActive(page.url, item.href) ? 'page' : undefined"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+            :class="
+                isActive(page.url, item.href)
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                    : 'text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground'
+            "
+        >
+            <component :is="item.icon" class="size-4" aria-hidden="true" />
+            {{ item.title }}
+        </Link>
+    </nav>
 </template>

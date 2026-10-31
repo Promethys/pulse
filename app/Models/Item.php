@@ -4,40 +4,33 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\ItemStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\ItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
- * @property string $source_slug
  * @property string $url
  * @property string $url_normalized
  * @property string $title
  * @property string $excerpt
  * @property list<string> $links
  * @property CarbonImmutable|null $published_at
- * @property ItemStatus $status
- * @property string|null $summary
- * @property int|null $post_id
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, Source> $sources
+ * @property-read Collection<int, PostItem> $postItems
  */
-#[Fillable(['source_slug', 'url', 'url_normalized', 'title', 'excerpt', 'links', 'published_at', 'status', 'summary', 'post_id'])]
+#[Fillable(['url', 'url_normalized', 'title', 'excerpt', 'links', 'published_at'])]
 class Item extends Model
 {
     /** @use HasFactory<ItemFactory> */
     use HasFactory;
-
-    /** @var array<string, mixed> */
-    protected $attributes = [
-        'status' => 'candidate',
-    ];
 
     /**
      * @return array<string, string>
@@ -47,23 +40,22 @@ class Item extends Model
         return [
             'links' => 'array',
             'published_at' => 'immutable_datetime',
-            'status' => ItemStatus::class,
         ];
     }
 
     /**
-     * @return BelongsToMany<Tag, $this>
+     * @return BelongsToMany<Source, $this, ItemSource>
      */
-    public function tags(): BelongsToMany
+    public function sources(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Source::class)->using(ItemSource::class)->withPivot('first_seen_at');
     }
 
     /**
-     * @return BelongsTo<Post, $this>
+     * @return HasMany<PostItem, $this>
      */
-    public function post(): BelongsTo
+    public function postItems(): HasMany
     {
-        return $this->belongsTo(Post::class);
+        return $this->hasMany(PostItem::class);
     }
 }

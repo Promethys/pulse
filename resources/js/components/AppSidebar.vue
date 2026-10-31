@@ -1,66 +1,41 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
-import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
+import { Moon, SunMedium } from '@lucide/vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import PulseLogo from '@/components/pulse/PulseLogo.vue';
+import { useAppearance } from '@/composables/useAppearance';
+import { navItems } from '@/lib/navigation';
+import { home } from '@/routes';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const { resolvedAppearance, updateAppearance } = useAppearance();
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarHeader>
-
-        <SidebarContent>
-            <NavMain :items="mainNavItems" />
-        </SidebarContent>
-
-        <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
-            <NavUser />
-        </SidebarFooter>
-    </Sidebar>
-    <slot />
+    <aside
+        class="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex"
+    >
+        <Link :href="home()" class="mb-8 flex items-center gap-2 px-2">
+            <PulseLogo />
+        </Link>
+        <NavMain :items="navItems" />
+        <button
+            type="button"
+            class="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground"
+            @click="
+                updateAppearance(
+                    resolvedAppearance === 'dark' ? 'light' : 'dark',
+                )
+            "
+        >
+            <SunMedium
+                v-if="resolvedAppearance === 'dark'"
+                class="size-4"
+                aria-hidden="true"
+            />
+            <Moon v-else class="size-4" aria-hidden="true" />
+            {{ resolvedAppearance === 'dark' ? 'Light mode' : 'Dark mode' }}
+        </button>
+        <NavUser />
+    </aside>
 </template>

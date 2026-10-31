@@ -73,7 +73,7 @@ return [
     |
     */
 
-    'home' => '/dashboard',
+    'home' => '/',
 
     /*
     |--------------------------------------------------------------------------
@@ -161,7 +161,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        ...env('REGISTRATION_ENABLED', true) ? [Features::registration()] : [],
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

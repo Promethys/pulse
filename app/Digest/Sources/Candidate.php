@@ -12,7 +12,6 @@ final readonly class Candidate
      * @param  list<string>  $links  URLs the model may cite for this candidate
      */
     public function __construct(
-        public string $sourceSlug,
         public string $title,
         public string $url,
         public string $excerpt,

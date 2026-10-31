@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Digest;
 
+use App\Digest\Rendering\NewsLine;
 use App\Digest\Rendering\NewsRenderer;
 use App\Digest\Rendering\RenderedPost;
 use App\Enums\SourceType;
-use App\Models\Item;
 use App\Models\Source;
 use App\Models\Tag;
 use Carbon\CarbonImmutable;
@@ -34,7 +34,7 @@ class NewsRendererTest extends TestCase
 
     public function test_title_format(): void
     {
-        $this->assertSame('📰 Tech digest — Fri 16 Oct', $this->render([])->title);
+        $this->assertSame('📰 News digest — Fri 16 Oct', $this->render([])->title);
     }
 
     public function test_groups_by_the_days_most_common_tag_largest_section_first(): void
@@ -88,7 +88,7 @@ class NewsRendererTest extends TestCase
 
     public function test_headlines_only_note_and_lines(): void
     {
-        $post = $this->render([$this->item('Plain headline', [], source: 'openai-news', summary: null)], headlinesOnly: true);
+        $post = $this->render([$this->item('Plain headline', ['ai'], summary: null)], headlinesOnly: true);
 
         $text = implode("\n", $post->messages);
         $this->assertStringContainsString("## AI\n- **Plain headline** <https://example.com/plain-headline>", $text);
@@ -127,21 +127,8 @@ class NewsRendererTest extends TestCase
         $this->assertEquals($post, RenderedPost::fromArray($post->toArray()));
     }
 
-    public function test_headlines_picks_by_source_priority_then_recency(): void
-    {
-        $old = $this->item('Laravel old', [], source: 'laravel-news', publishedAt: '2026-10-16 01:00');
-        $new = $this->item('Laravel new', [], source: 'laravel-news', publishedAt: '2026-10-16 05:00');
-        $openai = $this->item('OpenAI', [], source: 'openai-news', publishedAt: '2026-10-15 20:00');
-        $hn = $this->item('HN', [], source: 'hacker-news', publishedAt: '2026-10-16 06:00');
-        config(['digest.max_items' => 3]);
-
-        $picked = app(NewsRenderer::class)->headlines(collect([$old, $hn, $new, $openai]));
-
-        $this->assertSame(['OpenAI', 'Laravel new', 'Laravel old'], $picked->pluck('title')->all());
-    }
-
     /**
-     * @param  list<Item>  $items
+     * @param  list<NewsLine>  $items
      * @param  array<string, string>  $failures
      */
     private function render(array $items, array $failures = [], bool $headlinesOnly = false): RenderedPost
@@ -152,19 +139,8 @@ class NewsRendererTest extends TestCase
     /**
      * @param  list<string>  $tags
      */
-    private function item(string $title, array $tags, string $source = 'openai-news', ?string $summary = 'default', string $publishedAt = '2026-10-16 05:00'): Item
+    private function item(string $title, array $tags, ?string $summary = 'default'): NewsLine
     {
-        $url = 'https://example.com/'.str($title)->slug();
-        $item = Item::factory()->create([
-            'source_slug' => $source,
-            'url' => $url,
-            'url_normalized' => $url.'-'.uniqid(),
-            'title' => $title,
-            'summary' => $summary === 'default' ? "Summary of {$title}." : $summary,
-            'published_at' => $publishedAt,
-        ]);
-        $item->tags()->sync(Tag::query()->whereIn('slug', $tags)->pluck('id'));
-
-        return $item->load('tags');
+        return new NewsLine($title, $summary === 'default' ? "Summary of {$title}." : $summary, 'https://example.com/'.str($title)->slug(), $tags);
     }
 }

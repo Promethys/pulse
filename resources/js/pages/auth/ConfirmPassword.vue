@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ShieldCheck } from '@lucide/vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
@@ -14,15 +15,23 @@ import PasskeyVerify from '@/components/PasskeyVerify.vue';
 
 defineOptions({
     layout: {
-        title: 'Confirm password',
+        title: "Confirm it's you",
         description:
-            'This is a secure area of the application. Please confirm your password before continuing.',
+            'This is a secure area. Please confirm your password to continue.',
     },
 });
 </script>
 
 <template>
     <Head title="Confirm password" />
+
+    <div class="flex justify-center">
+        <span
+            class="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground"
+        >
+            <ShieldCheck class="size-5" aria-hidden="true" />
+        </span>
+    </div>
 
     <PasskeyVerify
         :routes="{
@@ -39,9 +48,9 @@ defineOptions({
         reset-on-success
         v-slot="{ errors, processing }"
     >
-        <div class="space-y-6">
+        <div class="space-y-4">
             <div class="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label for="password">Password</Label>
                 <PasswordInput
                     id="password"
                     name="password"
@@ -61,7 +70,7 @@ defineOptions({
                     data-test="confirm-password-button"
                 >
                     <Spinner v-if="processing" />
-                    Confirm password
+                    Confirm
                 </Button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { LogOut, Settings, ShieldCheck } from '@lucide/vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -15,6 +15,8 @@ import type { User } from '@/types';
 type Props = {
     user: User;
 };
+
+const page = usePage();
 
 const handleLogout = () => {
     router.flushAll();
@@ -37,11 +39,20 @@ defineProps<Props>();
                 Settings
             </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem
+            v-if="page.props.auth.canAccessAdmin"
+            :as-child="true"
+        >
+            <a class="block w-full cursor-pointer" href="/admin">
+                <ShieldCheck class="mr-2 h-4 w-4" />
+                Admin panel
+            </a>
+        </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true">
+    <DropdownMenuItem :as-child="true" variant="destructive">
         <Link
-            class="block w-full cursor-pointer"
+            class="flex w-full cursor-pointer items-center"
             :href="logout()"
             @click="handleLogout"
             as="button"

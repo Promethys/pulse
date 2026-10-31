@@ -34,7 +34,6 @@ final class GithubTrendingFetcher implements SourceFetcher
 
             $url = 'https://github.com/'.$href;
             $candidates[] = new Candidate(
-                sourceSlug: $source->slug,
                 title: $href,
                 url: $url,
                 excerpt: Text::plain((string) $xpath->evaluate('string(.//p[1])', $row)),

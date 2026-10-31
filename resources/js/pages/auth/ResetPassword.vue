@@ -10,10 +10,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { update } from '@/routes/password';
 
 defineOptions({
-    layout: {
-        title: 'Reset password',
-        description: 'Please enter your new password below',
-    },
+    layout: ({ email }: { email: string }) => ({
+        title: 'Choose a new password',
+        description: `For ${email}`,
+    }),
 });
 
 const props = defineProps<{
@@ -34,7 +34,7 @@ const inputEmail = ref(props.email);
         :reset-on-success="['password', 'password_confirmation']"
         v-slot="{ errors, processing }"
     >
-        <div class="grid gap-6">
+        <div class="grid gap-4">
             <div class="grid gap-2">
                 <Label for="email">Email</Label>
                 <Input
@@ -50,7 +50,7 @@ const inputEmail = ref(props.email);
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Password</Label>
+                <Label for="password">New password</Label>
                 <PasswordInput
                     id="password"
                     name="password"
@@ -64,7 +64,9 @@ const inputEmail = ref(props.email);
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation"> Confirm password </Label>
+                <Label for="password_confirmation">
+                    Confirm new password
+                </Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"
@@ -78,7 +80,7 @@ const inputEmail = ref(props.email);
 
             <Button
                 type="submit"
-                class="mt-4 w-full"
+                class="w-full"
                 :disabled="processing"
                 data-test="reset-password-button"
             >

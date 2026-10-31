@@ -159,6 +159,12 @@ return [
             'driver' => 'xai',
             'key' => env('XAI_API_KEY'),
         ],
+
+        'zai' => [
+            'driver' => 'openai-compatible',
+            'url' => env('ZAI_URL', 'https://api.z.ai/api/paas/v4'),
+            'key' => env('ZAI_API_KEY'),
+        ],
     ],
 
 ];

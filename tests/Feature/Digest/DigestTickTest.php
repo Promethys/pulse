@@ -4,14 +4,37 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Digest;
 
+use App\Digest\Delivery\PostDeliverer;
 use App\Digest\Learning\LearningPipeline;
 use App\Digest\News\NewsPipeline;
-use App\Enums\ItemStatus;
+use App\Digest\Sources\Candidate;
+use App\Digest\Sources\FeedFetcher;
+use App\Digest\Sources\FetchException;
+use App\Digest\Sources\SourceFetcher;
+use App\Enums\DeliveryStatus;
+use App\Enums\InterestStatus;
+use App\Enums\PostKind;
+use App\Jobs\CheckCatalogSource;
+use App\Jobs\RunDigest;
+use App\Jobs\ScoutInterest;
+use App\Models\AiKey;
+use App\Models\Delivery;
+use App\Models\DigestSettings;
+use App\Models\Interest;
 use App\Models\Item;
 use App\Models\Post;
+use App\Models\PostItem;
+use App\Models\Source;
+use App\Models\SourceCheck;
+use App\Models\SourceSubscription;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery\MockInterface;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Queue;
+use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -19,97 +42,267 @@ class DigestTickTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @var list<string> */
-    private array $calls = [];
+    /** @var list<int> */
+    public array $fetched = [];
+
+    public bool $fetchFails = false;
 
     protected function setUp(): void
     {
         parent::setUp();
-        config(['digest.timezone' => 'Europe/Paris']);
+        $this->travelTo(CarbonImmutable::parse('2026-07-01 16:00:00', 'UTC'));
+        $this->freezeSecond();
+        config(['digest.max_attempts' => 4, 'digest.news_time' => '23:59', 'digest.learning_time' => '23:59']);
+        Queue::fake();
+        Bus::fake([RunDigest::class, CheckCatalogSource::class, ScoutInterest::class]);
+        $this->mock(NewsPipeline::class)->shouldNotReceive('run', 'runFor');
+        $this->mock(LearningPipeline::class)->shouldNotReceive('run', 'runFor');
+        $this->mock(PostDeliverer::class)->shouldNotReceive('deliver');
+        $this->app->instance(FeedFetcher::class, new class($this) implements SourceFetcher
+        {
+            public function __construct(private DigestTickTest $test) {}
+
+            public function fetch(Source $source, CarbonImmutable $since): array
+            {
+                Bus::assertNotDispatched(RunDigest::class);
+                $this->test->fetched[] = $source->id;
+                if ($this->test->fetchFails) {
+                    throw new FetchException('Source unavailable');
+                }
+
+                return [new Candidate('A headline', 'https://source.test/article', '', null, [])];
+            }
+        });
     }
 
-    public function test_runs_due_pipelines_in_order_for_the_local_day(): void
+    public function test_collects_the_distinct_due_users_sources_before_dispatching_each_local_digest(): void
     {
-        CarbonImmutable::setTestNow('2026-07-01 07:30:00');
-        $this->expectRun(NewsPipeline::class, 'news');
-        $this->expectRun(LearningPipeline::class, 'learning');
-
-        $this->artisan('digest:tick')->assertExitCode(0);
-
-        $this->assertSame(['news:2026-07-01', 'learning:2026-07-01'], $this->calls);
-    }
-
-    public function test_nothing_due_runs_nothing(): void
-    {
-        CarbonImmutable::setTestNow('2026-12-01 07:00:00');
-        $this->mock(NewsPipeline::class)->shouldNotReceive('run');
-        $this->mock(LearningPipeline::class)->shouldNotReceive('run');
-
-        $this->artisan('digest:tick')->assertExitCode(0);
-    }
-
-    public function test_a_news_failure_does_not_block_learning(): void
-    {
-        CarbonImmutable::setTestNow('2026-07-01 07:30:00');
-        $this->expectRun(NewsPipeline::class, 'news', fail: true);
-        $this->expectRun(LearningPipeline::class, 'learning');
+        $tokyo = $this->eligibleUser('Asia/Tokyo');
+        $paris = $this->eligibleUser('Europe/Paris');
+        $later = $this->eligibleUser('UTC', ['news_time' => '23:59', 'learning_time' => '23:59']);
+        $shared = Source::factory()->create();
+        foreach ([$tokyo, $paris] as $user) {
+            SourceSubscription::factory()->create(['user_id' => $user->id, 'source_id' => $shared->id]);
+        }
+        $learningOnly = $this->eligibleUser('UTC', ['news_enabled' => false]);
+        $learningSource = Source::factory()->create();
+        SourceSubscription::factory()->create(['user_id' => $learningOnly->id, 'source_id' => $learningSource->id]);
+        SourceSubscription::factory()->create(['user_id' => $later->id]);
+        Source::factory()->create();
+        SourceSubscription::factory()->create(['user_id' => $paris->id, 'enabled' => false]);
 
         $this->artisan('digest:tick')
-            ->expectsOutputToContain('news failed: Discord is down')
+            ->expectsOutput('Dispatched 5 digests')
+            ->expectsOutput('Retried deliveries for 0 posts')
             ->assertExitCode(0);
 
-        $this->assertSame(['news:2026-07-01', 'learning:2026-07-01'], $this->calls);
+        $this->assertEqualsCanonicalizing([$shared->id, $learningSource->id], $this->fetched);
+        Bus::assertDispatchedTimes(RunDigest::class, 5);
+        foreach ([[$tokyo, '2026-07-02', 'Asia/Tokyo'], [$paris, '2026-07-01', 'Europe/Paris'], [$learningOnly, '2026-07-01', 'UTC']] as [$user, $date, $timezone]) {
+            foreach ($user->is($learningOnly) ? [PostKind::Learning] : PostKind::cases() as $kind) {
+                Bus::assertDispatched(RunDigest::class, fn (RunDigest $job) => $job->user->is($user)
+                    && $job->kind === $kind
+                    && $job->date->toDateTimeString() === $date.' 00:00:00'
+                    && $job->date->timezoneName === $timezone);
+            }
+        }
+        $this->assertDatabaseCount('posts', 0);
+        Queue::assertNothingPushed();
     }
 
-    public function test_fails_when_every_due_pipeline_failed(): void
+    public function test_no_due_users_skips_collection_and_dispatch(): void
     {
-        CarbonImmutable::setTestNow('2026-07-01 07:00:00');
-        $this->expectRun(NewsPipeline::class, 'news', fail: true);
+        SourceSubscription::factory()->create();
 
-        $this->artisan('digest:tick')->assertExitCode(1);
+        $this->artisan('digest:tick')
+            ->expectsOutput('Dispatched 0 digests')
+            ->expectsOutput('Retried deliveries for 0 posts')
+            ->assertExitCode(0);
+
+        $this->assertSame([], $this->fetched);
+        Bus::assertNotDispatched(RunDigest::class);
     }
 
-    public function test_prunes_old_skipped_items_only(): void
+    public function test_source_failure_still_dispatches_and_returns_success(): void
     {
-        CarbonImmutable::setTestNow('2026-12-01 07:00:00');
-        $this->mock(NewsPipeline::class)->shouldNotReceive('run');
-        $this->mock(LearningPipeline::class)->shouldNotReceive('run');
-        $old = Item::factory()->create(['status' => ItemStatus::Skipped, 'created_at' => '2026-10-15 07:00:00']);
-        $recent = Item::factory()->create(['status' => ItemStatus::Skipped, 'created_at' => '2026-11-15 07:00:00']);
-        $oldSelected = Item::factory()->create(['status' => ItemStatus::Selected, 'created_at' => '2026-10-15 07:00:00']);
-        $oldCandidate = Item::factory()->create(['status' => ItemStatus::Candidate, 'created_at' => '2026-10-15 07:00:00']);
+        $user = $this->eligibleUser('UTC');
+        SourceSubscription::factory()->create(['user_id' => $user->id]);
+        $this->fetchFails = true;
 
-        $this->artisan('digest:tick')->assertExitCode(0);
+        $this->artisan('digest:tick')->expectsOutput('Dispatched 2 digests')->assertExitCode(0);
+
+        Bus::assertDispatchedTimes(RunDigest::class, 2);
+        $this->assertCount(1, $this->fetched);
+    }
+
+    public function test_retries_each_recent_post_once_using_delivery_status_and_attempts_even_when_no_digest_is_due(): void
+    {
+        $user = User::factory()->create();
+        $retry = Post::factory()->create(['user_id' => $user->id, 'created_at' => now()->subDays(2), 'attempts' => 4, 'rendered' => ['title' => 'Ready', 'messages' => ['Body']]]);
+        foreach ([0, 3] as $attempts) {
+            Delivery::factory()->create(['post_id' => $retry->id, 'status' => DeliveryStatus::Failed, 'attempts' => $attempts]);
+        }
+        $other = Post::factory()->create(['user_id' => User::factory(), 'kind' => PostKind::Learning, 'rendered' => ['title' => 'Ready', 'messages' => ['Body']]]);
+        Delivery::factory()->create(['post_id' => $other->id, 'status' => DeliveryStatus::Failed, 'attempts' => 1]);
+        foreach ([
+            [DeliveryStatus::Failed, 4, now()],
+            [DeliveryStatus::Failed, 5, now()],
+            [DeliveryStatus::Delivered, 0, now()],
+            [DeliveryStatus::Pending, 0, now()],
+            [DeliveryStatus::Failed, 0, now()->subDays(2)->subSecond()],
+        ] as [$status, $attempts, $created]) {
+            $post = Post::factory()->create(['user_id' => $user->id, 'created_at' => $created]);
+            Delivery::factory()->create(['post_id' => $post->id, 'status' => $status, 'attempts' => $attempts]);
+        }
+        Post::factory()->create(['user_id' => $user->id]);
+        $deliverer = $this->mock(PostDeliverer::class);
+        $deliverer->shouldReceive('deliver')->once()->withArgs(fn (Post $post) => $post->is($retry))->andReturn(1);
+        $deliverer->shouldReceive('deliver')->once()->withArgs(fn (Post $post) => $post->is($other))->andReturn(0);
+
+        $this->artisan('digest:tick')
+            ->expectsOutput('Dispatched 0 digests')
+            ->expectsOutput('Retried deliveries for 2 posts')
+            ->assertExitCode(0);
+
+        Bus::assertNotDispatched(RunDigest::class);
+    }
+
+    public function test_dispatches_before_retrying_deliveries_then_prunes_only_old_unreferenced_items(): void
+    {
+        $this->eligibleUser('UTC');
+        $post = Post::factory()->create(['user_id' => User::factory()]);
+        Delivery::factory()->create(['post_id' => $post->id, 'status' => DeliveryStatus::Failed]);
+        $this->freezeSecond();
+        $old = Item::factory()->create(['published_at' => now(), 'created_at' => now()->subDays(30)->subSecond()]);
+        $undated = Item::factory()->create(['published_at' => null, 'created_at' => now()->subDays(31)]);
+        $referenced = Item::factory()->create(['created_at' => now()->subDays(31)]);
+        $selection = PostItem::factory()->create(['post_id' => $post->id, 'item_id' => $referenced->id]);
+        $kept = [
+            $referenced,
+            Item::factory()->create(['published_at' => now()->subDays(40), 'created_at' => now()->subDays(29)]),
+            Item::factory()->create(['created_at' => now()->subDays(30)]),
+        ];
+        $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->withArgs(function (Post $actual) use ($post, $old) {
+            Bus::assertDispatchedTimes(RunDigest::class, 2);
+            $this->assertModelExists($old);
+
+            return $actual->is($post);
+        })->andReturn(0);
+
+        $this->artisan('digest:tick')
+            ->expectsOutput('Dispatched 2 digests')
+            ->expectsOutput('Retried deliveries for 1 posts')
+            ->assertExitCode(0);
 
         $this->assertModelMissing($old);
-        $this->assertModelExists($recent);
-        $this->assertModelExists($oldSelected);
-        $this->assertModelExists($oldCandidate);
+        $this->assertModelMissing($undated);
+        $this->assertModelExists($selection);
+        foreach ($kept as $item) {
+            $this->assertModelExists($item);
+        }
     }
 
-    public function test_keeps_old_skipped_items_without_a_date_so_they_are_not_collected_again(): void
+    public function test_dispatches_due_catalog_checks_even_when_no_digest_is_due(): void
     {
-        CarbonImmutable::setTestNow('2026-12-01 07:00:00');
-        $this->mock(NewsPipeline::class)->shouldNotReceive('run');
-        $this->mock(LearningPipeline::class)->shouldNotReceive('run');
-        $undated = Item::factory()->create(['status' => ItemStatus::Skipped, 'published_at' => null, 'created_at' => '2026-10-15 07:00:00']);
+        $unchecked = Source::factory()->create();
+        $previousMonth = Source::factory()->create();
+        SourceCheck::factory()->for($previousMonth)->create(['checked_at' => now()->startOfMonth()->subSecond()]);
+        $checked = Source::factory()->create();
+        SourceCheck::factory()->for($checked)->create(['checked_at' => now()->startOfMonth()]);
+        Source::factory()->create(['enabled' => false]);
+        Source::factory()->for(User::factory())->create();
 
         $this->artisan('digest:tick')->assertExitCode(0);
 
-        $this->assertModelExists($undated);
+        Bus::assertDispatchedTimes(CheckCatalogSource::class, 2);
+        foreach ([$unchecked, $previousMonth] as $source) {
+            Bus::assertDispatched(CheckCatalogSource::class, fn (CheckCatalogSource $job) => $job->source->is($source) && ! $job->force);
+        }
+        Bus::assertNotDispatched(RunDigest::class);
+        $this->assertSame([], $this->fetched);
     }
 
-    /**
-     * @param  class-string  $class
-     */
-    private function expectRun(string $class, string $name, bool $fail = false): void
+    #[DataProvider('tickExitCodes')]
+    public function test_catalog_dispatch_failure_is_reported_without_changing_the_tick_exit_code(int $exitCode): void
     {
-        $this->mock($class, function (MockInterface $mock) use ($name, $fail) {
-            $mock->shouldReceive('run')->once()->andReturnUsing(function (CarbonImmutable $today) use ($name, $fail) {
-                $this->calls[] = "{$name}:{$today->toDateString()}";
+        Exceptions::fake();
+        Source::factory()->create();
+        $old = Item::factory()->create(['created_at' => now()->subDays(31)]);
+        if ($exitCode === 1) {
+            $post = Post::factory()->create(['user_id' => User::factory()]);
+            Delivery::factory()->create(['post_id' => $post->id, 'status' => DeliveryStatus::Failed]);
+            $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(1);
+        }
+        $failure = new RuntimeException('Catalog queue unavailable');
+        Bus::shouldReceive('dispatch')->once()
+            ->withArgs(function (CheckCatalogSource $job) use ($old): bool {
+                $this->assertModelMissing($old);
 
-                return $fail ? throw new RuntimeException('Discord is down') : new Post;
-            });
+                return true;
+            })->andThrow($failure);
+
+        $this->artisan('digest:tick')->assertExitCode($exitCode);
+
+        Exceptions::assertReported(fn (RuntimeException $actual) => $actual === $failure);
+    }
+
+    public function test_dispatches_scouts_after_catalog_checks_even_when_no_digest_is_due(): void
+    {
+        $source = Source::factory()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => now()->startOfMonth()]);
+        Interest::factory()->create(['status' => InterestStatus::Draft]);
+        $old = Item::factory()->create(['created_at' => now()->subDays(31)]);
+        $order = [];
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(CheckCatalogSource::class))->andReturnUsing(function (CheckCatalogSource $job) use ($source, $old, &$order): void {
+            $this->assertModelMissing($old);
+            $this->assertTrue($job->source->is($source));
+            $order[] = 'check';
         });
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(ScoutInterest::class))->andReturnUsing(function (ScoutInterest $job) use ($interest, &$order): void {
+            $this->assertSame(['check'], $order);
+            $this->assertTrue($job->interest->is($interest));
+            $order[] = 'scout';
+        });
+
+        $this->artisan('digest:tick')->assertExitCode(0);
+
+        $this->assertSame(['check', 'scout'], $order);
+        $this->assertSame([], $this->fetched);
+    }
+
+    #[DataProvider('tickExitCodes')]
+    public function test_scout_dispatch_failure_is_reported_without_changing_the_tick_exit_code(int $exitCode): void
+    {
+        Exceptions::fake();
+        Interest::factory()->create(['status' => InterestStatus::Live]);
+        if ($exitCode === 1) {
+            $post = Post::factory()->create(['user_id' => User::factory()]);
+            Delivery::factory()->create(['post_id' => $post->id, 'status' => DeliveryStatus::Failed]);
+            $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(1);
+        }
+        $failure = new RuntimeException('Scout queue unavailable');
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(ScoutInterest::class))->andThrow($failure);
+
+        $this->artisan('digest:tick')->assertExitCode($exitCode);
+
+        Exceptions::assertReported(fn (RuntimeException $actual) => $actual === $failure);
+    }
+
+    /** @return array<string, array{int}> */
+    public static function tickExitCodes(): array
+    {
+        return ['successful tick' => [0], 'failed delivery retry' => [1]];
+    }
+
+    /** @param  array<string, mixed>  $settings */
+    private function eligibleUser(string $timezone, array $settings = []): User
+    {
+        $user = User::factory()->create();
+        DigestSettings::factory()->create(['user_id' => $user->id, 'timezone' => $timezone, 'onboarded_at' => now(), 'news_time' => '00:00', 'learning_time' => '00:00', ...$settings]);
+        AiKey::factory()->create(['user_id' => $user->id]);
+        $user->interests()->attach(Interest::factory()->create(['has_learning' => true]));
+
+        return $user;
     }
 }

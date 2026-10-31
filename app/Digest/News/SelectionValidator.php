@@ -23,16 +23,16 @@ final class SelectionValidator
     /**
      * @param  array<mixed>  $data  the model's answer
      * @param  Collection<int, Item>  $candidatesById
-     * @param  array<string, string>  $defaultTags  source slug => default tag
+     * @param  array<int, string>  $defaultTags  candidate id => default tag
      * @return list<SelectedItem>
      */
-    public function validate(array $data, Collection $candidatesById, array $defaultTags = []): array
+    public function validate(array $data, Collection $candidatesById, array $defaultTags = [], ?int $maxItems = null): array
     {
         $selected = [];
         $seenUrls = [];
 
         foreach (is_array($data['items'] ?? null) ? $data['items'] : [] as $entry) {
-            if (count($selected) >= (int) config('digest.max_items')) {
+            if (count($selected) >= ($maxItems ?? (int) config('digest.max_items'))) {
                 break;
             }
 
@@ -55,7 +55,7 @@ final class SelectionValidator
                 url: $url,
                 title: Str::limit(trim((string) ($entry['title'] ?? '')), self::TITLE_LENGTH - 1, '…'),
                 summary: Str::limit(trim((string) ($entry['summary'] ?? '')), self::SUMMARY_LENGTH - 1, '…'),
-                tagSlugs: $this->tags($entry['tags'] ?? null) ?: [$defaultTags[$candidate->source_slug] ?? self::FALLBACK_TAG],
+                tagSlugs: $this->tags($entry['tags'] ?? null) ?: [$defaultTags[$candidate->id] ?? self::FALLBACK_TAG],
             );
         }
 

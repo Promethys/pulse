@@ -16,14 +16,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            InterestTableSeeder::class,
             SourceTableSeeder::class,
             TagTableSeeder::class,
             LearningTopicTableSeeder::class,
         ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if (app()->isLocal()) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
     }
 }

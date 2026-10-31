@@ -28,7 +28,7 @@ final class ResendInboxFetcher implements SourceFetcher
 
     public function fetch(Source $source, CarbonImmutable $since): array
     {
-        $http = $this->client();
+        $http = $this->client($source);
 
         $emails = array_filter(
             $this->listEmails($http),
@@ -37,17 +37,17 @@ final class ResendInboxFetcher implements SourceFetcher
         usort($emails, fn (array $a, array $b) => strcmp($b['created_at'], $a['created_at']));
 
         return array_map(
-            fn (array $email) => $this->candidate($source, $this->get($http, self::API.'/'.$email['id'])->json()),
+            fn (array $email) => $this->candidate($this->get($http, self::API.'/'.$email['id'])->json()),
             array_slice($emails, 0, $source->max_items),
         );
     }
 
-    private function client(): PendingRequest
+    private function client(Source $source): PendingRequest
     {
-        $key = config('services.resend.key');
+        $key = $source->credentials['api_key'] ?? null;
 
         if (! is_string($key) || $key === '') {
-            throw new FetchException('RESEND_API_KEY is not set');
+            throw new FetchException('This newsletter source has no Resend API key');
         }
 
         return Http::timeout(15)->retry(2, 500, throw: false)->withToken($key)->acceptJson();
@@ -99,13 +99,12 @@ final class ResendInboxFetcher implements SourceFetcher
     /**
      * @param  array{id: string, subject?: string, created_at: string, html?: string|null, text?: string|null}  $email
      */
-    private function candidate(Source $source, array $email): Candidate
+    private function candidate(array $email): Candidate
     {
         $html = (string) ($email['html'] ?? '');
         $text = (string) ($email['text'] ?? '');
 
         return new Candidate(
-            sourceSlug: $source->slug,
             title: Text::plain((string) ($email['subject'] ?? '')) ?: '(no subject)',
             url: 'resend://email/'.$email['id'],
             excerpt: Str::limit(Text::plain($text !== '' ? $text : $html), self::EXCERPT_LENGTH - 1, '…'),

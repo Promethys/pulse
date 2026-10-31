@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Digest\Sources;
 
+use App\Digest\Support\PublicUrl;
 use App\Digest\Support\Text;
+use App\Digest\Support\UnsafeUrlException;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
@@ -25,10 +27,10 @@ final class FeedFetcher implements SourceFetcher
 
     public function fetch(Source $source, CarbonImmutable $since): array
     {
-        $xml = $this->load((string) $source->url);
+        $xml = $this->load($source);
 
         $candidates = array_filter(
-            $xml->getName() === 'rss' ? $this->rssItems($xml, $source) : $this->atomEntries($xml, $source),
+            $xml->getName() === 'rss' ? $this->rssItems($xml) : $this->atomEntries($xml),
             fn (Candidate $c) => $c->publishedAt === null || $c->publishedAt->greaterThanOrEqualTo($since),
         );
 
@@ -37,10 +39,16 @@ final class FeedFetcher implements SourceFetcher
         return array_slice($candidates, 0, $source->max_items);
     }
 
-    private function load(string $url): SimpleXMLElement
+    private function load(Source $source): SimpleXMLElement
     {
         try {
-            $response = Http::timeout(10)->retry(3, $this->backoff(...), throw: false)->withUserAgent(self::USER_AGENT)->get($url);
+            $http = Http::timeout(10)->withUserAgent(self::USER_AGENT);
+            $url = (string) $source->url;
+            $response = $source->user_id !== null
+                ? app(PublicUrl::class)->get($http, $url)
+                : $http->retry(3, $this->backoff(...), throw: false)->get($url);
+        } catch (UnsafeUrlException $e) {
+            throw new FetchException($e->getMessage(), previous: $e);
         } catch (ConnectionException $e) {
             throw new FetchException("Connection failed: {$e->getMessage()}", previous: $e);
         }
@@ -80,12 +88,12 @@ final class FeedFetcher implements SourceFetcher
     /**
      * @return list<Candidate>
      */
-    private function rssItems(SimpleXMLElement $xml, Source $source): array
+    private function rssItems(SimpleXMLElement $xml): array
     {
         $candidates = [];
 
         foreach ($xml->channel->item ?? [] as $item) {
-            $candidates[] = $this->candidate($source, (string) $item->title, (string) $item->link, (string) $item->description, (string) $item->pubDate);
+            $candidates[] = $this->candidate((string) $item->title, (string) $item->link, (string) $item->description, (string) $item->pubDate);
         }
 
         return array_values(array_filter($candidates));
@@ -94,13 +102,12 @@ final class FeedFetcher implements SourceFetcher
     /**
      * @return list<Candidate>
      */
-    private function atomEntries(SimpleXMLElement $xml, Source $source): array
+    private function atomEntries(SimpleXMLElement $xml): array
     {
         $candidates = [];
 
         foreach ($xml->entry ?? [] as $entry) {
             $candidates[] = $this->candidate(
-                $source,
                 (string) $entry->title,
                 $this->atomLink($entry),
                 (string) ($entry->summary ?? '') ?: (string) $entry->content,
@@ -123,7 +130,7 @@ final class FeedFetcher implements SourceFetcher
         return '';
     }
 
-    private function candidate(Source $source, string $title, string $url, string $html, string $date): ?Candidate
+    private function candidate(string $title, string $url, string $html, string $date): ?Candidate
     {
         $title = Text::plain($title);
         $url = trim($url);
@@ -133,7 +140,6 @@ final class FeedFetcher implements SourceFetcher
         }
 
         return new Candidate(
-            sourceSlug: $source->slug,
             title: $title,
             url: $url,
             excerpt: Str::limit(Text::plain($html), self::EXCERPT_LENGTH - 1, '…'),

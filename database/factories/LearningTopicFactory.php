@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\LearningTopic;
@@ -18,7 +20,6 @@ class LearningTopicFactory extends Factory
         return [
             'title' => fake()->unique()->words(3, true),
             'category' => fake()->randomElement(['architecture', 'databases', 'testing', 'performance']),
-            'last_used_on' => null,
         ];
     }
 }

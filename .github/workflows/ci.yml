@@ -30,8 +30,28 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress
+        run: |
+          composer install --no-interaction --no-progress
+          npm ci
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan wayfinder:generate --with-form
+
+      - name: Front-end checks
+        run: npx vp check
+
+      - name: Type checks
+        run: npm run types:check
 
       - name: Pint
         run: vendor/bin/pint --test
@@ -94,6 +114,11 @@ jobs:
 
       - name: Tests
         run: php artisan test
+
+      - name: JS tests
+        run: npm run test
+        env:
+          LARAVEL_BYPASS_ENV_CHECK: 1
 
   gitleaks:
     runs-on: ubuntu-latest

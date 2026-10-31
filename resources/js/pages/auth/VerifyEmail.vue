@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { MailCheck } from '@lucide/vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -8,9 +9,9 @@ import { send } from '@/routes/verification';
 
 defineOptions({
     layout: {
-        title: 'Email verification',
+        title: 'Check your inbox',
         description:
-            'Please verify your email address by clicking on the link we just emailed to you.',
+            'We sent you a link. Click it to confirm your email address.',
     },
 });
 
@@ -22,9 +23,18 @@ defineProps<{
 <template>
     <Head title="Email verification" />
 
+    <div class="flex justify-center">
+        <span
+            class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground"
+        >
+            <MailCheck class="size-6" aria-hidden="true" />
+        </span>
+    </div>
+
     <div
         v-if="status === 'verification-link-sent'"
-        class="mb-4 text-center text-sm font-medium text-green-600"
+        role="status"
+        class="rounded-lg bg-success/15 p-2 text-center text-sm text-success"
     >
         A new verification link has been sent to the email address you provided
         during registration.
@@ -32,12 +42,12 @@ defineProps<{
 
     <Form
         v-bind="send.form()"
-        class="space-y-6 text-center"
+        class="space-y-4 text-center"
         v-slot="{ processing }"
     >
-        <Button :disabled="processing" variant="secondary">
+        <Button :disabled="processing" variant="outline" class="w-full">
             <Spinner v-if="processing" />
-            Resend verification email
+            Resend the email
         </Button>
 
         <TextLink :href="logout()" as="button" class="mx-auto block text-sm">
