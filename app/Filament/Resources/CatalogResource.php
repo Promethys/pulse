@@ -55,7 +55,7 @@ class CatalogResource extends Resource
                 TextColumn::make('url')
                     ->label(__('URL'))
                     ->limit(26)
-                    ->tooltip(fn (SourceProposal $record): string => $record->url)
+                    ->tooltip(fn (SourceProposal $record): string => Str::limit($record->url, 120))
                     ->copyable()
                     ->copyableState(fn (SourceProposal $record): string => $record->url),
                 TextColumn::make('kind')->badge(),
@@ -125,8 +125,8 @@ class CatalogResource extends Resource
                     ->visible(fn (SourceProposal $record): bool => $record->status === SourceProposalStatus::Pending && $record->kind === SourceProposalKind::UrlChange)
                     ->requiresConfirmation()
                     ->modalDescription(fn (SourceProposal $record): string => __('Change the source URL from :old to :new?', [
-                        'old' => $record->source?->url,
-                        'new' => $record->url,
+                        'old' => Str::limit((string) $record->source?->url, 120),
+                        'new' => Str::limit($record->url, 120),
                     ]))
                     ->action(function (SourceProposal $record): void {
                         self::review(fn () => app(ApplyUrlChange::class)->handle($record), __('Source URL updated'));

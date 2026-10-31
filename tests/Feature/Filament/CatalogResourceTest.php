@@ -381,4 +381,19 @@ class CatalogResourceTest extends TestCase
     {
         return Livewire::test(ListCatalog::class);
     }
+
+    public function test_extreme_urls_are_truncated_in_the_tooltip_and_the_confirmation(): void
+    {
+        $page = $this->catalogPageForTest();
+        $source = Source::factory()->create(['url' => 'https://old.test/feed']);
+        $url = 'https://catalog.test/'.str_repeat('long-path/', 40).'feed.xml';
+        $proposal = SourceProposal::factory()->for($source)->create(['kind' => SourceProposalKind::UrlChange, 'url' => $url]);
+
+        $column = $page->instance()->getTable()->getColumn('url');
+        $this->assertNotNull($column);
+        $this->assertLessThanOrEqual(123, mb_strlen((string) $column->record($proposal)->getTooltip($url)));
+
+        $page->mountAction(TestAction::make('applyUrlChange')->table($proposal))
+            ->assertMountedActionModalDontSee($url);
+    }
 }
