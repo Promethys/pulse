@@ -9,9 +9,9 @@ describe('PulseLogo', () => {
             const { container } = render(PulseLogo, { props: { size } });
 
             expect(screen.getByText('Pulse')).toHaveClass('font-display');
-            expect(
-                container.querySelector('.bg-primary svg.lucide-activity'),
-            ).toBeInTheDocument();
+            const mark = container.querySelector('svg');
+            expect(mark).toHaveAttribute('aria-hidden', 'true');
+            expect(mark).not.toHaveClass('lucide-activity');
         },
     );
 
