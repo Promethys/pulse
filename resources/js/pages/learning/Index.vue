@@ -203,11 +203,11 @@ function reset() {
         <EmptyState
             v-else
             title="No tips yet"
-            description="Your tips and topics appear here after your next learning digest. They need an interest marked Includes learning, and Learning turned on in Digest settings."
+            description="Your tips and topics appear here after your next learning digest."
         >
             <template #actions>
                 <p class="text-sm text-muted-foreground">
-                    Choose your interests on
+                    Choose an interest marked Includes learning on
                     <Link href="/sources" class="underline underline-offset-4"
                         >Sources</Link
                     >, then enable Learning in

@@ -181,18 +181,19 @@ function next() {
                             What do you follow?
                         </h1>
                         <p class="mt-1 text-sm text-muted-foreground">
-                            Pick at least one.
                             {{ interestForm.interests.length }} selected.
                         </p>
                     </div>
                     <p class="text-sm text-muted-foreground">
                         Interests decide which sources you follow. Pulse adds
                         their default sources. Removing an interest also removes
-                        catalog subscriptions that no longer match.
-                        <HelpTip
-                            label="Sources"
-                            text="A source is a site or newsletter that supplies news."
-                        />
+                        catalog subscriptions that no longer
+                        <span class="whitespace-nowrap"
+                            >match.
+                            <HelpTip
+                                label="Sources"
+                                text="A source is a site or newsletter that supplies news."
+                        /></span>
                     </p>
                     <p class="text-sm text-muted-foreground">
                         Interests marked ‘Coming soon’ are not available to

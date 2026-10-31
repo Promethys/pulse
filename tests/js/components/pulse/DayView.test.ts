@@ -289,6 +289,25 @@ describe('DayView', () => {
         },
     );
 
+    it.each([
+        [true, false],
+        [false, true],
+    ])(
+        'leaves pending news to the Today banner when isToday=%s',
+        (isToday, shown) => {
+            const props = dayViewProps();
+            props.isToday = isToday;
+            props.day.news = { status: 'pending', item_count: 0, sections: [] };
+            renderDay(props);
+            const line = screen.queryByText(/Your news is being prepared/);
+            if (shown) expect(line).toBeVisible();
+            else expect(line).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('heading', { name: 'Quiet night' }),
+            ).not.toBeInTheDocument();
+        },
+    );
+
     it('renders no news state when the news post is absent', () => {
         const props = dayViewProps();
         props.day.news = null;

@@ -328,9 +328,14 @@ describe('Learning Index', () => {
         expect(screen.getByText('No tips yet')).toBeVisible();
         expect(
             screen.getByText(
-                'Your tips and topics appear here after your next learning digest. They need an interest marked Includes learning, and Learning turned on in Digest settings.',
+                'Your tips and topics appear here after your next learning digest.',
             ),
         ).toBeVisible();
+        expect(
+            screen.getByRole('link', { name: 'Sources' }).parentElement,
+        ).toHaveTextContent(
+            'Choose an interest marked Includes learning on Sources, then enable Learning in Digest settings.',
+        );
         expect(
             screen.queryByRole('button', { name: 'Clear filters' }),
         ).not.toBeInTheDocument();

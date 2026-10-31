@@ -144,12 +144,11 @@ function selectDate(date: DateValue | undefined) {
             </p>
         </template>
         <section v-if="day.news" class="mt-8">
-            <p
-                v-if="day.news.status === 'pending'"
-                class="text-sm text-muted-foreground"
-            >
-                Your news is being prepared. Refresh this page shortly.
-            </p>
+            <template v-if="day.news.status === 'pending'">
+                <p v-if="!isToday" class="text-sm text-muted-foreground">
+                    Your news is being prepared. Refresh this page shortly.
+                </p>
+            </template>
             <p
                 v-else-if="day.news.status === 'failed'"
                 class="text-sm text-muted-foreground"

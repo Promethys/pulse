@@ -49,7 +49,7 @@ function pinHoverOpened(event: MouseEvent) {
             </button>
         </PopoverTrigger>
         <PopoverContent
-            class="w-fit max-w-xs border-0 bg-foreground px-3 py-1.5 text-xs text-balance text-background"
+            class="w-fit max-w-xs border-0 bg-foreground px-3 py-1.5 text-xs text-background"
             :collision-padding="8"
             @open-auto-focus.prevent
             @close-auto-focus.prevent

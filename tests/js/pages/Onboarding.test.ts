@@ -203,9 +203,7 @@ describe('Onboarding', () => {
         expect(
             screen.getByRole('button', { name: /Robotics.*Coming soon/i }),
         ).toBeDisabled();
-        expect(
-            screen.getByText(/Pick at least one\. 2 selected\./),
-        ).toBeVisible();
+        expect(screen.getByText(/^2 selected\.$/)).toBeVisible();
         expect(
             screen.getByRole('button', { name: /Suggest an interest/i }),
         ).toBeVisible();
@@ -236,9 +234,7 @@ describe('Onboarding', () => {
         expect(button).toBeDisabled();
         await view.user.click(screen.getByRole('button', { name: 'Security' }));
         expect(button).toBeEnabled();
-        expect(
-            screen.getByText(/Pick at least one\. 1 selected\./),
-        ).toBeVisible();
+        expect(screen.getByText(/^1 selected\.$/)).toBeVisible();
         expect(
             screen.queryByText('Pick at least one interest to continue.'),
         ).not.toBeInTheDocument();
@@ -751,7 +747,14 @@ describe('Getting started guidance', () => {
         'Interests marked ‘Coming soon’ are not available to select yet.',
     ])('explains %s', async (message) => {
         renderPage();
-        expect(screen.getByText(message)).toBeVisible();
+        expect(
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    element.textContent?.replace(/\s+/g, ' ').trim() ===
+                        message,
+            ),
+        ).toBeVisible();
     });
 });
 

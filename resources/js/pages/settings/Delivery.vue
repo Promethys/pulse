@@ -334,7 +334,7 @@ function disconnect() {
                     @update:enabled="update(channel, { enabled: $event })"
                     @delete="remove(channel)"
                 >
-                    <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex flex-wrap items-start gap-4">
                         <div class="space-y-1.5">
                             <Label :for="`webhook-name-${channel.id}`"
                                 >Name</Label
