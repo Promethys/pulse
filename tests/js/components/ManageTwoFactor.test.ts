@@ -27,3 +27,23 @@ describe('ManageTwoFactor', () => {
         },
     );
 });
+
+it.each([true, false])(
+    'explains authenticator codes with enabled=%s',
+    (twoFactorEnabled) => {
+        render(ManageTwoFactor, {
+            props: { canManageTwoFactor: true, twoFactorEnabled },
+            global: {
+                stubs: {
+                    TwoFactorRecoveryCodes: true,
+                    TwoFactorSetupModal: true,
+                },
+            },
+        });
+        expect(
+            screen.getByText(
+                'Use an authenticator app to generate a six-digit code when you sign in.',
+            ),
+        ).toBeVisible();
+    },
+);

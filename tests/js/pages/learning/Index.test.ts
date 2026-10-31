@@ -61,6 +61,14 @@ function isPressed(button: HTMLElement): boolean {
 }
 
 describe('Learning Index', () => {
+    it('defines tips and topics once, next to the page title', () => {
+        renderPage();
+
+        expect(
+            screen.getByRole('button', { name: 'Help: Learning' }),
+        ).toBeInTheDocument();
+    });
+
     it('links to the learning tab of unified search even with active browsing filters', () => {
         const props = learningProps();
         props.filters = { kind: 'topic', category: 'Testing', tag: 'php' };

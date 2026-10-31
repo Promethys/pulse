@@ -156,3 +156,21 @@ describe('Paused delivery guidance', () => {
         },
     );
 });
+
+it.each(['delivered', 'failed', 'pending'])(
+    'labels the %s delivery time in UTC',
+    (status) => {
+        const channel = destinationProps();
+        channel.latest_delivery = {
+            id: 1,
+            status,
+            attempts: 1,
+            last_error: null,
+            delivered_at:
+                status === 'delivered' ? '2026-10-28T11:02:00+02:00' : null,
+            updated_at: '2026-10-28T11:02:00+02:00',
+        };
+        renderRow(channel);
+        expect(screen.getByText(/28 Oct, 09:02 UTC/)).toBeVisible();
+    },
+);

@@ -12,7 +12,7 @@ defineProps<{ text: string; label: string }>();
 
 <template>
     <TooltipProvider>
-        <Tooltip>
+        <Tooltip ignore-non-keyboard-focus>
             <TooltipTrigger as-child>
                 <button
                     type="button"

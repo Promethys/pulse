@@ -100,6 +100,9 @@ function selectDate(date: DateValue | undefined) {
                             prevent-deselect
                             @update:model-value="selectDate"
                         />
+                        <p class="px-3 pb-3 text-sm text-muted-foreground">
+                            Only dates with saved digests can be selected.
+                        </p>
                     </PopoverContent>
                 </Popover>
                 <Button

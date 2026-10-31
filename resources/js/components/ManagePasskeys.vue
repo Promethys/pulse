@@ -5,6 +5,7 @@ import type { Passkey } from '@/types/auth';
 import Heading from '@/components/Heading.vue';
 import PasskeyItem from '@/components/PasskeyItem.vue';
 import PasskeyRegister from '@/components/PasskeyRegister.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
 
 export type Props = {
@@ -31,11 +32,17 @@ const handleRegisterSuccess = () => {
 
 <template>
     <div v-if="canManagePasskeys" class="space-y-6">
-        <Heading
-            variant="small"
-            title="Passkeys"
-            description="Manage your passkeys for passwordless sign-in"
-        />
+        <div class="flex items-center gap-2">
+            <Heading
+                variant="small"
+                title="Passkeys"
+                description="Manage your passkeys for passwordless sign-in"
+            />
+            <HelpTip
+                label="Passkeys"
+                text="A way to sign in using your device or password manager instead of typing a password."
+            />
+        </div>
 
         <div class="overflow-hidden rounded-lg border border-border">
             <template v-if="passkeys.length">

@@ -3,6 +3,7 @@ import type { AcceptableValue } from 'reka-ui';
 import { useId } from 'vue';
 import InputError from '@/components/InputError.vue';
 import DatePicker from '@/components/pulse/DatePicker.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Label } from '@/components/ui/label';
 import {
@@ -65,7 +66,10 @@ function updateDate(field: 'from' | 'to', value: string | null) {
 <template>
     <div class="space-y-5">
         <div>
-            <Label :id="`${id}-tags`" class="mb-2 block">Tags</Label>
+            <div class="mb-2 flex items-center gap-2">
+                <Label :id="`${id}-tags`">Tags</Label>
+                <HelpTip label="Tags" text="Matches any selected tag." />
+            </div>
             <div
                 role="group"
                 :aria-labelledby="`${id}-tags`"
@@ -150,6 +154,13 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 </Select>
             </div>
         </template>
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium">Digest dates</span>
+            <HelpTip
+                label="Digest dates"
+                text="Dates filter when content appeared in your digest."
+            />
+        </div>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-1">
             <div>
                 <Label :for="`${id}-from`" class="mb-2 block">From</Label>

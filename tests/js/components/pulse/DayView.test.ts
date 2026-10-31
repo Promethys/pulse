@@ -392,3 +392,11 @@ it.each([
     renderDay(props);
     expect(screen.getByText(message)).toBeVisible();
 });
+
+it('explains which calendar dates can be selected', async () => {
+    const view = renderDay();
+    const message = 'Only dates with saved digests can be selected.';
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+    await view.user.click(screen.getByRole('button', { name: 'Pick a date' }));
+    expect(await screen.findByText(message)).toBeVisible();
+});

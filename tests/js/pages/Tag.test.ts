@@ -163,3 +163,18 @@ it.each([true, false])(
         }
     },
 );
+
+it('defines the weekly story counts', async () => {
+    renderPage();
+    screen.getByRole('button', { name: 'Help: Weekly stories' }).focus();
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        'News stories in your digests with this tag, grouped into weeks over the last 12 weeks.',
+    );
+});
+
+it('hides weekly story help when no stories use the tag', () => {
+    renderPage({ ...tagPageProps(), count: 0, items: [] });
+    expect(
+        screen.queryByRole('button', { name: 'Help: Weekly stories' }),
+    ).not.toBeInTheDocument();
+});

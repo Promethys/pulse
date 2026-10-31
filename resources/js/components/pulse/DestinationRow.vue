@@ -36,7 +36,7 @@ const deliveredAt = computed(() => {
     const value = last.value?.delivered_at ?? last.value?.updated_at;
     if (!value) return '';
     const date = new Date(value);
-    return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}`;
+    return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC`;
 });
 </script>
 

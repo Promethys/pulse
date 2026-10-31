@@ -241,3 +241,14 @@ it.each([
         else expect(message).not.toBeInTheDocument();
     },
 );
+
+it.each([
+    ['Tags', 'Matches any selected tag.'],
+    ['Digest dates', 'Dates filter when content appeared in your digest.'],
+])('defines %s', async (label, text) => {
+    render(SearchFilters, { props: props() });
+    await userEvent
+        .setup()
+        .hover(screen.getByRole('button', { name: `Help: ${label}` }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(text);
+});

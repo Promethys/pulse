@@ -288,6 +288,22 @@ class CatalogResourceTest extends TestCase
         $this->assertSame($before, $proposal->fresh()->getAttributes());
     }
 
+    public function test_single_approval_explains_default_subscriptions(): void
+    {
+        $proposal = SourceProposal::factory()->create();
+        $this->listPage()->mountAction(TestAction::make('approve')->table($proposal))
+            ->assertMountedActionModalSee('Automatically subscribe readers who follow these interests, including existing readers.');
+    }
+
+    public function test_bulk_approval_explains_default_subscriptions(): void
+    {
+        $proposal = SourceProposal::factory()->create();
+        $this->listPage()->selectTableRecords([$proposal->id])
+            ->mountAction(TestAction::make('bulkApprove')->table()->bulk())
+            ->assertMountedActionModalSee('Automatically subscribe readers who follow these interests, including existing readers.')
+            ->assertMountedActionModalSee('Each feed keeps its own interest. Proposals without one are skipped.');
+    }
+
     private function listPage(): Testable
     {
         return Livewire::test(CatalogResource::getPages()['index']->getPage());

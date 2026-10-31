@@ -236,6 +236,22 @@ class InterestProposalResourceTest extends TestCase
         $this->assertSame(SourceProposalStatus::Approved, $approved->fresh()?->status);
     }
 
+    public function test_single_approval_explains_draft_availability(): void
+    {
+        $proposal = InterestProposal::factory()->create();
+        $this->listPage()->mountAction(TestAction::make('approve')->table($proposal))
+            ->assertMountedActionModalSee('Approval creates a draft interest and starts finding sources. Readers can select it once enough default sources are available.');
+    }
+
+    public function test_bulk_approval_explains_draft_availability(): void
+    {
+        $proposal = InterestProposal::factory()->create();
+        $this->listPage()->selectTableRecords([$proposal->id])
+            ->mountAction(TestAction::make('bulkApprove')->table()->bulk())
+            ->assertMountedActionModalSee('Approval creates a draft interest and starts finding sources. Readers can select it once enough default sources are available.')
+            ->assertMountedActionModalSee('Each interest keeps its suggested name and category. Names already taken are skipped.');
+    }
+
     private function listPage(): Testable
     {
         return Livewire::test(InterestProposalResource::getPages()['index']->getPage());

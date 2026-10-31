@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Tag as TagIcon } from '@lucide/vue';
 import { computed } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
@@ -25,9 +26,13 @@ const subtitle = computed(() =>
                 <div class="text-right">
                     <Sparkline :data="weeks" />
                     <div
-                        class="text-[10px] tracking-wider text-muted-foreground uppercase"
+                        class="flex items-center justify-end gap-2 text-[10px] tracking-wider text-muted-foreground uppercase"
                     >
                         per week · 12w
+                        <HelpTip
+                            label="Weekly stories"
+                            text="News stories in your digests with this tag, grouped into weeks over the last 12 weeks."
+                        />
                     </div>
                 </div>
             </template>
