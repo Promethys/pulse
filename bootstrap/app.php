@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias(['onboarded' => EnsureOnboarded::class]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
