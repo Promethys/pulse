@@ -27,7 +27,7 @@ const typeLabel = computed(
                 }}</span>
             </div>
             <p v-if="source.retired" class="text-sm text-muted-foreground">
-                This source is unavailable. Choose another source.
+                Retired: this source stopped working. Choose another source.
             </p>
         </div>
         <Switch

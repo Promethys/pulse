@@ -79,7 +79,7 @@ describe('Retired source guidance', () => {
             },
         });
         const message = screen.queryByText(
-            'This source is unavailable. Choose another source.',
+            'Retired: this source stopped working. Choose another source.',
         );
         if (retired) expect(message).toBeVisible();
         else expect(message).not.toBeInTheDocument();

@@ -51,7 +51,7 @@ onMounted(async () => {
         </CardHeader>
         <CardContent>
             <div
-                class="flex flex-col gap-3 select-none sm:flex-row sm:items-center sm:justify-between"
+                class="flex flex-col gap-3 select-none sm:flex-row sm:items-end sm:justify-between"
             >
                 <Button @click="toggleRecoveryCodesVisibility" class="w-fit">
                     <component
@@ -66,6 +66,7 @@ onMounted(async () => {
                     v-if="isRecoveryCodesVisible && recoveryCodesList.length"
                     v-bind="regenerateRecoveryCodes.form()"
                     method="post"
+                    class="space-y-3 sm:max-w-sm"
                     :options="{ preserveScroll: true }"
                     @success="fetchRecoveryCodes"
                     #default="{ processing }"

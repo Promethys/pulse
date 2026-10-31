@@ -146,7 +146,7 @@ function save() {
                     >Only you will see this source.</DialogDescription
                 >
             </DialogHeader>
-            <p class="text-sm text-muted-foreground">
+            <p v-if="!source" class="text-sm text-muted-foreground">
                 You can save up to 30 custom sources.
             </p>
             <form class="space-y-4" @submit.prevent="save">
@@ -180,7 +180,13 @@ function save() {
                 </p>
                 <InputError :message="errors.type" />
                 <div v-if="form.type === 'feed'" class="space-y-1.5">
-                    <Label for="source-url">Feed URL (required)</Label>
+                    <span class="inline-flex items-center gap-1">
+                        <Label for="source-url">Feed URL (required)</Label>
+                        <HelpTip
+                            label="Feeds"
+                            text="A feed lists a site’s latest posts so Pulse can read them automatically."
+                        />
+                    </span>
                     <Input
                         id="source-url"
                         v-model="form.url"
@@ -194,10 +200,6 @@ function save() {
                     <p class="text-sm text-muted-foreground">
                         Paste the site’s public RSS or Atom feed URL. Look for
                         an RSS or Subscribe link on the site.
-                        <HelpTip
-                            label="Feeds"
-                            text="A feed lists a site’s latest posts so Pulse can read them automatically."
-                        />
                     </p>
                     <InputError id="source-url-error" :message="errors.url" />
                 </div>
@@ -214,12 +216,16 @@ function save() {
                         "
                     />
                     <p class="text-sm text-muted-foreground">
-                        Connect a Resend account that receives your newsletters.
-                        Pulse reads recent received emails from that account.
-                        <HelpTip
-                            label="Resend"
-                            text="Resend is an email service. This does not connect your Gmail or Outlook inbox."
-                        />
+                        Connect a
+                        <span class="inline-flex items-center gap-1">
+                            Resend account
+                            <HelpTip
+                                label="Resend"
+                                text="Resend is an email service. This does not connect your Gmail or Outlook inbox."
+                            />
+                        </span>
+                        that receives your newsletters. Pulse reads recent
+                        received emails from that account.
                     </p>
                     <InputError :message="errors.api_key" />
                 </div>

@@ -89,7 +89,11 @@ function selectDate(date: DateValue | undefined) {
                             ><CalendarDays aria-hidden="true"
                         /></Button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" class="w-auto p-0">
+                    <PopoverContent
+                        align="end"
+                        class="w-auto p-0"
+                        :collision-padding="8"
+                    >
                         <Calendar
                             :model-value="selectedDate"
                             :default-placeholder="selectedDate"
@@ -100,7 +104,9 @@ function selectDate(date: DateValue | undefined) {
                             prevent-deselect
                             @update:model-value="selectDate"
                         />
-                        <p class="px-3 pb-3 text-sm text-muted-foreground">
+                        <p
+                            class="w-0 min-w-full px-3 pb-3 text-sm text-muted-foreground"
+                        >
                             Only dates with saved digests can be selected.
                         </p>
                     </PopoverContent>
@@ -133,7 +139,7 @@ function selectDate(date: DateValue | undefined) {
                 v-else-if="day.learning.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                Learning generation failed. Test your AI key in Settings and
+                Learning generation failed. Check your AI keys in Settings and
                 check your enabled sources.
             </p>
         </template>
@@ -148,7 +154,7 @@ function selectDate(date: DateValue | undefined) {
                 v-else-if="day.news.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                News generation failed. Test your AI key in Settings and check
+                News generation failed. Check your AI keys in Settings and check
                 your enabled sources.
             </p>
             <EmptyState

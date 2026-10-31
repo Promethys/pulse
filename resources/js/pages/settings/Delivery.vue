@@ -274,6 +274,7 @@ function disconnect() {
                                 >
                             </Select>
                             <ReceivesPicker
+                                pause-hint
                                 :model-value="channel.kinds"
                                 @update:model-value="
                                     update(channel, { kinds: $event })
@@ -359,6 +360,7 @@ function disconnect() {
                             />
                         </div>
                         <ReceivesPicker
+                            pause-hint
                             :model-value="channel.kinds"
                             @update:model-value="
                                 update(channel, { kinds: $event })
@@ -403,6 +405,7 @@ function disconnect() {
                             />
                         </div>
                         <ReceivesPicker
+                            pause-hint
                             :model-value="email.kinds"
                             @update:model-value="
                                 update(email, { kinds: $event })
@@ -467,21 +470,23 @@ function disconnect() {
                         />
                     </div>
                     <div class="space-y-1.5">
-                        <p class="text-sm text-muted-foreground">
-                            Create a webhook in Discord for the destination
-                            channel, then paste its URL here.
+                        <span class="inline-flex items-center gap-1">
+                            <Label for="add-webhook">Webhook URL</Label>
                             <HelpTip
                                 label="Discord webhooks"
                                 text="A webhook is a private address Pulse uses to post messages to Discord."
                             />
-                        </p>
-                        <Label for="add-webhook">Webhook URL</Label
-                        ><Input
+                        </span>
+                        <Input
                             id="add-webhook"
                             v-model="input.webhook_url"
                             type="password"
                             autocomplete="off"
                         />
+                        <p class="text-sm text-muted-foreground">
+                            Create a webhook in Discord for the destination
+                            channel, then paste its URL here.
+                        </p>
                     </div>
                 </template>
                 <div v-else class="space-y-1.5">

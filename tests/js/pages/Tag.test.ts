@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import Tag from '@/pages/Tag.vue';
 import { newsItemProps, tagProps } from '../support/dayProps';
@@ -166,8 +167,10 @@ it.each([true, false])(
 
 it('defines the weekly story counts', async () => {
     renderPage();
-    screen.getByRole('button', { name: 'Help: Weekly stories' }).focus();
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    await userEvent
+        .setup()
+        .click(screen.getByRole('button', { name: 'Help: Weekly stories' }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
         'News stories in your digests with this tag, grouped into weeks over the last 12 weeks.',
     );
 });

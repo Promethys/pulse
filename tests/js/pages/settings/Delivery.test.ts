@@ -336,3 +336,19 @@ it('explains obtaining a webhook beside its field', async () => {
         screen.getByRole('button', { name: 'Help: Discord webhooks' }),
     ).toBeVisible();
 });
+
+it.each(['Add webhook', 'Add email'])(
+    'omits the pause hint in the %s dialog',
+    async (button) => {
+        const view = renderPage();
+        expect(
+            screen.getAllByText(/To pause this destination/).length,
+        ).toBeGreaterThan(0);
+        await view.user.click(screen.getByRole('button', { name: button }));
+        const dialog = await screen.findByRole('dialog');
+        expect(within(dialog).getByText('Choose at least one.')).toBeVisible();
+        expect(
+            within(dialog).queryByText(/To pause this destination/),
+        ).not.toBeInTheDocument();
+    },
+);

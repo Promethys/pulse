@@ -271,7 +271,7 @@ describe('DayView', () => {
         ['pending', 'Your news is being prepared. Refresh this page shortly.'],
         [
             'failed',
-            'News generation failed. Test your AI key in Settings and check your enabled sources.',
+            'News generation failed. Check your AI keys in Settings and check your enabled sources.',
         ],
     ] as const)(
         'shows %s news without a quiet-night fallback',
@@ -362,7 +362,7 @@ describe('DayView archive navigation', () => {
 
         expect(
             screen.getByText(
-                'News generation failed. Test your AI key in Settings and check your enabled sources.',
+                'News generation failed. Check your AI keys in Settings and check your enabled sources.',
             ),
         ).toBeVisible();
 
@@ -384,7 +384,7 @@ it.each([
     ['pending', 'Your learning is being prepared. Refresh this page shortly.'],
     [
         'failed',
-        'Learning generation failed. Test your AI key in Settings and check your enabled sources.',
+        'Learning generation failed. Check your AI keys in Settings and check your enabled sources.',
     ],
 ] as const)('explains %s learning and its next step', (status, message) => {
     const props = dayViewProps();

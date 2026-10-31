@@ -51,8 +51,7 @@ const subtitle = computed(() =>
                     or
                     <Link href="/search" class="underline underline-offset-4"
                         >Search</Link
-                    >
-                    .
+                    >.
                 </p>
             </template>
             <template #icon>

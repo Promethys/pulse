@@ -2,7 +2,6 @@
 import { router } from '@inertiajs/vue3';
 import { KeyRound } from '@lucide/vue';
 import type { Passkey } from '@/types/auth';
-import Heading from '@/components/Heading.vue';
 import PasskeyItem from '@/components/PasskeyItem.vue';
 import PasskeyRegister from '@/components/PasskeyRegister.vue';
 import HelpTip from '@/components/pulse/HelpTip.vue';
@@ -32,17 +31,18 @@ const handleRegisterSuccess = () => {
 
 <template>
     <div v-if="canManagePasskeys" class="space-y-6">
-        <div class="flex items-center gap-2">
-            <Heading
-                variant="small"
-                title="Passkeys"
-                description="Manage your passkeys for passwordless sign-in"
-            />
-            <HelpTip
-                label="Passkeys"
-                text="A way to sign in using your device or password manager instead of typing a password."
-            />
-        </div>
+        <header>
+            <div class="mb-0.5 flex items-center gap-1">
+                <h2 class="text-base font-medium">Passkeys</h2>
+                <HelpTip
+                    label="Passkeys"
+                    text="A way to sign in using your device or password manager instead of typing a password."
+                />
+            </div>
+            <p class="text-sm text-muted-foreground">
+                Manage your passkeys for passwordless sign-in
+            </p>
+        </header>
 
         <div class="overflow-hidden rounded-lg border border-border">
             <template v-if="passkeys.length">

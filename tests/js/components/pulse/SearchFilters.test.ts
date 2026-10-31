@@ -249,6 +249,6 @@ it.each([
     render(SearchFilters, { props: props() });
     await userEvent
         .setup()
-        .hover(screen.getByRole('button', { name: `Help: ${label}` }));
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(text);
+        .click(screen.getByRole('button', { name: `Help: ${label}` }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent(text);
 });

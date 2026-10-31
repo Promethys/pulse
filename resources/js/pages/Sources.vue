@@ -113,9 +113,13 @@ function deleteSource() {
     <Head title="Sources" />
     <div>
         <PageHeader title="Sources" :subtitle="subtitle" />
-        <p class="text-sm text-muted-foreground">
+        <p class="mb-4 text-sm text-muted-foreground">
             Turn sources off to leave them out of future digests. This changes
             only your subscriptions.
+            <HelpTip
+                label="Source status"
+                text="Each source shows a status. Ok: fetched in the last 2 days. Failing: the last fetch failed. Unknown: no successful fetch in the last 2 days."
+            />
         </p>
         <Tabs v-model="tab">
             <TabsList class="mb-4 w-full md:w-auto">
@@ -247,8 +251,8 @@ function deleteSource() {
                     >
                 </DialogHeader>
                 <p class="text-sm text-muted-foreground">
-                    Interests choose what you follow. Pulse adds their default
-                    sources. Removing an interest also removes catalog
+                    Interests decide which sources you follow. Pulse adds their
+                    default sources. Removing an interest also removes catalog
                     subscriptions that no longer match.
                     <HelpTip
                         label="Sources"

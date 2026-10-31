@@ -369,7 +369,7 @@ describe('Getting started guidance', () => {
 });
 
 it.each([
-    'Interests choose what you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
+    'Interests decide which sources you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
     'Interests marked ‘Coming soon’ are not available to select yet. Choose an available interest to continue.',
 ])('explains the interest picker: %s', async (message) => {
     const view = renderPage();

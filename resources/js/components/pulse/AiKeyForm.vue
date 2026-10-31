@@ -194,7 +194,7 @@ async function testKey(): Promise<KeyTestResult> {
             key tests. Check your provider’s pricing and balance.
         </p>
         <p class="text-sm text-muted-foreground">
-            Pulse sends your reader profile, interests and source titles,
+            Pulse sends your About you text, interests and source titles,
             excerpts and links to your AI provider. Learning requests also
             include recent tip titles.
         </p>

@@ -67,7 +67,7 @@ describe('SourceRow', () => {
 
         expect(
             screen.getByText(
-                'Retired: this source stopped working. This source is unavailable. Choose another source.',
+                'Retired: this source stopped working. Choose another source.',
             ),
         ).toBeVisible();
         const dot = screen.getByLabelText(/^retired$/i);
@@ -144,11 +144,9 @@ describe('Source recovery guidance', () => {
                         screen.queryByText(copy, { exact: true }),
                     ).not.toBeInTheDocument();
             }
-            const help = screen.queryByRole('button', {
-                name: 'Help: Unknown source health',
-            });
-            if (health === 'unknown') expect(help).toBeVisible();
-            else expect(help).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('button', { name: /^Help:/ }),
+            ).not.toBeInTheDocument();
         },
     );
 });

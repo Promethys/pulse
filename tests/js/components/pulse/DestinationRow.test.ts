@@ -149,7 +149,7 @@ describe('Paused delivery guidance', () => {
                 };
             renderRow(channel);
             const message = screen.queryByText(
-                'Delivery is paused. Check Pulse’s access to this destination and the webhook URL if used, send a test, then turn delivery back on.',
+                'Delivery is paused. Fix the problem, send a test, then turn delivery back on.',
             );
             if (visible) expect(message).toBeVisible();
             else expect(message).not.toBeInTheDocument();

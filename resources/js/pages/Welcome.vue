@@ -17,7 +17,7 @@ const steps = [
     {
         icon: KeyRound,
         title: 'Add your AI key',
-        body: 'Gemini, Anthropic, OpenAI, Groq or OpenRouter. Free tiers are often enough, and your provider may charge beyond them.',
+        body: 'Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI. Some providers have free tiers, and yours may charge beyond them.',
     },
     {
         icon: Send,

@@ -3,7 +3,10 @@ import { useId } from 'vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
-const props = defineProps<{ modelValue: string[] }>();
+const props = withDefaults(
+    defineProps<{ modelValue: string[]; pauseHint?: boolean }>(),
+    { pauseHint: false },
+);
 const emit = defineEmits<{ 'update:modelValue': [value: string[]] }>();
 const id = useId();
 const kinds = [
@@ -22,7 +25,10 @@ function toggle(kind: string, checked: boolean) {
     <fieldset class="space-y-2">
         <legend class="text-sm font-medium">Send to this destination</legend>
         <p class="text-sm text-muted-foreground">
-            Choose at least one. To pause this destination, turn off its switch.
+            Choose at least one.
+            <template v-if="pauseHint">
+                To pause this destination, turn off its switch.
+            </template>
         </p>
         <div class="flex gap-4">
             <div

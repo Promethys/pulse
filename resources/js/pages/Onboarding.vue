@@ -186,8 +186,8 @@ function next() {
                         </p>
                     </div>
                     <p class="text-sm text-muted-foreground">
-                        Interests choose what you follow. Pulse adds their
-                        default sources. Removing an interest also removes
+                        Interests decide which sources you follow. Pulse adds
+                        their default sources. Removing an interest also removes
                         catalog subscriptions that no longer match.
                         <HelpTip
                             label="Sources"
@@ -196,7 +196,7 @@ function next() {
                     </p>
                     <p class="text-sm text-muted-foreground">
                         Interests marked ‘Coming soon’ are not available to
-                        select yet. Choose an available interest to continue.
+                        select yet.
                     </p>
                     <div class="relative">
                         <Search
@@ -352,7 +352,7 @@ function next() {
                         v-model:email-delivery="deliveryForm.email_delivery"
                     />
                     <div
-                        class="flex items-center gap-3 rounded-xl border border-primary-strong/30 bg-primary/40 p-4"
+                        class="flex items-center gap-3 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 dark:bg-primary/10"
                     >
                         <Sunrise
                             class="size-6 text-primary-strong"
@@ -362,7 +362,7 @@ function next() {
                             <p class="text-sm text-muted-foreground">
                                 {{
                                     ai_keys.length || uses_instance_ai
-                                        ? `Your first digest will be prepared at ${settings.news_time} (${settings.timezone}).`
+                                        ? `Pulse prepares your digest every day at ${settings.news_time} (${settings.timezone}).`
                                         : 'Add an AI key in Settings to start receiving digests.'
                                 }}
                             </p>

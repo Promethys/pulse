@@ -244,7 +244,7 @@ describe('AiKeyForm', () => {
                 },
             });
             const disclosure = screen.getByText(
-                'Pulse sends your reader profile, interests and source titles, excerpts and links to your AI provider. Learning requests also include recent tip titles.',
+                'Pulse sends your About you text, interests and source titles, excerpts and links to your AI provider. Learning requests also include recent tip titles.',
             );
             expect(disclosure).toBeVisible();
             expect(

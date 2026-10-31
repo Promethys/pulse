@@ -729,7 +729,7 @@ describe('Onboarding', () => {
                 ];
             const view = renderPage(props);
             await goToStep(view, 4);
-            const schedule = `Your first digest will be prepared at ${props.settings.news_time} (${props.settings.timezone}).`;
+            const schedule = `Pulse prepares your digest every day at ${props.settings.news_time} (${props.settings.timezone}).`;
             const missing =
                 'Add an AI key in Settings to start receiving digests.';
             expect(
@@ -747,8 +747,8 @@ describe('Onboarding', () => {
 
 describe('Getting started guidance', () => {
     it.each([
-        'Interests choose what you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
-        'Interests marked ‘Coming soon’ are not available to select yet. Choose an available interest to continue.',
+        'Interests decide which sources you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
+        'Interests marked ‘Coming soon’ are not available to select yet.',
     ])('explains %s', async (message) => {
         renderPage();
         expect(screen.getByText(message)).toBeVisible();

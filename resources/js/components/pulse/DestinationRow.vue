@@ -78,8 +78,8 @@ const deliveredAt = computed(() => {
             "
             class="text-sm text-muted-foreground"
         >
-            Delivery is paused. Check Pulse’s access to this destination and the
-            webhook URL if used, send a test, then turn delivery back on.
+            Delivery is paused. Fix the problem, send a test, then turn delivery
+            back on.
         </p>
         <slot />
         <div class="flex flex-wrap items-center justify-between gap-2">

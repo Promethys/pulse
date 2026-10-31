@@ -327,7 +327,9 @@ describe('Learning Index', () => {
         renderPage(props);
         expect(screen.getByText('No tips yet')).toBeVisible();
         expect(
-            screen.getByText('Your daily tips and topics will appear here.'),
+            screen.getByText(
+                'Your tips and topics appear here after your next learning digest. They need an interest marked Includes learning, and Learning turned on in Digest settings.',
+            ),
         ).toBeVisible();
         expect(
             screen.queryByRole('button', { name: 'Clear filters' }),

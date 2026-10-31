@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import HelpTip from '@/components/pulse/HelpTip.vue';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type { ManagedSource } from '@/types';
@@ -58,11 +57,6 @@ function toggle(enabled: boolean) {
             </div>
             <p class="text-sm text-muted-foreground">
                 {{ source.health }}
-                <HelpTip
-                    v-if="source.health === 'unknown'"
-                    label="Unknown source health"
-                    text="Unknown means Pulse has not recorded a successful fetch yet."
-                />
             </p>
             <p
                 v-if="source.url"
@@ -72,8 +66,7 @@ function toggle(enabled: boolean) {
                 {{ source.url }}
             </p>
             <p v-if="source.retired" class="mt-1 text-sm text-muted-foreground">
-                Retired: this source stopped working. This source is
-                unavailable. Choose another source.
+                Retired: this source stopped working. Choose another source.
             </p>
             <p
                 v-if="!source.retired && source.health === 'failing'"

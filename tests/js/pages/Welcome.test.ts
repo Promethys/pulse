@@ -55,7 +55,7 @@ describe('Welcome', () => {
             ],
             [
                 'Add your AI key',
-                'Gemini, Anthropic, OpenAI, Groq or OpenRouter. Free tiers are often enough, and your provider may charge beyond them.',
+                'Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI. Some providers have free tiers, and yours may charge beyond them.',
             ],
             [
                 'Choose where to receive it',

@@ -81,7 +81,7 @@ describe('Help definitions', () => {
         ]);
     });
 
-    it('defines unknown source health', () => {
+    it('keeps source health help off individual rows', () => {
         const wrapper = shallowMount(SourceRow, {
             props: {
                 source: {
@@ -93,9 +93,7 @@ describe('Help definitions', () => {
             },
             global,
         });
-        expect(wrapper.findComponent(HelpTip).props('text')).toBe(
-            'Unknown means Pulse has not recorded a successful fetch yet.',
-        );
+        expect(wrapper.findComponent(HelpTip).exists()).toBe(false);
     });
 
     it('defines the news limit', () => {
@@ -130,7 +128,17 @@ it('defines sources beside the Sources interest picker', () => {
         },
         global,
     });
-    expect(wrapper.findComponent(HelpTip).props()).toMatchObject({
+    const tips = wrapper.findAllComponents(HelpTip);
+    expect(
+        tips
+            .find((tip) => tip.props('label') === 'Source status')
+            ?.props('text'),
+    ).toBe(
+        'Each source shows a status. Ok: fetched in the last 2 days. Failing: the last fetch failed. Unknown: no successful fetch in the last 2 days.',
+    );
+    expect(
+        tips.find((tip) => tip.props('label') === 'Sources')?.props(),
+    ).toMatchObject({
         label: 'Sources',
         text: 'A source is a site or newsletter that supplies news.',
     });

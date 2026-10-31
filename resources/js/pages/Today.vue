@@ -6,7 +6,6 @@ import DayView from '@/components/pulse/DayView.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
-import { timeHasPassed } from '@/lib/dates';
 import type { TodayProps } from '@/types';
 
 const props = defineProps<TodayProps>();
@@ -17,20 +16,14 @@ const firstDigest = computed(() => {
     if (!props.setup.ai_key)
         return 'Add an AI key in Settings to start receiving digests.';
     return props.next_digest
-        ? `Your first digest will be prepared at ${props.next_digest.time} (${props.next_digest.timezone}).`
+        ? `Pulse prepares your digest every day at ${props.next_digest.time} (${props.next_digest.timezone}).`
         : undefined;
 });
-const notice = computed(() => {
-    if (!props.setup.ai_key)
-        return 'Add an AI key in Settings to start receiving digests.';
-    if (!props.next_digest) return null;
-
-    const { time, timezone } = props.next_digest;
-
-    return timeHasPassed(time, timezone)
-        ? "Today's digest is not ready yet. Check the generation status below and refresh this page shortly."
-        : `Today's digest will start preparing at ${time} (${timezone}).`;
-});
+const notice = computed(() =>
+    props.is_today && props.day?.news?.status === 'pending'
+        ? 'Your digest is being prepared. Refresh this page shortly.'
+        : null,
+);
 </script>
 
 <template>
@@ -44,6 +37,9 @@ const notice = computed(() => {
             class="mb-6 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 text-sm text-foreground dark:bg-primary/10"
         >
             {{ notice }}
+        </p>
+        <p v-if="!is_today" class="mb-6 text-sm text-muted-foreground">
+            No digest for today yet. Showing your latest day.
         </p>
         <DayView
             :day="day"

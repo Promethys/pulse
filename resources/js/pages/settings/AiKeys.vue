@@ -68,7 +68,16 @@ function emptyInput(): AiKeyInput {
     };
 }
 function openAdd() {
-    input.value = emptyInput();
+    const provider =
+        props.providers.find(
+            (provider) =>
+                !props.keys.some((key) => key.provider === provider.value),
+        ) ?? props.providers[0];
+    input.value = {
+        ...emptyInput(),
+        provider: provider?.value ?? '',
+        model: provider?.suggested_models[0] ?? '',
+    };
     errors.value = {};
     adding.value = true;
 }

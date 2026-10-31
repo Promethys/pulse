@@ -85,10 +85,10 @@ describe('AI keys settings', () => {
             within(dialog).queryByText('Why your own key?'),
         ).not.toBeInTheDocument();
         expect(
-            within(dialog).getByRole('button', { name: /^Replace key$/ }),
+            within(dialog).getByRole('button', { name: /^Add$/ }),
         ).toBeDisabled();
         await view.user.type(
-            within(dialog).getByLabelText('Gemini API key'),
+            within(dialog).getByLabelText('Anthropic API key'),
             'fake-private-key',
         );
         await view.user.click(
@@ -97,13 +97,13 @@ describe('AI keys settings', () => {
             }),
         );
         await view.user.click(
-            within(dialog).getByRole('button', { name: /^Replace key$/ }),
+            within(dialog).getByRole('button', { name: /^Add$/ }),
         );
         expect(view.post).toHaveBeenCalledWith(
             '/settings/ai-keys',
             {
-                provider: 'gemini',
-                model: 'gemini-3.8-flash',
+                provider: 'anthropic',
+                model: 'claude-haiku-5-5',
                 api_key: 'fake-private-key',
                 consent: true,
             },
@@ -119,7 +119,7 @@ describe('AI keys settings', () => {
         );
         const dialog = await screen.findByRole('dialog');
         await view.user.type(
-            within(dialog).getByLabelText('Gemini API key'),
+            within(dialog).getByLabelText('Anthropic API key'),
             'fake-new-key',
         );
         await view.user.click(
@@ -213,35 +213,48 @@ describe('AI keys settings', () => {
         );
     });
 
-    it('explains replacement and updates the title and button when changing provider', async () => {
+    it('offers an unused provider first and lets the reader choose replacement', async () => {
         const view = renderPage();
         await view.user.click(
             screen.getByRole('button', { name: 'Add a key' }),
         );
         const dialog = await screen.findByRole('dialog');
         expect(
-            within(dialog).getByText(
-                'You can save one key per provider. Adding another key for this provider replaces its saved key and model.',
-            ),
+            within(dialog).getByRole('heading', { name: 'Add an AI key' }),
         ).toBeVisible();
+        expect(
+            within(dialog).getByRole('radio', { name: 'Anthropic' }),
+        ).toBeChecked();
+        expect(
+            within(dialog).getByRole('combobox', { name: 'Model' }),
+        ).toHaveTextContent('claude-haiku-5-5');
+        await view.user.click(
+            within(dialog).getByRole('radio', { name: 'Gemini' }),
+        );
         expect(
             within(dialog).getByRole('heading', { name: 'Replace key' }),
         ).toBeVisible();
         expect(
             within(dialog).getByRole('button', { name: 'Replace key' }),
         ).toBeDisabled();
-        await view.user.click(
-            within(dialog).getByRole('radio', { name: 'Anthropic' }),
+    });
+
+    it('falls back to the first provider when all providers have saved keys', async () => {
+        const props = aiKeysProps();
+        props.providers = props.providers.filter((provider) =>
+            props.keys.some((key) => key.provider === provider.value),
         );
+        const view = renderPage(props);
+        await view.user.click(
+            screen.getByRole('button', { name: 'Add a key' }),
+        );
+        const dialog = await screen.findByRole('dialog');
         expect(
-            within(dialog).getByRole('heading', { name: 'Add an AI key' }),
+            within(dialog).getByRole('radio', { name: 'Gemini' }),
+        ).toBeChecked();
+        expect(
+            within(dialog).getByRole('heading', { name: 'Replace key' }),
         ).toBeVisible();
-        expect(
-            within(dialog).getByRole('button', { name: 'Add' }),
-        ).toBeDisabled();
-        expect(
-            within(dialog).queryByRole('heading', { name: 'Replace key' }),
-        ).not.toBeInTheDocument();
     });
 
     it.each([

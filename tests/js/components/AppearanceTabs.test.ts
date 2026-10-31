@@ -88,8 +88,8 @@ it('defines System beside its choice without nesting buttons', async () => {
         name: 'Help: System appearance',
     });
     expect(help.closest('button button')).toBeNull();
-    await userEvent.setup().hover(help);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    await userEvent.setup().click(help);
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
         'Follow this device’s light or dark appearance.',
     );
 });

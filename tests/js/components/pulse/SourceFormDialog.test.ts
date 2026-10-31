@@ -81,10 +81,10 @@ describe('SourceFormDialog', () => {
             screen.queryByRole('textbox', { name: /^Feed URL \(required\)$/ }),
         ).not.toBeInTheDocument();
         expect(
-            screen.getByText(
-                'Connect a Resend account that receives your newsletters. Pulse reads recent received emails from that account.',
-            ),
-        ).toBeVisible();
+            screen.getByRole('button', { name: 'Help: Resend' }).closest('p'),
+        ).toHaveTextContent(
+            'Connect a Resend account that receives your newsletters. Pulse reads recent received emails from that account.',
+        );
         const key = screen.getByLabelText('Resend API key');
         expect(key).toHaveAttribute('type', 'password');
         await view.user.type(key, 'fake-resend-key');
@@ -351,3 +351,13 @@ it('identifies the key requirement for a new newsletter inbox', async () => {
         screen.getByText('Required for a new newsletter inbox.'),
     ).toBeVisible();
 });
+
+it.each([false, true])(
+    'shows the custom source limit only when adding, editing=%s',
+    async (editing) => {
+        await renderForm(editing ? customSource() : null);
+        expect(
+            screen.queryAllByText('You can save up to 30 custom sources.'),
+        ).toHaveLength(editing ? 0 : 1);
+    },
+);

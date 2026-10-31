@@ -96,7 +96,7 @@ function reset() {
     <Head title="Learning" />
     <div>
         <PageHeader title="Learning" subtitle="Tips and topics, day by day">
-            <template #actions>
+            <template #title-end>
                 <HelpTip
                     label="Learning"
                     text="Each day has a short practical tip and a deeper explanation of one topic, written for your interests."
@@ -134,12 +134,6 @@ function reset() {
                         >
                     </SelectContent>
                 </Select>
-                <p
-                    v-if="filters.kind === 'tip'"
-                    class="text-sm text-muted-foreground"
-                >
-                    Categories apply to topics only.
-                </p>
                 <Button variant="outline" as-child>
                     <Link
                         :href="searchIndex.url({ query: { type: 'learning' } })"
@@ -148,6 +142,12 @@ function reset() {
                     </Link>
                 </Button>
             </div>
+            <p
+                v-if="filters.kind === 'tip'"
+                class="text-sm text-muted-foreground"
+            >
+                Categories apply to topics only.
+            </p>
             <div
                 v-if="options.tags.length"
                 role="group"
@@ -203,11 +203,11 @@ function reset() {
         <EmptyState
             v-else
             title="No tips yet"
-            description="Your daily tips and topics will appear here."
+            description="Your tips and topics appear here after your next learning digest. They need an interest marked Includes learning, and Learning turned on in Digest settings."
         >
             <template #actions>
                 <p class="text-sm text-muted-foreground">
-                    Choose an interest with learning content on
+                    Choose your interests on
                     <Link href="/sources" class="underline underline-offset-4"
                         >Sources</Link
                     >, then enable Learning in
