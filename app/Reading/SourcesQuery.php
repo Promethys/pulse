@@ -9,6 +9,7 @@ use App\Http\Resources\InterestResource;
 use App\Http\Resources\SourceResource;
 use App\Models\Interest;
 use App\Models\Source;
+use App\Models\SourceProposal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -37,9 +38,14 @@ final class SourcesQuery
      */
     public function custom(User $user): array
     {
+        $proposed = SourceProposal::query()->whereIn('url', Source::query()->where('user_id', $user->id)->select('url'))->pluck('url');
+
         return array_values(Source::query()->where('user_id', $user->id)
             ->with(['interests', 'subscriptions' => fn ($query) => $query->where('user_id', $user->id)])
-            ->orderBy('name')->get()->map($this->serialize(...))->all());
+            ->orderBy('name')->get()->map(fn (Source $source): array => [
+                ...$this->serialize($source),
+                'suggested' => $source->url !== null && $proposed->contains($source->url),
+            ])->all());
     }
 
     /**

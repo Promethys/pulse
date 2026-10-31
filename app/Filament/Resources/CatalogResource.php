@@ -166,7 +166,7 @@ class CatalogResource extends Resource
         }
 
         return array_values(collect($record->checks)
-            ->map(fn (mixed $passed, int|string $check): string => $check.': '.(is_bool($passed) ? ($passed ? 'passed' : 'failed') : (string) json_encode($passed)))
+            ->map(fn (mixed $passed, int|string $check): string => str_replace('_', ' ', ucfirst((string) $check)).': '.(is_bool($passed) ? ($passed ? 'passed' : 'failed') : (string) json_encode($passed)))
             ->all());
     }
 

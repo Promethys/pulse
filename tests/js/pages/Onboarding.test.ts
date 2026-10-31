@@ -1,6 +1,6 @@
 import type { InertiaConfig, Page } from '@inertiajs/core';
 import { router } from '@inertiajs/vue3';
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
@@ -75,6 +75,106 @@ async function fillKey(view: View) {
 }
 
 describe('Onboarding', () => {
+    it.each(['cancel', 'success', 'error'])(
+        'preserves the interests step, search and selection after a suggestion %s',
+        async (outcome) => {
+            const view = renderPage();
+            await view.user.click(
+                screen.getByRole('button', { name: 'Security' }),
+            );
+            await view.user.type(
+                screen.getByRole('textbox', { name: 'Search interests' }),
+                'security',
+            );
+            await view.user.click(
+                screen.getByRole('button', { name: 'Suggest an interest' }),
+            );
+            const dialog = await screen.findByRole('dialog');
+            if (outcome === 'cancel') {
+                await view.user.keyboard('{Escape}');
+                expect(view.post).not.toHaveBeenCalled();
+            } else {
+                await view.user.type(
+                    within(dialog).getByRole('textbox', { name: /^Name$/i }),
+                    'Space Science',
+                );
+                const category = within(dialog).getByRole('combobox', {
+                    name: /^Category$/i,
+                });
+                if (category instanceof HTMLSelectElement)
+                    await view.user.selectOptions(category, 'technology');
+                else {
+                    await view.user.click(category);
+                    await view.user.click(
+                        await screen.findByRole('option', {
+                            name: 'Technology',
+                        }),
+                    );
+                }
+                await view.user.type(
+                    within(dialog).getByRole('textbox', { name: /^Reason$/i }),
+                    'More reporting on space research.',
+                );
+                await view.user.click(
+                    within(dialog).getByRole('button', {
+                        name: /suggest|submit|send/i,
+                    }),
+                );
+                expect(view.post).toHaveBeenCalledWith(
+                    '/interest-proposals',
+                    {
+                        name: 'Space Science',
+                        category: 'technology',
+                        reason: 'More reporting on space research.',
+                    },
+                    expect.any(Object),
+                );
+                const options = view.post.mock.calls[0][2];
+                if (outcome === 'success')
+                    options?.onSuccess?.({ props: view.props } as never);
+                else {
+                    options?.onError?.({
+                        name: 'This interest has already been suggested.',
+                    });
+                    expect(
+                        await screen.findByText(
+                            'This interest has already been suggested.',
+                        ),
+                    ).toBeVisible();
+                    await view.user.keyboard('{Escape}');
+                }
+            }
+            await waitFor(() =>
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+            );
+            expect(
+                screen.getByRole('listitem', { current: 'step' }),
+            ).toHaveTextContent('Interests');
+            expect(
+                screen.getByRole('textbox', { name: 'Search interests' }),
+            ).toHaveValue('security');
+            expect(
+                screen.getByRole('button', { name: 'Security' }),
+            ).toHaveAttribute('aria-pressed', 'true');
+            expect(view.put).not.toHaveBeenCalled();
+            view.post.mockClear();
+            await view.user.click(
+                screen.getByRole('button', { name: /^Continue$/ }),
+            );
+            expect(view.post).toHaveBeenCalledWith(
+                interests.url(),
+                {
+                    interests: [
+                        'artificial-intelligence',
+                        'programming',
+                        'security',
+                    ],
+                },
+                expect.any(Object),
+            );
+        },
+    );
+
     it('groups interests by category in props order and resumes selected live chips', () => {
         const props = onboardingProps();
         props.categories.reverse();
@@ -107,8 +207,16 @@ describe('Onboarding', () => {
             screen.getByText(/Pick at least one\. 2 selected\./),
         ).toBeVisible();
         expect(
-            screen.queryByRole('button', { name: /Suggest an interest/i }),
-        ).not.toBeInTheDocument();
+            screen.getByRole('button', { name: /Suggest an interest/i }),
+        ).toBeVisible();
+    });
+
+    it('hosts toasts, because it has no app layout', () => {
+        renderPage();
+
+        expect(
+            document.querySelector('section[aria-label^="Notifications"]'),
+        ).toBeInTheDocument();
     });
 
     it('requires at least one live interest, updates the count and never selects drafts', async () => {

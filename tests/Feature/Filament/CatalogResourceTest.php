@@ -277,7 +277,7 @@ class CatalogResourceTest extends TestCase
             ->assertDontSee($user->name)
             ->mountAction(TestAction::make('view')->table($proposal))
             ->assertActionMounted(TestAction::make('view')->table($proposal))
-            ->assertMountedActionModalSee([$proposal->reason, 'http_status', '200', 'feed_title', 'Verified feed title'])
+            ->assertMountedActionModalSee([$proposal->reason, 'Http status', '200', 'Feed title', 'Verified feed title'])
             ->assertMountedActionModalDontSee([$privateInterest->name, $user->email, $user->name]);
 
         if ($kind === SourceProposalKind::UrlChange) {

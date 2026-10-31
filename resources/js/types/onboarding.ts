@@ -28,6 +28,7 @@ export type OnboardingSource = {
     last_error: string | null;
     health: string;
     subscription_enabled: boolean;
+    suggested?: boolean;
 };
 
 export type OnboardingSourceGroup = {

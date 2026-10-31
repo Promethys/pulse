@@ -7,11 +7,13 @@ namespace Tests\Feature;
 use App\Actions\ChooseInterests;
 use App\Enums\InterestCategory;
 use App\Enums\InterestStatus;
+use App\Enums\SourceProposalStatus;
 use App\Enums\SourceType;
 use App\Http\Resources\InterestResource;
 use App\Http\Resources\SourceResource;
 use App\Models\Interest;
 use App\Models\Source;
+use App\Models\SourceProposal;
 use App\Models\SourceSubscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,27 @@ use Tests\TestCase;
 class SourcesPageTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[DataProvider('suggestionStatuses')]
+    public function test_custom_sources_are_marked_suggested_by_url_in_any_status_regardless_of_proposer(SourceProposalStatus $status): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $suggested = Source::factory()->for($user)->create(['name' => 'Alpha suggested']);
+        $available = Source::factory()->for($user)->create(['name' => 'Beta available']);
+        $inbox = Source::factory()->for($user)->create(['name' => 'Zulu inbox', 'type' => SourceType::ResendInbox, 'url' => null]);
+        SourceProposal::factory()->for(User::factory())->create(['url' => $suggested->url, 'status' => $status, 'source_id' => null]);
+        SourceProposal::factory()->create(['url' => $available->url.'/other']);
+
+        $this->actingAs($user)->get('/sources')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('custom.0.id', $suggested->id)->where('custom.0.suggested', true)
+            ->where('custom.1.id', $available->id)->where('custom.1.suggested', false)
+            ->where('custom.2.id', $inbox->id)->where('custom.2.suggested', false));
+    }
+
+    public static function suggestionStatuses(): array
+    {
+        return array_map(fn ($status) => [$status], SourceProposalStatus::cases());
+    }
 
     public function test_props_group_subscribed_catalog_by_selected_interest_in_category_and_position_order(): void
     {

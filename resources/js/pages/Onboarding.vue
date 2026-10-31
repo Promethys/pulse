@@ -15,6 +15,7 @@ import DeliveryOptions from '@/components/pulse/DeliveryOptions.vue';
 import PulseLogo from '@/components/pulse/PulseLogo.vue';
 import SourceToggleRow from '@/components/pulse/SourceToggleRow.vue';
 import StepIndicator from '@/components/pulse/StepIndicator.vue';
+import SuggestInterestDialog from '@/components/pulse/SuggestInterestDialog.vue';
 import ThemeToggle from '@/components/pulse/ThemeToggle.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Toaster } from '@/components/ui/sonner';
 import { Textarea } from '@/components/ui/textarea';
 import type {
     AiKeyInput,
@@ -38,6 +40,7 @@ const props = defineProps<OnboardingProps>();
 const steps = ['Interests', 'Sources', 'About you', 'AI key', 'Delivery'];
 const step = ref(0);
 const search = ref('');
+const suggestInterestOpen = ref(false);
 const interestForm = useForm({
     interests: props.interests
         .filter((interest) => interest.selected && interest.status === 'live')
@@ -160,6 +163,7 @@ function next() {
 
 <template>
     <Head title="Set up your digest" />
+    <Toaster />
     <div class="min-h-screen bg-background">
         <header
             class="mx-auto flex max-w-3xl items-center justify-between px-4 py-5"
@@ -208,6 +212,9 @@ function next() {
                             No interest matches “{{ search }}”.
                         </p>
                     </div>
+                    <Button variant="ghost" @click="suggestInterestOpen = true"
+                        >Suggest an interest</Button
+                    >
                 </section>
                 <section v-else-if="step === 1" class="space-y-6">
                     <div>
@@ -355,6 +362,10 @@ function next() {
                 </div>
             </div>
         </main>
+        <SuggestInterestDialog
+            v-model:open="suggestInterestOpen"
+            :categories="categories"
+        />
         <footer
             class="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:static md:border-0 md:bg-transparent"
         >

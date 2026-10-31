@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3';
-import { render, screen, within } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import Sources from '@/pages/Sources.vue';
@@ -16,6 +16,7 @@ function sourcesProps() {
         is_default: false,
         interests: [onboarding.interests[0]],
         has_key: false,
+        suggested: false,
     };
     return {
         catalog: onboarding.sources.map((group) => ({
@@ -44,6 +45,136 @@ function renderPage(props = sourcesProps(), url = '/sources') {
 }
 
 describe('Sources', () => {
+    it('opens a suggestion for the selected custom feed and sends its id', async () => {
+        const post = vi.spyOn(router, 'post').mockImplementation(() => {});
+        const view = renderPage(sourcesProps(), '/sources?tab=mine');
+        await view.user.click(
+            screen.getByRole('button', { name: 'Suggest for the catalog' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+        await view.user.type(
+            within(dialog).getByRole('textbox', { name: /^Reason$/i }),
+            'Useful reporting for everyone.',
+        );
+        await view.user.click(
+            within(dialog).getByRole('button', {
+                name: /suggest|submit|send/i,
+            }),
+        );
+        expect(post).toHaveBeenCalledWith(
+            '/sources/21/suggest',
+            {
+                interest: 'artificial-intelligence',
+                reason: 'Useful reporting for everyone.',
+            },
+            expect.any(Object),
+        );
+        expect(view.put).not.toHaveBeenCalled();
+        post.mock.calls[0][2]?.onSuccess?.({ props: {} } as never);
+        await waitFor(() =>
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+        );
+        expect(
+            screen.getByRole('tab', { name: 'My sources 1' }),
+        ).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('disables Suggested feeds and offers no suggestion action on Resend inbox rows', async () => {
+        const props = sourcesProps();
+        props.custom = [
+            { ...props.custom[0], suggested: true },
+            {
+                ...props.custom[0],
+                id: 22,
+                name: 'My inbox',
+                type: 'resend_inbox',
+                suggested: false,
+            },
+            {
+                ...props.custom[0],
+                id: 23,
+                name: 'Another feed',
+                suggested: false,
+            },
+        ];
+        const view = renderPage(props, '/sources?tab=mine');
+        const suggested = screen.getByRole('button', {
+            name: 'Suggested',
+        });
+        expect(suggested).toBeDisabled();
+        await view.user.click(suggested);
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        const inboxRow = screen
+            .getByRole('switch', { name: 'Use My inbox' })
+            .closest('li');
+        expect(inboxRow).not.toBeNull();
+        expect(
+            within(inboxRow!).queryByRole('button', { name: /suggest/i }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getAllByRole('button', { name: 'Suggest for the catalog' }),
+        ).toHaveLength(1);
+        await view.user.click(
+            screen.getByRole('button', { name: 'Suggest for the catalog' }),
+        );
+        await screen.findByRole('dialog');
+    });
+
+    it('opens the interest suggestion beside interest management and closes on success', async () => {
+        const post = vi.spyOn(router, 'post').mockImplementation(() => {});
+        const view = renderPage();
+        expect(
+            screen.getByRole('button', { name: 'Add or remove interests' }),
+        ).toBeVisible();
+        await view.user.click(
+            screen.getByRole('button', { name: 'Suggest an interest' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+        await view.user.type(
+            within(dialog).getByRole('textbox', { name: /^Name$/i }),
+            'Space Science',
+        );
+        const category = within(dialog).getByRole('combobox', {
+            name: /^Category$/i,
+        });
+        if (category instanceof HTMLSelectElement)
+            await view.user.selectOptions(category, 'technology');
+        else {
+            await view.user.click(category);
+            await view.user.click(
+                await screen.findByRole('option', {
+                    name: 'Technology',
+                }),
+            );
+        }
+        await view.user.type(
+            within(dialog).getByRole('textbox', { name: /^Reason$/i }),
+            'More reporting on space research.',
+        );
+        await view.user.click(
+            within(dialog).getByRole('button', {
+                name: /suggest|submit|send/i,
+            }),
+        );
+        expect(post).toHaveBeenCalledWith(
+            '/interest-proposals',
+            {
+                name: 'Space Science',
+                category: 'technology',
+                reason: 'More reporting on space research.',
+            },
+            expect.any(Object),
+        );
+        post.mock.calls[0][2]?.onSuccess?.({ props: {} } as never);
+        await waitFor(() =>
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+        );
+        expect(
+            screen.getByRole('tab', { name: 'By interest' }),
+        ).toHaveAttribute('aria-selected', 'true');
+        expect(view.put).not.toHaveBeenCalled();
+    });
+
     it('shows grouped catalog sources in props order and switches to custom sources without navigating', async () => {
         const visit = vi.spyOn(router, 'visit').mockImplementation(() => {});
         const view = renderPage();
