@@ -54,7 +54,7 @@ Personal keys are managed at `/settings/ai-keys`, with up to five keys per accou
 
 | Variable | What it does | Default |
 |---|---|---|
-| `RESEND_API_KEY` | Starting key for `pulse:adopt`, copied into the newsletters source's encrypted credentials. | empty |
+| `RESEND_API_KEY` | Sends mail when `MAIL_MAILER=resend`. Also the starting key for `pulse:adopt`, copied into the newsletters source's encrypted credentials. | empty |
 
 The inbox fetcher reads only its source's `credentials.api_key`; it never falls back to `RESEND_API_KEY`. Sources and subscriptions are database records. See [Sources](05-sources.md).
 
@@ -74,7 +74,7 @@ At `/settings/delivery`, users can add forum destinations from installed Discord
 
 Destinations are per-user `delivery_channels` rows. Bot settings contain `guild_id` and `channel_id`; webhook settings contain `webhook_url`; email settings contain `address`. Settings are encrypted and hidden from serialization. Each destination accepts news, learning or both.
 
-Email delivery uses Laravel's mail configuration (`MAIL_*`, including the transport and sender settings in `config/mail.php`). Webhook delivery uses the stored Discord webhook URL. The `DiscordWebhookUrl` form rule and delivery driver accept only Discord webhook URLs, including supported Discord subdomains and optional API version paths; query strings and other hosts are rejected.
+Email delivery uses Laravel's mail configuration (`MAIL_*`, including the transport and sender settings in `config/mail.php`). To send through Resend, set `MAIL_MAILER=resend`, `RESEND_API_KEY`, and a `MAIL_FROM_ADDRESS` on a domain verified in Resend. Account emails, such as verification and password reset, use the same settings. Webhook delivery uses the stored Discord webhook URL. The `DiscordWebhookUrl` form rule and delivery driver accept only Discord webhook URLs, including supported Discord subdomains and optional API version paths; query strings and other hosts are rejected.
 
 ## Web test limits
 
