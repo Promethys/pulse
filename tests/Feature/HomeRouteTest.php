@@ -15,7 +15,7 @@ class HomeRouteTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->component('Welcome'));
+            ->assertInertia(fn (Assert $page) => $page->component('Welcome')->where('canRegister', true));
 
         $this->actingAs(User::factory()->onboarded()->create())
             ->get(route('home'))

@@ -16,10 +16,11 @@ use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Laravel\Fortify\Features;
 
 Route::get('/', function (Request $request) {
     if ($request->user() === null) {
-        return Inertia::render('Welcome');
+        return Inertia::render('Welcome', ['canRegister' => Features::enabled(Features::registration())]);
     }
 
     return app(EnsureEmailIsVerified::class)->handle($request,

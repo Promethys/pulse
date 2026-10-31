@@ -6,6 +6,8 @@ import ThemeToggle from '@/components/pulse/ThemeToggle.vue';
 import { Button } from '@/components/ui/button';
 import { home, login, register } from '@/routes';
 
+defineProps<{ canRegister: boolean }>();
+
 const steps = [
     {
         icon: Sparkles,
@@ -56,7 +58,7 @@ const steps = [
                     grouped summary each morning. Free and open source.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
-                    <Button size="lg" as-child
+                    <Button v-if="canRegister" size="lg" as-child
                         ><Link :href="register()"
                             >Create an account</Link
                         ></Button

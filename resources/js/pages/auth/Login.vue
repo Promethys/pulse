@@ -18,6 +18,7 @@ defineOptions({ layout: [] });
 
 defineProps<{
     status?: string;
+    canRegister: boolean;
     canResetPassword: boolean;
 }>();
 </script>
@@ -104,7 +105,7 @@ defineProps<{
             </div>
         </Form>
 
-        <template #footer>
+        <template v-if="canRegister" #footer>
             No account?
             <TextLink
                 :href="register()"

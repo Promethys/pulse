@@ -4,8 +4,11 @@ import { describe, expect, it } from 'vite-plus/test';
 import Welcome from '@/pages/Welcome.vue';
 import { login, register } from '@/routes';
 
-function renderWelcome() {
-    return render(Welcome, { global: { stubs: { Head: true } } });
+function renderWelcome(canRegister = true) {
+    return render(Welcome, {
+        props: { canRegister },
+        global: { stubs: { Head: true } },
+    });
 }
 
 describe('Welcome', () => {
@@ -20,6 +23,15 @@ describe('Welcome', () => {
         links.forEach((link) =>
             expect(link).toHaveAttribute('href', login.url()),
         );
+    });
+
+    it('hides account creation when registration is disabled', () => {
+        renderWelcome(false);
+
+        expect(
+            screen.queryByRole('link', { name: 'Create an account' }),
+        ).not.toBeInTheDocument();
+        expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2);
     });
 
     it('explains the digest and its three setup steps without preview or deferred features', () => {
