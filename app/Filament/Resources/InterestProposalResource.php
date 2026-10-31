@@ -13,6 +13,7 @@ use BackedEnum;
 use Closure;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +25,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class InterestProposalResource extends Resource
@@ -46,14 +49,40 @@ class InterestProposalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->limit(30)->tooltip(fn (InterestProposal $record): string => Str::limit($record->name, 120)),
-                TextColumn::make('category')->formatStateUsing(fn (InterestCategory $state): string => $state->label()),
-                TextColumn::make('created_at')->date()->sortable(),
+                TextColumn::make('name')->searchable()->toggleable()->limit(30)->tooltip(fn (InterestProposal $record): string => Str::limit($record->name, 120)),
+                TextColumn::make('category')->formatStateUsing(fn (InterestCategory $state): string => $state->label())->toggleable(),
+                TextColumn::make('created_at')->date()->sortable()->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading(__('No proposals'))
             ->filters([
                 SelectFilter::make('status')->options(SourceProposalStatus::class)->default(SourceProposalStatus::Pending->value),
+                SelectFilter::make('category')->options(self::categories()),
+            ])
+            ->checkIfRecordIsSelectableUsing(fn (Model $record): bool => $record instanceof InterestProposal && $record->status === SourceProposalStatus::Pending)
+            ->toolbarActions([
+                BulkAction::make('bulkApprove')
+                    ->label(__('Approve'))
+                    ->icon(Heroicon::OutlinedCheck)
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription(__('Each interest keeps its suggested name and category. Names already taken are skipped.'))
+                    ->action(function (Collection $records): void {
+                        self::approveAll($records);
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                BulkAction::make('bulkReject')
+                    ->label(__('Reject'))
+                    ->icon(Heroicon::OutlinedXMark)
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records): void {
+                        $rejected = InterestProposal::query()->whereKey($records->modelKeys())->where('status', SourceProposalStatus::Pending)
+                            ->update(['status' => SourceProposalStatus::Rejected]);
+
+                        Notification::make()->title(__(':count rejected', ['count' => $rejected]))->success()->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -102,6 +131,28 @@ class InterestProposalResource extends Resource
                         }, __('Proposal rejected'));
                     }),
             ]);
+    }
+
+    /**
+     * @param  Collection<int, InterestProposal>  $records
+     */
+    private static function approveAll(Collection $records): void
+    {
+        $approved = 0;
+
+        foreach ($records as $record) {
+            try {
+                app(ApproveInterestProposal::class)->handle($record, $record->name, $record->category);
+                $approved++;
+            } catch (DomainException) {
+                continue;
+            }
+        }
+
+        Notification::make()
+            ->title(__(':approved approved, :skipped skipped', ['approved' => $approved, 'skipped' => $records->count() - $approved]))
+            ->success()
+            ->send();
     }
 
     private static function title(InterestProposal $record): string
