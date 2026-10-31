@@ -8,6 +8,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Support\Colors\Color;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
@@ -66,5 +67,24 @@ class AdminPanelTest extends TestCase
         $unverified = User::factory()->onboarded()->unverified()->create();
         $unverified->forceFill(['is_admin' => true])->save();
         $this->actingAs($unverified)->get('/admin')->assertForbidden();
+    }
+
+    public function test_the_panel_links_back_to_the_app(): void
+    {
+        $admin = User::factory()->onboarded()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get('/admin')->assertSee('Back to Pulse');
+    }
+
+    public function test_the_app_only_tells_verified_admins_about_the_panel(): void
+    {
+        $admin = User::factory()->onboarded()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+
+        $this->actingAs($admin)->get(route('home'))
+            ->assertInertia(fn (Assert $page) => $page->where('auth.canAccessAdmin', true));
+        $this->actingAs(User::factory()->onboarded()->create())->get(route('home'))
+            ->assertInertia(fn (Assert $page) => $page->where('auth.canAccessAdmin', false));
     }
 }

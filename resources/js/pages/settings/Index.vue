@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronRight } from '@lucide/vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -7,6 +7,8 @@ import { settingsSections } from '@/lib/settingsSections';
 import { logout } from '@/routes';
 
 defineOptions({ layout: AppLayout });
+
+const page = usePage();
 
 const logOut = () => {
     router.flushAll();
@@ -43,6 +45,18 @@ const logOut = () => {
                     aria-hidden="true"
                 />
             </Link>
+        </li>
+        <li v-if="page.props.auth.canAccessAdmin">
+            <a
+                href="/admin"
+                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+                Admin panel
+                <ChevronRight
+                    class="size-4 text-muted-foreground"
+                    aria-hidden="true"
+                />
+            </a>
         </li>
         <li>
             <button
