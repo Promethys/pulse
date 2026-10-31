@@ -45,14 +45,14 @@ class ScoutInterestTest extends TestCase
     {
         $interest = Interest::factory()->create();
         $other = Interest::factory()->create();
-        SourceScout::fake(['{"proposals":[]}'])->preventStrayPrompts();
+        SourceScout::fake(['{"proposals":[]}', '{"proposals":[]}'])->preventStrayPrompts();
         $job = unserialize(serialize(new ScoutInterest($interest)));
 
         $this->app->call([$job, 'handle']);
 
         $this->assertTrue($interest->fresh()->scouted_at->equalTo(now()));
         $this->assertNull($other->fresh()->scouted_at);
-        SourceScout::assertPromptedTimes(1);
+        SourceScout::assertPromptedTimes(2);
         $this->assertDatabaseCount('source_proposals', 0);
     }
 
