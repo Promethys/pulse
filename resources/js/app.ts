@@ -6,7 +6,7 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { vFocus } from '@/lib/focusDirective';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = 'Pulse';
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

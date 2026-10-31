@@ -2,7 +2,6 @@
 
 namespace App\Concerns;
 
-// @phpstan-ignore trait.unused (used by the settings page, task 24)
 trait DigestSettingsValidationRules
 {
     /**

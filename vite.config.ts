@@ -12,8 +12,14 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
+                bunny('DM Sans', {
                     weights: [400, 500, 600],
+                }),
+                bunny('Fraunces', {
+                    weights: [500, 600],
+                }),
+                bunny('JetBrains Mono', {
+                    weights: [400, 500],
                 }),
             ],
         }),
@@ -36,6 +42,8 @@ export default defineConfig({
         include: ['tests/js/**/*.test.ts'],
         setupFiles: ['tests/js/setup.ts'],
         restoreMocks: true,
+        maxWorkers: 4,
+        testTimeout: 15000,
     },
     server: {
         watch: {
@@ -75,6 +83,9 @@ export default defineConfig({
         ignorePatterns: [
             '.github/**',
             'composer.json',
+            'docs/**',
+            'compose.yaml',
+            'tests/Fixtures/**',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
         ],

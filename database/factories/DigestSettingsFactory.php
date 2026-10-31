@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\DigestSettings;
@@ -11,6 +13,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class DigestSettingsFactory extends Factory
 {
+    public function onboarded(): static
+    {
+        return $this->state(fn () => ['onboarded_at' => now()]);
+    }
+
     /**
      * @return array<string, mixed>
      */

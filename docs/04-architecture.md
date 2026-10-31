@@ -1,6 +1,6 @@
 # Architecture
 
-Pulse is a Laravel 13 app with a Vue/Inertia web app for accounts. The digest runs from the command line and does not depend on the web app. Its pipelines generate one post per user, local date and kind, using that user's settings, subscriptions and AI chain, then deliver it to their enabled destinations.
+Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for reading and account settings. The digest runs from the command line and does not depend on the web app. Its pipelines generate one post per user, local date and kind, using that user's settings, subscriptions and AI chain, then deliver it to their enabled destinations.
 
 ## Code layout
 
@@ -16,11 +16,75 @@ Pulse is a Laravel 13 app with a Vue/Inertia web app for accounts. The digest ru
 | `app/Digest/Support/` | Text, tags and public URL checks |
 | `app/Jobs/RunDigest.php` | Queued generation and delivery for one user, kind and date |
 | `app/Ai/Agents/` | `laravel/ai` agents (prompt + JSON schema) |
-| `app/Actions/` | Account registration and interest selection (`ChooseInterests`) |
+| `app/Reading/` | Account-scoped day, archive, search, tag, learning and source queries |
+| `app/Http/Resources/` | Explicit field allowlists for Inertia props and rendered learning HTML |
+| `app/Policies/` | Ownership checks for posts, learning, sources, AI keys and destinations |
+| `app/Actions/` | Registration, onboarding, interests, custom sources, AI keys and delivery settings |
+| `app/Http/Controllers/`, `app/Http/Requests/` | Web pages, actions and request validation |
+| `resources/js/pages/`, `resources/js/components/pulse/` | Inertia pages and shared digest components |
+| `resources/js/layouts/`, `resources/css/app.css` | App, auth and settings layouts, typography and light/dark tokens |
 | `app/Http/Controllers/Discord/` | Add to Discord install and callback |
 | `app/Console/Commands/` | `digest:*` commands and `pulse:adopt` |
 | `app/Models/`, `app/Enums/` | Data model |
 | `database/seeders/` | Interests, sources, tags and learning topics |
+
+## Web app
+
+`routes/web.php` defines reading, sources, onboarding and Discord routes; `routes/settings.php` defines account settings. Reading pages and sources require authentication, verified email and completed onboarding. `EnsureOnboarded` redirects verified accounts with no `onboarded_at` to `/onboarding`, creating default digest settings when missing. Onboarding and Discord install/callback require authentication and verified email but stay outside this gate.
+
+### Pages and navigation
+
+| GET path | Page and behavior |
+|---|---|
+| `/` | Landing page for guests; verification and onboarding gates for signed-in users, then Today |
+| `/dashboard` | Permanent redirect to `/` after the app gates |
+| `/onboarding` | Interests, Sources, About you, AI key, Delivery; completed accounts redirect to `/` |
+| `/days/{date}` | Saved day for the account; real `Y-m-d` required, today redirects to `/`, missing days return 404 |
+| `/archive` | One row per saved date, newest first, 30 dates per page |
+| `/search` | News and Learning tabs, totals for both, 30 results per page on the active tab |
+| `/tags/{tag:slug}` | Personal news selections for an existing tag, total count and 12 weekly activity counts |
+| `/learning` | Tips and topics grouped by digest date, filtered by kind, category and tag, 30 entries per page |
+| `/learning/{id}` | Full tip or topic; unknown entries and another account's entries return 404 |
+| `/sources` | Catalog subscriptions by interest and the account's custom sources |
+| `/settings` | Settings index, Sources link and logout |
+| `/settings/profile`, `/settings/security`, `/settings/appearance` | Profile, password/passkeys/two-factor security and theme |
+| `/settings/digest`, `/settings/delivery`, `/settings/ai-keys` | Digest preferences, external destinations and personal AI chain |
+
+Settings use the onboarding gate. Profile viewing and updating require authentication; the other settings routes also require verified email. Security requires password confirmation. Fortify provides registration, login, email verification, password reset and two-factor authentication.
+
+The desktop sidebar links Today, Archive, Search, Learning and Sources; the user menu opens Settings. Mobile uses bottom tabs with Settings, whose index also links to Sources. `resources/js/lib/navigation.ts` defines navigation and active states; `settingsSections.ts` defines the settings tabs. The app supports light, dark and system appearance through `useAppearance`. Calendar popovers use reka-ui and `@internationalized/date`; digest dates remain `Y-m-d` values without browser timezone shifts.
+
+Onboarding saves Interests, Sources, About you and AI key on Continue. At least one live interest is required, draft interests are disabled, and About you and AI key can be skipped. The final step offers optional email delivery alongside in-app delivery and sets `onboarded_at`. Completing onboarding without an AI key is allowed; the scheduler still requires personal keys or instance AI access.
+
+Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a news schedule notice until today's news is generated, unless news is disabled, and a checklist for interests, enabled subscriptions, AI access and an external destination. Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
+
+Archive, Search, Tag and Learning redirect pages beyond the last page to the last valid page. Search and Learning preserve their query filters in pagination links. A known tag without personal news renders an empty page; an unknown slug returns 404. Tag activity uses twelve consecutive seven-day windows ending on the account's local today, oldest first.
+
+### Read layer and resources
+
+Every query in `app/Reading/` takes the account explicitly and scopes personal records through `posts.user_id`. `DayQuery` and the Discord news renderer share `NewsSections`: assign an item to its most frequent tag that day, break ties by slug, use `general` for untagged items, then order sections by size and name. Archive counts dates rather than posts; Tag counts personal selections rather than shared fetched items. Source relations expose only catalog sources and the account's own custom sources.
+
+Controllers resolve `app/Http/Resources/` to plain arrays for Inertia props. Resources allowlist fields, format digest dates as `Y-m-d` and timestamps as ISO 8601, and serialize enum values. AI keys expose a suffix, sources expose `has_key`, and delivery destinations expose only their allowed target fields with a masked webhook suffix. Encrypted credentials and settings are never returned wholesale. Policies authorize model actions; custom source edits/deletes, AI key actions and delivery changes require ownership. In-app destination changes are explicitly rejected by the delivery request/controller.
+
+`LearningPostResource` converts stored Markdown to `body_html` on the server, strips raw HTML and rejects unsafe links. `phiki/phiki` highlights fenced code through its CommonMark extension with GitHub light and dark themes. Vue renders that HTML in the shared `.pulse-prose` style; list cards can expand their body and detail pages show it in full.
+
+### Search
+
+`SearchQuery` searches personal `post_items` titles and summaries for news, and `learning_posts` titles and bodies for learning. Both tables have a hidden, stored generated `search` column of type `tsvector` and a GIN index. The migrations coalesce nullable text before building the English vector:
+
+```sql
+to_tsvector('english', coalesce(title, '') || ' ' || coalesce(summary, ''))
+```
+
+Learning uses `body` in place of `summary`. Queries use the bound expression `search @@ websearch_to_tsquery('english', ?)`, supporting English stemming and web-search syntax. This avoids `whereFullText` concatenation of separate vectors: `tsvector || NULL` is NULL, which would hide headlines with no summary. Results are ordered by digest date descending, then news position or learning kind (tip before topic), rather than relevance.
+
+`SearchFilters` carries `q`, `tags`, `from`, `to`, `type` (news by default), `source`, `kind` and `category`. Tags match any selected slug; date bounds are inclusive digest dates. Source applies to news, kind and category to learning. Filter options come only from the account's saved history. With no text query, search browses the filtered history. The UI debounces text by 300 ms, applies filters immediately, keeps them in the URL and resets pagination on changes. Switching tabs keeps text, tags and dates and clears tab-specific filters. Clear filters keeps the text and active tab.
+
+See [Sources](05-sources.md#managing-sources-in-the-web-app), [Configuration](03-configuration.md) and [AI providers](06-ai.md#per-user-keys) for writes, limits and provider ordering.
+
+### Errors
+
+With debug disabled, browser errors 403, 404, 419, 429, 500 and 503 render the Inertia Error page; JSON and API responses keep their normal format. The page links to Today and offers reload for 500 and 503. Secret form fields (`api_key`, `webhook_url`, `settings`) are excluded from flashed input. Source, AI key and delivery test endpoints return friendly JSON results and log failures with secrets redacted.
 
 ## Accounts
 
@@ -34,7 +98,7 @@ Delivery channels store a type (`discord_bot`, `discord_webhook`, `email` or `in
 
 ### Add to Discord
 
-Authenticated users with verified email can visit `/discord/install`. The OAuth2 flow requests the `bot` scope and permissions `274877975568`. `/discord/callback` consumes a single-use session state and records the installed guild in `discord_guilds`. The guild comes only from Discord's token response, never the callback's guild query parameter. Installing records the guild; it does not create a delivery channel.
+Authenticated users with verified email can visit `/discord/install`. The OAuth2 flow requests the `bot` scope and permissions `274877975568`. `/discord/callback` consumes a single-use session state and records the installed guild in `discord_guilds`. The guild comes only from Discord's token response, never the callback's guild query parameter. Installing records the guild and redirects to `/settings/delivery`; it does not create a delivery channel. Users select a forum there to add a destination. Forum discovery is cached for five minutes per guild; a Discord failure leaves the page usable with an empty forum list and an error indicator.
 
 `DiscordClient::forumChannels($guildId)` returns forum channel ids and names, ordered by Discord channel position. See [Configuration](03-configuration.md) for the client credentials and redirect URL.
 
@@ -170,10 +234,10 @@ The command exits with failure only when no digests were dispatched, delivery re
 | `item_source` | Source sightings per item, with `first_seen_at` |
 | `tags` | Tag slug and display name (`ai` → "AI") |
 | `posts` | One per required owner, day and kind (`news` / `learning`): generation status, attempts, rendered messages and model used |
-| `post_items` | Per-post copies of selected item titles, summaries and positions |
+| `post_items` | Per-post copies of selected item titles, summaries and positions, with a generated search vector |
 | `post_item_tag` | Tags attached to personal selections |
 | `learning_topics` | The rotating list of software-engineering topics |
-| `learning_posts` | The tip and the topic of a learning post (bodies in Markdown) |
+| `learning_posts` | The tip and the topic of a learning post (bodies in Markdown), with a generated search vector |
 | `learning_post_tag` | Tags attached to tips and topics |
 | `learning_topic_usages` | Per-user topic history, unique by user and day |
 | `delivery_channels` | Per-user destinations, accepted kinds, enabled flag, encrypted settings and verification time |

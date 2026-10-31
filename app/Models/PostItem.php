@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonImmutable;
 use Database\Factories\PostItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read Collection<int, Tag> $tags
  */
 #[Fillable(['post_id', 'item_id', 'title', 'summary', 'position'])]
+#[Hidden(['search'])]
 class PostItem extends Model
 {
     /** @use HasFactory<PostItemFactory> */

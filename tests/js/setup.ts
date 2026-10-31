@@ -14,6 +14,22 @@ vi.mock('@inertiajs/vue3', async (importOriginal) => {
 
 config.global.directives = { focus: vFocus };
 
+// jsdom lacks the pointer and scroll APIs reka-ui's Select uses.
+Object.assign(Element.prototype, {
+    hasPointerCapture: () => false,
+    releasePointerCapture: () => {},
+    scrollIntoView: () => {},
+});
+
+vi.stubGlobal(
+    'ResizeObserver',
+    class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    },
+);
+
 beforeEach(() => {
     mockMatchMedia(false);
 });

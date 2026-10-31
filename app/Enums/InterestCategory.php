@@ -6,11 +6,11 @@ namespace App\Enums;
 
 enum InterestCategory: string
 {
+    case Technology = 'technology';
+    case SoftwareDevelopment = 'software_development';
     case Life = 'life';
     case SelfImprovement = 'self_improvement';
     case Work = 'work';
-    case Technology = 'technology';
-    case SoftwareDevelopment = 'software_development';
     case Media = 'media';
     case Society = 'society';
     case Culture = 'culture';

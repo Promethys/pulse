@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
 import { computed, ref, watchEffect } from 'vue';
+import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,17 +20,15 @@ const authConfigContent = computed<TwoFactorConfigContent>(() => {
     if (showRecoveryInput.value) {
         return {
             title: 'Recovery code',
-            description:
-                'Please confirm access to your account by entering one of your emergency recovery codes.',
-            buttonText: 'login using an authentication code',
+            description: 'Enter one of your emergency recovery codes.',
+            buttonText: 'Use an authentication code instead',
         };
     }
 
     return {
-        title: 'Authentication code',
-        description:
-            'Enter the authentication code provided by your authenticator application.',
-        buttonText: 'login using a recovery code',
+        title: 'Two-factor check',
+        description: 'Enter the 6-digit code from your authenticator app.',
+        buttonText: 'Use a recovery code instead',
     };
 });
 
@@ -50,7 +49,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
 <template>
     <Head title="Two-factor authentication" />
 
-    <div class="space-y-6">
+    <div class="space-y-4">
         <template v-if="!showRecoveryInput">
             <Form
                 v-bind="store.form()"
@@ -76,6 +75,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                                     v-for="index in 6"
                                     :key="index"
                                     :index="index - 1"
+                                    class="size-11 text-lg"
                                 />
                             </InputOTPGroup>
                         </InputOTP>
@@ -86,7 +86,6 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     >Continue</Button
                 >
                 <div class="text-center text-sm text-muted-foreground">
-                    <span>or you can </span>
                     <button
                         type="button"
                         class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
@@ -105,7 +104,9 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 reset-on-error
                 #default="{ errors, processing, clearErrors }"
             >
+                <Label for="recovery_code">Recovery code</Label>
                 <Input
+                    id="recovery_code"
                     name="recovery_code"
                     type="text"
                     placeholder="Enter recovery code"
@@ -118,7 +119,6 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 >
 
                 <div class="text-center text-sm text-muted-foreground">
-                    <span>or you can </span>
                     <button
                         type="button"
                         class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     'timezone' => env('DIGEST_TIMEZONE', 'Europe/Paris'),
@@ -18,5 +20,14 @@ return [
     'ai_providers' => env('DIGEST_AI_PROVIDERS', ''),
 
     'ai_timeout' => (int) env('DIGEST_AI_TIMEOUT', 120),
+
+    'suggested_models' => [
+        'gemini' => ['gemini-3.8-flash'],
+        'anthropic' => ['claude-haiku-5-5', 'claude-sonnet-5-5'],
+        'openai' => ['gpt-5-mini'],
+        'groq' => ['llama-3.3-70b-versatile'],
+        'openrouter' => ['deepseek/deepseek-chat'],
+        'zai' => ['glm-4.7-flash'],
+    ],
 
 ];

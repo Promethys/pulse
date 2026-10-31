@@ -65,7 +65,7 @@ class DiscordInstallControllerTest extends TestCase
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'code']));
 
-        $response->assertRedirect(route('dashboard'))
+        $response->assertRedirect('/settings/delivery')
             ->assertSessionMissing('discord_install_state')
             ->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Pulse was added to Developers.']);
         $this->assertDatabaseHas('discord_guilds', ['user_id' => $user->id, 'guild_id' => '456', 'name' => 'Developers']);
@@ -123,7 +123,7 @@ class DiscordInstallControllerTest extends TestCase
             ->withSession(['discord_install_state' => self::STATE]);
         $url = route('discord.callback', ['state' => self::STATE, 'code' => 'code']);
 
-        $this->get($url)->assertRedirect(route('dashboard'))->assertSessionMissing('discord_install_state');
+        $this->get($url)->assertRedirect('/settings/delivery')->assertSessionMissing('discord_install_state');
         $this->get($url)->assertForbidden();
 
         $this->assertDatabaseCount('discord_guilds', 1);
@@ -135,7 +135,7 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'error' => 'access_denied']))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect('/settings/delivery')
             ->assertSessionMissing('discord_install_state')
             ->assertInertiaFlash('toast', self::ERROR_TOAST);
 
@@ -162,7 +162,7 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs($user)
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'code', 'guild_id' => 'forged']))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/settings/delivery');
 
         $this->assertDatabaseHas('discord_guilds', ['user_id' => $user->id, 'guild_id' => '456', 'name' => 'Developers']);
         $this->assertDatabaseMissing('discord_guilds', ['guild_id' => 'forged']);
@@ -179,7 +179,7 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs($user)
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'code']))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect('/settings/delivery')
             ->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Pulse was added to New name.']);
 
         $this->assertSame('New name', $guild->refresh()->name);
@@ -199,11 +199,11 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs($first)
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'first-code']))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/settings/delivery');
         $this->actingAs($second)
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'second-code']))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/settings/delivery');
 
         $this->assertDatabaseHas('discord_guilds', ['user_id' => $first->id, 'guild_id' => '456', 'name' => 'Original name']);
         $this->assertDatabaseHas('discord_guilds', ['user_id' => $second->id, 'guild_id' => '456', 'name' => 'Renamed guild']);
@@ -218,7 +218,7 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'expired-code']))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect('/settings/delivery')
             ->assertSessionMissing('discord_install_state')
             ->assertInertiaFlash('toast', self::ERROR_TOAST);
 
@@ -233,7 +233,7 @@ class DiscordInstallControllerTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->withSession(['discord_install_state' => self::STATE])
             ->get(route('discord.callback', ['state' => self::STATE, 'code' => 'code', 'guild_id' => 'forged']))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect('/settings/delivery')
             ->assertSessionMissing('discord_install_state')
             ->assertInertiaFlash('toast', self::ERROR_TOAST);
 

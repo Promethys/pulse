@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\LearningKind;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonImmutable|null $updated_at
  */
 #[Fillable(['post_id', 'kind', 'learning_topic_id', 'title', 'body', 'links'])]
+#[Hidden(['search'])]
 class LearningPost extends Model
 {
     /**
