@@ -112,7 +112,7 @@ Models name real sites but often guess the feed path, so when a suggested URL is
 
 ## Reviewing proposals
 
-Admins review proposals at `/admin/catalog`. Approving adds a catalog source with the chosen interests. A default source also subscribes the users of those interests who have no subscription to it, and never changes an existing one. Applying a URL change updates the source, and re-enables it when it was retired. Nothing enters the catalog without this review. Both review tables have search, filters, column toggles and bulk approve and reject. Bulk approval keeps each proposal's own interest and skips what it cannot approve.
+Admins review proposals at `/admin/catalog`. Approving adds a catalog source with the chosen interests. A default source also subscribes the users of those interests who have no subscription to it, and never changes an existing one. Applying a URL change updates the source, and re-enables it when it was retired. The Import button takes a pasted JSON array of feeds with `interest`, `name`, `url`, `site_url` and `reason`. Bad rows are refused and listed straight away, and valid ones go through the same checks as the scout in the background, then wait for review as pending proposals. Nothing enters the catalog without this review. Both review tables have search, filters, column toggles and bulk approve and reject. Bulk approval keeps each proposal's own interest and skips what it cannot approve.
 
 ## Suggestions from users
 

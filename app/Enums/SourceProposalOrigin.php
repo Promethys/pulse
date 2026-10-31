@@ -11,6 +11,7 @@ enum SourceProposalOrigin: string implements HasLabel
     case Scout = 'scout';
     case User = 'user';
     case Check = 'check';
+    case Import = 'import';
 
     public function getLabel(): string
     {
@@ -18,6 +19,7 @@ enum SourceProposalOrigin: string implements HasLabel
             self::Scout => 'Scout',
             self::User => 'User',
             self::Check => 'Check',
+            self::Import => 'Import',
         };
     }
 }
