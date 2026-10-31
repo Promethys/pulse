@@ -104,11 +104,11 @@ When a feed fails, Pulse looks for a moved feed by following redirects, then thr
 
 ## Scout
 
-Once a month, `digest:tick` queues one `ScoutInterest` job for each live interest that was not scouted this UTC month. `php artisan catalog:scout --interest=<slug> --max=5` runs it by hand, including for draft interests.
+Once a month, `digest:tick` queues one `ScoutInterest` job for each live interest that was not scouted this UTC month. `php artisan catalog:scout --interest=<slug> --max=5` runs it by hand, including for draft interests, and `--category=<category>` covers every draft interest of a category.
 
 `SourceScout` first tries a provider of the instance chain that supports web search. If that fails or returns nothing usable, it retries the full chain without search, from what the model knows. A failed search only logs a line.
 
-Each suggestion goes through `ProposalChecker`: public URL, not already in the catalog (feed URL and domain), the feed parses, and at least 3 posts in the last 30 days. Passing suggestions become pending rows in `source_proposals`, failing ones are dropped. A URL already proposed in any status is skipped, so rejected feeds do not return.
+Models name real sites but often guess the feed path, so when a suggested URL is not a feed, the scout uses the feed the site advertises through `<link rel="alternate">`. Each suggestion goes through `ProposalChecker`: public URL, not already in the catalog (feed URL and domain), the feed parses, and at least 3 posts in the last 30 days. Passing suggestions become pending rows in `source_proposals`, failing ones are dropped. A URL already proposed in any status is skipped, so rejected feeds do not return.
 
 ## Reviewing proposals
 
