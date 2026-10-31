@@ -71,6 +71,12 @@ describe('AppearanceTabs', () => {
         expect(localStorage.getItem('appearance')).toBe('light');
     });
 
+    it('holds only the three theme options', () => {
+        render(AppearanceTabs);
+
+        expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
+
     it('uses plain buttons that never submit a form', () => {
         render(AppearanceTabs);
 

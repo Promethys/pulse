@@ -6,27 +6,24 @@ import DayView from '@/components/pulse/DayView.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
-import { timeHasPassed } from '@/lib/dates';
 import type { TodayProps } from '@/types';
 
 const props = defineProps<TodayProps>();
-const incomplete = computed(() =>
-    Object.values(props.setup).some((done) => !done),
+const incomplete = computed(
+    () => !props.setup.interests || !props.setup.sources || !props.setup.ai_key,
 );
-const firstDigest = computed(() =>
-    props.next_digest
-        ? `Your first digest arrives tomorrow at ${props.next_digest.time} (${props.next_digest.timezone}).`
-        : undefined,
-);
-const notice = computed(() => {
-    if (!props.next_digest) return null;
-
-    const { time, timezone } = props.next_digest;
-
-    return timeHasPassed(time, timezone)
-        ? "Today's digest isn't ready yet."
-        : `Today's digest arrives at ${time} (${timezone}).`;
+const firstDigest = computed(() => {
+    if (!props.setup.ai_key)
+        return 'Add an AI key in Settings to start receiving digests.';
+    return props.next_digest
+        ? `Pulse prepares your digest every day at ${props.next_digest.time} (${props.next_digest.timezone}).`
+        : undefined;
 });
+const notice = computed(() =>
+    props.is_today && props.day?.news?.status === 'pending'
+        ? 'Your digest is being prepared. Refresh this page shortly.'
+        : null,
+);
 </script>
 
 <template>
@@ -41,6 +38,9 @@ const notice = computed(() => {
         >
             {{ notice }}
         </p>
+        <p v-if="!is_today" class="mb-6 text-sm text-muted-foreground">
+            No digest for today yet. Showing your latest day.
+        </p>
         <DayView
             :day="day"
             :available-dates="available_dates"
@@ -52,7 +52,11 @@ const notice = computed(() => {
         <PageHeader title="Today" subtitle="Welcome to Pulse" />
         <SetupChecklist v-if="incomplete" :state="setup" />
         <EmptyState
-            title="Your first digest is on its way"
+            :title="
+                setup.ai_key
+                    ? 'Your first digest is on its way'
+                    : 'Set up your first digest'
+            "
             :description="firstDigest"
         >
             <template #icon

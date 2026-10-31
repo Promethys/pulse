@@ -2,6 +2,7 @@
 import { router, useHttp } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import MaskedSecretInput from '@/components/pulse/MaskedSecretInput.vue';
 import TestButton from '@/components/pulse/TestButton.vue';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,9 @@ function save() {
                     >Only you will see this source.</DialogDescription
                 >
             </DialogHeader>
+            <p v-if="!source" class="text-sm text-muted-foreground">
+                You can save up to 30 custom sources.
+            </p>
             <form class="space-y-4" @submit.prevent="save">
                 <RadioGroup
                     v-model="form.type"
@@ -170,9 +174,19 @@ function save() {
                         Newsletter inbox
                     </Label>
                 </RadioGroup>
+                <p v-if="source" class="text-sm text-muted-foreground">
+                    A source’s type cannot be changed. Create a new source to
+                    use another type.
+                </p>
                 <InputError :message="errors.type" />
                 <div v-if="form.type === 'feed'" class="space-y-1.5">
-                    <Label for="source-url">Feed URL</Label>
+                    <span class="inline-flex items-center gap-1">
+                        <Label for="source-url">Feed URL (required)</Label>
+                        <HelpTip
+                            label="Feeds"
+                            text="A feed lists a site’s latest posts so Pulse can read them automatically."
+                        />
+                    </span>
                     <Input
                         id="source-url"
                         v-model="form.url"
@@ -183,6 +197,10 @@ function save() {
                             errors.url ? 'source-url-error' : undefined
                         "
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Paste the site’s public RSS or Atom feed URL. Look for
+                        an RSS or Subscribe link on the site.
+                    </p>
                     <InputError id="source-url-error" :message="errors.url" />
                 </div>
                 <div v-else class="space-y-1.5">
@@ -190,17 +208,29 @@ function save() {
                         id="source-key"
                         v-model="form.api_key"
                         label="Resend API key"
-                        hint="Used to read the newsletter from your own Resend account."
+                        hint="Required for a new newsletter inbox."
                         :placeholder="
                             source?.has_key
                                 ? 'Key stored, leave empty to keep it'
                                 : 're_…'
                         "
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Connect a
+                        <span class="inline-flex items-center gap-1">
+                            Resend account
+                            <HelpTip
+                                label="Resend"
+                                text="Resend is an email service. This does not connect your Gmail or Outlook inbox."
+                            />
+                        </span>
+                        that receives your newsletters. Pulse reads recent
+                        received emails from that account.
+                    </p>
                     <InputError :message="errors.api_key" />
                 </div>
                 <div class="space-y-1.5">
-                    <Label for="source-name">Name</Label>
+                    <Label for="source-name">Name (required)</Label>
                     <Input
                         id="source-name"
                         v-model="form.name"
@@ -215,7 +245,7 @@ function save() {
                 </div>
                 <fieldset class="space-y-1.5">
                     <legend class="text-sm font-medium">
-                        Interests it belongs to
+                        Interests it belongs to (at least one required)
                     </legend>
                     <div class="flex flex-wrap gap-3">
                         <Label
@@ -246,6 +276,13 @@ function save() {
                         :message="errors[`interests.${index}`]"
                     />
                 </fieldset>
+                <p
+                    v-if="source?.has_key && form.type === 'resend_inbox'"
+                    class="text-sm text-muted-foreground"
+                >
+                    To test here, enter a Resend key. Leave it blank to keep the
+                    saved key when saving.
+                </p>
                 <TestButton
                     label="Test now"
                     :on-test="testSource"
@@ -265,6 +302,13 @@ function save() {
                         {{ headline }}
                     </li>
                 </ul>
+                <p
+                    v-if="!canSave && !processing"
+                    class="text-sm text-muted-foreground"
+                >
+                    Enter a name, choose at least one interest, and add a feed
+                    URL or Resend key.
+                </p>
                 <DialogFooter>
                     <Button
                         type="button"

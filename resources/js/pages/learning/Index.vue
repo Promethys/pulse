@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
 import TagChip from '@/components/pulse/TagChip.vue';
@@ -94,7 +95,14 @@ function reset() {
 <template>
     <Head title="Learning" />
     <div>
-        <PageHeader title="Learning" subtitle="Tips and topics, day by day" />
+        <PageHeader title="Learning" subtitle="Tips and topics, day by day">
+            <template #title-end>
+                <HelpTip
+                    label="Learning"
+                    text="Each day has a short practical tip and a deeper explanation of one topic, written for your interests."
+                />
+            </template>
+        </PageHeader>
         <div class="mb-6 space-y-3">
             <div class="flex flex-wrap gap-2">
                 <ToggleGroup
@@ -134,6 +142,12 @@ function reset() {
                     </Link>
                 </Button>
             </div>
+            <p
+                v-if="filters.kind === 'tip'"
+                class="text-sm text-muted-foreground"
+            >
+                Categories apply to topics only.
+            </p>
             <div
                 v-if="options.tags.length"
                 role="group"
@@ -189,8 +203,22 @@ function reset() {
         <EmptyState
             v-else
             title="No tips yet"
-            description="Your daily tips and topics will appear here."
-        />
+            description="Your tips and topics appear here after your next learning digest."
+        >
+            <template #actions>
+                <p class="text-sm text-muted-foreground">
+                    Choose an interest marked Includes learning on
+                    <Link href="/sources" class="underline underline-offset-4"
+                        >Sources</Link
+                    >, then enable Learning in
+                    <Link
+                        href="/settings/digest"
+                        class="underline underline-offset-4"
+                        >Digest settings</Link
+                    >.
+                </p>
+            </template>
+        </EmptyState>
         <PaginationLinks :pagination="pagination" />
     </div>
 </template>

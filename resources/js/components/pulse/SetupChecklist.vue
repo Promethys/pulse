@@ -24,11 +24,6 @@ const items: { key: keyof SetupState; label: string; hint: string }[] = [
         label: 'Add an AI key',
         hint: "The digest won't run without one",
     },
-    {
-        key: 'delivery',
-        label: 'Choose where to receive it',
-        hint: 'Discord or email',
-    },
 ];
 const destinations: Record<keyof SetupState, string> = {
     interests: '/sources',
@@ -52,12 +47,12 @@ const done = computed(
                         Finish setting up
                     </p>
                     <p class="mt-0.5 text-sm text-muted-foreground">
-                        {{ done }} of 4 done
+                        {{ done }} of 3 done
                     </p>
                 </div>
             </div>
             <Progress
-                :model-value="(done / 4) * 100"
+                :model-value="(done / 3) * 100"
                 class="mt-3 h-1.5"
                 aria-label="Setup progress"
             />
@@ -112,6 +107,13 @@ const done = computed(
                     </component>
                 </li>
             </ul>
+            <p class="mt-3 text-sm text-muted-foreground">
+                <Link
+                    href="/settings/delivery"
+                    class="underline underline-offset-4"
+                    >Optional: also receive digests by Discord or email.</Link
+                >
+            </p>
         </CardContent>
     </Card>
 </template>

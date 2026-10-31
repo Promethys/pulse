@@ -195,3 +195,14 @@ describe('SuggestSourceDialog', () => {
         else expect(select).toHaveTextContent('Security');
     });
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'You can have up to 10 suggestions waiting for review, including feeds and interests.',
+        'Explain why this belongs in Pulse. Use 10 to 500 characters.',
+        'Catalog feeds must be public and have at least three posts from the last 30 days.',
+    ])('explains %s', async (message) => {
+        await renderDialog();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});

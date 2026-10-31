@@ -38,3 +38,29 @@ describe('InterestChip', () => {
         expect(result.emitted().toggle).toBeUndefined();
     });
 });
+
+describe('Learning marker', () => {
+    it.each([
+        ['live', true, true],
+        ['live', false, false],
+        ['draft', true, false],
+        ['draft', false, false],
+    ] as const)(
+        'marks status=%s with has_learning=%s',
+        (status, has_learning, visible) => {
+            render(InterestChip, {
+                props: {
+                    interest: {
+                        ...onboardingProps().interests[0],
+                        status,
+                        has_learning,
+                    },
+                    selected: false,
+                },
+            });
+            const marker = screen.queryByText('Includes learning');
+            if (visible) expect(marker).toBeVisible();
+            else expect(marker).not.toBeInTheDocument();
+        },
+    );
+});

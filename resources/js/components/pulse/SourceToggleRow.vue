@@ -26,6 +26,9 @@ const typeLabel = computed(
                     typeLabel
                 }}</span>
             </div>
+            <p v-if="source.retired" class="text-sm text-muted-foreground">
+                Retired: this source stopped working. Choose another source.
+            </p>
         </div>
         <Switch
             :model-value="modelValue"

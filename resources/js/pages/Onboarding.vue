@@ -9,6 +9,7 @@ import {
     interests,
     sources,
 } from '@/actions/App/Http/Controllers/OnboardingController';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import AiKeyForm from '@/components/pulse/AiKeyForm.vue';
 import CategoryGroup from '@/components/pulse/CategoryGroup.vue';
 import DeliveryOptions from '@/components/pulse/DeliveryOptions.vue';
@@ -180,10 +181,24 @@ function next() {
                             What do you follow?
                         </h1>
                         <p class="mt-1 text-sm text-muted-foreground">
-                            Pick at least one.
                             {{ interestForm.interests.length }} selected.
                         </p>
                     </div>
+                    <p class="text-sm text-muted-foreground">
+                        Interests decide which sources you follow. Pulse adds
+                        their default sources. Removing an interest also removes
+                        catalog subscriptions that no longer
+                        <span class="whitespace-nowrap"
+                            >match.
+                            <HelpTip
+                                label="Sources"
+                                text="A source is a site or newsletter that supplies news."
+                        /></span>
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                        Interests marked ‘Coming soon’ are not available to
+                        select yet.
+                    </p>
                     <div class="relative">
                         <Search
                             class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -265,6 +280,9 @@ function next() {
                             :maxlength="2000"
                             placeholder="Laravel developer, curious about AI agents, not interested in crypto. I like short summaries with a link to the source."
                         />
+                        <p class="text-sm text-muted-foreground">
+                            Sent to your AI provider to tailor your digest.
+                        </p>
                         <p class="text-right text-xs text-muted-foreground">
                             {{ aboutForm.profile.length.toLocaleString('en') }}
                             / 2,000
@@ -272,6 +290,11 @@ function next() {
                     </div>
                     <div class="space-y-1.5">
                         <Label for="timezone">Timezone</Label>
+                        <p class="text-sm text-muted-foreground">
+                            Times use your selected timezone. Pulse checks every
+                            15 minutes and starts preparing each digest when it
+                            is due. Delivery can take longer.
+                        </p>
                         <Select v-model="aboutForm.timezone">
                             <SelectTrigger id="timezone" class="w-full"
                                 ><SelectValue
@@ -330,18 +353,24 @@ function next() {
                         v-model:email-delivery="deliveryForm.email_delivery"
                     />
                     <div
-                        class="flex items-center gap-3 rounded-xl border border-primary-strong/30 bg-primary/40 p-4"
+                        class="flex items-center gap-3 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 dark:bg-primary/10"
                     >
                         <Sunrise
                             class="size-6 text-primary-strong"
                             aria-hidden="true"
                         />
                         <div>
-                            <p class="font-semibold">
-                                Your first digest arrives tomorrow at
-                                {{ settings.news_time }}
-                            </p>
                             <p class="text-sm text-muted-foreground">
+                                {{
+                                    ai_keys.length || uses_instance_ai
+                                        ? `Pulse prepares your digest every day at ${settings.news_time} (${settings.timezone}).`
+                                        : 'Add an AI key in Settings to start receiving digests.'
+                                }}
+                            </p>
+                            <p
+                                v-if="ai_keys.length || uses_instance_ai"
+                                class="text-sm text-muted-foreground"
+                            >
                                 In the app{{
                                     deliveryForm.email_delivery
                                         ? ' and by email'

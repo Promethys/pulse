@@ -61,6 +61,14 @@ function isPressed(button: HTMLElement): boolean {
 }
 
 describe('Learning Index', () => {
+    it('defines tips and topics once, next to the page title', () => {
+        renderPage();
+
+        expect(
+            screen.getByRole('button', { name: 'Help: Learning' }),
+        ).toBeInTheDocument();
+    });
+
     it('links to the learning tab of unified search even with active browsing filters', () => {
         const props = learningProps();
         props.filters = { kind: 'topic', category: 'Testing', tag: 'php' };
@@ -319,8 +327,15 @@ describe('Learning Index', () => {
         renderPage(props);
         expect(screen.getByText('No tips yet')).toBeVisible();
         expect(
-            screen.getByText('Your daily tips and topics will appear here.'),
+            screen.getByText(
+                'Your tips and topics appear here after your next learning digest.',
+            ),
         ).toBeVisible();
+        expect(
+            screen.getByRole('link', { name: 'Sources' }).parentElement,
+        ).toHaveTextContent(
+            'Choose an interest marked Includes learning on Sources, then enable Learning in Digest settings.',
+        );
         expect(
             screen.queryByRole('button', { name: 'Clear filters' }),
         ).not.toBeInTheDocument();
@@ -354,3 +369,36 @@ describe('Learning Index', () => {
         },
     );
 });
+
+it.each([null, 'tip', 'topic'] as const)(
+    'explains categories only for kind=%s',
+    (kind) => {
+        const props = learningProps();
+        props.filters.kind = kind;
+        renderPage(props);
+        const message = screen.queryByText('Categories apply to topics only.');
+        if (kind === 'tip') expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);
+
+it.each(['empty', 'filtered', 'populated'])(
+    'offers setup links for the %s learning state',
+    (state) => {
+        const props = learningProps();
+        if (state !== 'populated') {
+            props.entries = [];
+            props.pagination.total = 0;
+        }
+        if (state === 'filtered') props.filters.kind = 'tip';
+        renderPage(props);
+        for (const [name, href] of [
+            ['Sources', '/sources'],
+            ['Digest settings', '/settings/digest'],
+        ]) {
+            const link = screen.queryByRole('link', { name });
+            if (state === 'empty') expect(link).toHaveAttribute('href', href);
+            else expect(link).not.toBeInTheDocument();
+        }
+    },
+);

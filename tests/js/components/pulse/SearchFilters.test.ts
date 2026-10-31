@@ -223,3 +223,32 @@ describe('SearchFilters', () => {
         }
     });
 });
+
+it.each([
+    ['news', 'tip', false],
+    ['learning', 'tip', true],
+    ['learning', 'topic', false],
+    ['learning', null, false],
+] as const)(
+    'explains categories for type=%s kind=%s',
+    (type, kind, visible) => {
+        const initial = props();
+        initial.modelValue.type = type;
+        initial.modelValue.kind = kind;
+        render(SearchFilters, { props: initial });
+        const message = screen.queryByText('Categories apply to topics only.');
+        if (visible) expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);
+
+it.each([
+    ['Tags', 'Matches any selected tag.'],
+    ['Digest dates', 'Dates filter when content appeared in your digest.'],
+])('defines %s', async (label, text) => {
+    render(SearchFilters, { props: props() });
+    await userEvent
+        .setup()
+        .click(screen.getByRole('button', { name: `Help: ${label}` }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent(text);
+});

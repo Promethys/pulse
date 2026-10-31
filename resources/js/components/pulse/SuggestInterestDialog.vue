@@ -69,6 +69,10 @@ function submit() {
                     suggestion.</DialogDescription
                 >
             </DialogHeader>
+            <p class="text-sm text-muted-foreground">
+                You can have up to 10 suggestions waiting for review, including
+                feeds and interests.
+            </p>
             <form class="space-y-4" @submit.prevent="submit">
                 <div class="space-y-1.5">
                     <Label for="suggest-interest-name">Name</Label>
@@ -83,6 +87,9 @@ function submit() {
                                 : undefined
                         "
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Use 2 to 60 characters.
+                    </p>
                     <InputError
                         id="suggest-interest-name-error"
                         :message="form.errors.name"
@@ -131,6 +138,10 @@ function submit() {
                                 : undefined
                         "
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Explain why this belongs in Pulse. Use 10 to 500
+                        characters.
+                    </p>
                     <p class="text-right text-xs text-muted-foreground">
                         {{ form.reason.length }} / 500
                     </p>

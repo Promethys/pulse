@@ -8,6 +8,7 @@ export type AiKeysProps = {
     keys: OnboardingProps['ai_keys'];
     providers: OnboardingProps['providers'];
     uses_instance_ai_notice: boolean;
+    uses_instance_ai: boolean;
 };
 export type DeliveryDestination = {
     id: number;

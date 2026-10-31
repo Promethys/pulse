@@ -88,7 +88,7 @@ describe('AI keys settings', () => {
             within(dialog).getByRole('button', { name: /^Add$/ }),
         ).toBeDisabled();
         await view.user.type(
-            within(dialog).getByLabelText('Gemini API key'),
+            within(dialog).getByLabelText('Anthropic API key'),
             'fake-private-key',
         );
         await view.user.click(
@@ -102,8 +102,8 @@ describe('AI keys settings', () => {
         expect(view.post).toHaveBeenCalledWith(
             '/settings/ai-keys',
             {
-                provider: 'gemini',
-                model: 'gemini-3.8-flash',
+                provider: 'anthropic',
+                model: 'claude-haiku-5-5',
                 api_key: 'fake-private-key',
                 consent: true,
             },
@@ -119,7 +119,7 @@ describe('AI keys settings', () => {
         );
         const dialog = await screen.findByRole('dialog');
         await view.user.type(
-            within(dialog).getByLabelText('Gemini API key'),
+            within(dialog).getByLabelText('Anthropic API key'),
             'fake-new-key',
         );
         await view.user.click(
@@ -212,4 +212,93 @@ describe('AI keys settings', () => {
             expect.any(Object),
         );
     });
+
+    it('offers an unused provider first and lets the reader choose replacement', async () => {
+        const view = renderPage();
+        await view.user.click(
+            screen.getByRole('button', { name: 'Add a key' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+        expect(
+            within(dialog).getByRole('heading', { name: 'Add an AI key' }),
+        ).toBeVisible();
+        expect(
+            within(dialog).getByRole('radio', { name: 'Anthropic' }),
+        ).toBeChecked();
+        expect(
+            within(dialog).getByRole('combobox', { name: 'Model' }),
+        ).toHaveTextContent('claude-haiku-5-5');
+        await view.user.click(
+            within(dialog).getByRole('radio', { name: 'Gemini' }),
+        );
+        expect(
+            within(dialog).getByRole('heading', { name: 'Replace key' }),
+        ).toBeVisible();
+        expect(
+            within(dialog).getByRole('button', { name: 'Replace key' }),
+        ).toBeDisabled();
+    });
+
+    it('falls back to the first provider when all providers have saved keys', async () => {
+        const props = aiKeysProps();
+        props.providers = props.providers.filter((provider) =>
+            props.keys.some((key) => key.provider === provider.value),
+        );
+        const view = renderPage(props);
+        await view.user.click(
+            screen.getByRole('button', { name: 'Add a key' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+        expect(
+            within(dialog).getByRole('radio', { name: 'Gemini' }),
+        ).toBeChecked();
+        expect(
+            within(dialog).getByRole('heading', { name: 'Replace key' }),
+        ).toBeVisible();
+    });
+
+    it.each([
+        [
+            1,
+            false,
+            'Deleting your last AI key pauses scheduled digests until you add another.',
+        ],
+        [1, true, 'Pulse will use its own AI key for future digests.'],
+        [2, false, 'Pulse will stop using this key for your digests.'],
+        [2, true, 'Pulse will stop using this key for your digests.'],
+    ] as const)(
+        'explains deleting from %i keys with instance AI=%s',
+        async (count, instance, message) => {
+            const props = { ...aiKeysProps(), uses_instance_ai: instance };
+            props.keys = props.keys.slice(0, count);
+            const view = renderPage(props);
+            await view.user.click(
+                screen.getAllByRole('button', { name: 'Delete' })[0],
+            );
+            const dialog = await screen.findByRole('alertdialog');
+            expect(within(dialog).getByText(message)).toBeVisible();
+            const pause =
+                'Deleting your last AI key pauses scheduled digests until you add another.';
+            const fallback =
+                'Pulse will use its own AI key for future digests.';
+            if (message !== pause)
+                expect(
+                    within(dialog).queryByText(pause),
+                ).not.toBeInTheDocument();
+            if (message !== fallback)
+                expect(
+                    within(dialog).queryByText(fallback),
+                ).not.toBeInTheDocument();
+        },
+    );
+});
+
+describe('Getting started guidance', () => {
+    it.each(['Up to five AI keys, one per provider.'])(
+        'explains %s',
+        async (message) => {
+            renderPage();
+            expect(screen.getByText(message)).toBeVisible();
+        },
+    );
 });

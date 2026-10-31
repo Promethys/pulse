@@ -185,5 +185,6 @@ export function onboardingProps() {
         }[],
         email: 'reader@example.test',
         email_delivery: false,
+        uses_instance_ai: false,
     };
 }

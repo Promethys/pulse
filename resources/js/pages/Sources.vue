@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import CategoryGroup from '@/components/pulse/CategoryGroup.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SourceFormDialog from '@/components/pulse/SourceFormDialog.vue';
 import SourceRow from '@/components/pulse/SourceRow.vue';
@@ -112,6 +113,14 @@ function deleteSource() {
     <Head title="Sources" />
     <div>
         <PageHeader title="Sources" :subtitle="subtitle" />
+        <p class="mb-4 text-sm text-muted-foreground">
+            Turn sources off to leave them out of future digests. This changes
+            only your subscriptions.
+            <HelpTip
+                label="Source status"
+                text="Each source shows a status. Ok: fetched in the last 2 days. Failing: the last fetch failed. Unknown: no successful fetch in the last 2 days."
+            />
+        </p>
         <Tabs v-model="tab">
             <TabsList class="mb-4 w-full md:w-auto">
                 <TabsTrigger value="interest">By interest</TabsTrigger>
@@ -149,6 +158,9 @@ function deleteSource() {
                 </section>
             </TabsContent>
             <TabsContent value="mine" class="space-y-4">
+                <p class="text-sm text-muted-foreground">
+                    You can save up to 30 custom sources.
+                </p>
                 <Button @click="openForm()"
                     ><Plus aria-hidden="true" /> Add a source</Button
                 >
@@ -171,6 +183,15 @@ function deleteSource() {
                         :source="source"
                     >
                         <template #actions>
+                            <p
+                                v-if="
+                                    source.type === 'feed' && source.suggested
+                                "
+                                class="text-sm text-muted-foreground"
+                            >
+                                This feed has already been suggested for the
+                                catalog.
+                            </p>
                             <Button
                                 v-if="source.type === 'feed'"
                                 variant="ghost"
@@ -229,6 +250,19 @@ function deleteSource() {
                         digest.</DialogDescription
                     >
                 </DialogHeader>
+                <p class="text-sm text-muted-foreground">
+                    Interests decide which sources you follow. Pulse adds their
+                    default sources. Removing an interest also removes catalog
+                    subscriptions that no longer match.
+                    <HelpTip
+                        label="Sources"
+                        text="A source is a site or newsletter that supplies news."
+                    />
+                </p>
+                <p class="text-sm text-muted-foreground">
+                    Interests marked ‘Coming soon’ are not available to select
+                    yet. Choose an available interest to continue.
+                </p>
                 <div class="space-y-7">
                     <CategoryGroup
                         v-for="category in categories"

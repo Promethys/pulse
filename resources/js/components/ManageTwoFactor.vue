@@ -40,9 +40,8 @@ onUnmounted(() => clearTwoFactorAuthData());
             class="flex flex-col items-start justify-start space-y-4"
         >
             <p class="text-sm text-muted-foreground">
-                When you enable two-factor authentication, you will be prompted
-                for a secure pin during login. This pin can be retrieved from a
-                TOTP-supported application on your phone.
+                Use an authenticator app to generate a six-digit code when you
+                sign in.
             </p>
 
             <div>
@@ -64,11 +63,14 @@ onUnmounted(() => clearTwoFactorAuthData());
 
         <div v-else class="flex flex-col items-start justify-start space-y-4">
             <p class="text-sm text-muted-foreground">
-                You will be prompted for a secure, random pin during login,
-                which you can retrieve from the TOTP-supported application on
-                your phone.
+                Use an authenticator app to generate a six-digit code when you
+                sign in.
             </p>
 
+            <p class="text-sm text-muted-foreground">
+                Turning this off removes the authenticator-code check when you
+                sign in.
+            </p>
             <div class="relative inline">
                 <Form v-bind="disable.form()" #default="{ processing }">
                     <Button

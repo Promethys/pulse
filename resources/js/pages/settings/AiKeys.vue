@@ -42,6 +42,16 @@ const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const input = ref<AiKeyInput>(emptyInput());
 const http = useHttp<Record<string, never>, KeyTestResult>({});
+const replacing = computed(() =>
+    props.keys.some((key) => key.provider === input.value.provider),
+);
+const deletionMessage = computed(() => {
+    if (props.keys.length !== 1)
+        return 'Pulse will stop using this key for your digests.';
+    return props.uses_instance_ai
+        ? 'Pulse will use its own AI key for future digests.'
+        : 'Deleting your last AI key pauses scheduled digests until you add another.';
+});
 const canAdd = computed(
     () =>
         !processing.value &&
@@ -58,7 +68,16 @@ function emptyInput(): AiKeyInput {
     };
 }
 function openAdd() {
-    input.value = emptyInput();
+    const provider =
+        props.providers.find(
+            (provider) =>
+                !props.keys.some((key) => key.provider === provider.value),
+        ) ?? props.providers[0];
+    input.value = {
+        ...emptyInput(),
+        provider: provider?.value ?? '',
+        model: provider?.suggested_models[0] ?? '',
+    };
     errors.value = {};
     adding.value = true;
 }
@@ -202,6 +221,9 @@ function remove() {
                     />
                 </li>
             </ul>
+            <p class="text-sm text-muted-foreground">
+                Up to five AI keys, one per provider.
+            </p>
             <Button variant="outline" @click="openAdd"
                 ><Plus aria-hidden="true" />Add a key</Button
             >
@@ -210,13 +232,19 @@ function remove() {
     <Dialog v-model:open="adding" @update:open="input.api_key = ''">
         <DialogContent class="max-h-[90vh] overflow-y-auto">
             <DialogHeader
-                ><DialogTitle class="font-display">Add an AI key</DialogTitle
+                ><DialogTitle class="font-display">{{
+                    replacing ? 'Replace key' : 'Add an AI key'
+                }}</DialogTitle
                 ><DialogDescription
                     >Stored encrypted, used only for your
                     digests.</DialogDescription
                 ></DialogHeader
             >
             <form class="space-y-4" @submit.prevent="save">
+                <p class="text-sm text-muted-foreground">
+                    You can save one key per provider. Adding another key for
+                    this provider replaces its saved key and model.
+                </p>
                 <AiKeyForm
                     v-model="input"
                     :providers="providers"
@@ -228,7 +256,9 @@ function remove() {
                     :key="field"
                     :message="error"
                 />
-                <Button :disabled="!canAdd">Add</Button>
+                <Button :disabled="!canAdd">{{
+                    replacing ? 'Replace key' : 'Add'
+                }}</Button>
             </form>
         </DialogContent>
     </Dialog>
@@ -240,10 +270,9 @@ function remove() {
             <AlertDialogTitle class="font-display text-lg font-semibold"
                 >Delete AI key?</AlertDialogTitle
             >
-            <AlertDialogDescription class="text-sm text-muted-foreground"
-                >Pulse will stop using this key for your
-                digests.</AlertDialogDescription
-            >
+            <AlertDialogDescription class="text-sm text-muted-foreground">{{
+                deletionMessage
+            }}</AlertDialogDescription>
             <div class="flex justify-end gap-2">
                 <AlertDialogCancel as-child
                     ><Button variant="outline"

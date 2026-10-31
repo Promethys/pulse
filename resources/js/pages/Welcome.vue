@@ -17,7 +17,7 @@ const steps = [
     {
         icon: KeyRound,
         title: 'Add your AI key',
-        body: 'Gemini, Anthropic, OpenAI, Groq or OpenRouter. Free tiers are usually enough.',
+        body: 'Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI. Some providers have free tiers, and yours may charge beyond them.',
     },
     {
         icon: Send,
@@ -55,7 +55,8 @@ const steps = [
                 </h1>
                 <p class="mt-4 max-w-xl text-muted-foreground">
                     Pulse reads your sources overnight and sends you a short,
-                    grouped summary each morning. Free and open source.
+                    grouped summary each morning. Free and open source. You
+                    bring your own AI key.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
                     <Button v-if="canRegister" size="lg" as-child

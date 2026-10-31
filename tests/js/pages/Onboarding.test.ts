@@ -203,9 +203,7 @@ describe('Onboarding', () => {
         expect(
             screen.getByRole('button', { name: /Robotics.*Coming soon/i }),
         ).toBeDisabled();
-        expect(
-            screen.getByText(/Pick at least one\. 2 selected\./),
-        ).toBeVisible();
+        expect(screen.getByText(/^2 selected\.$/)).toBeVisible();
         expect(
             screen.getByRole('button', { name: /Suggest an interest/i }),
         ).toBeVisible();
@@ -236,9 +234,7 @@ describe('Onboarding', () => {
         expect(button).toBeDisabled();
         await view.user.click(screen.getByRole('button', { name: 'Security' }));
         expect(button).toBeEnabled();
-        expect(
-            screen.getByText(/Pick at least one\. 1 selected\./),
-        ).toBeVisible();
+        expect(screen.getByText(/^1 selected\.$/)).toBeVisible();
         expect(
             screen.queryByText('Pick at least one interest to continue.'),
         ).not.toBeInTheDocument();
@@ -699,4 +695,80 @@ describe('Onboarding', () => {
                 );
         },
     );
+
+    it('explains profile sharing beside the reader profile', async () => {
+        const view = renderPage();
+        await goToStep(view, 2);
+        expect(
+            screen.getByText('Sent to your AI provider to tailor your digest.'),
+        ).toBeVisible();
+    });
+
+    it.each(['none', 'personal', 'instance'] as const)(
+        'shows honest first-digest guidance with %s AI access',
+        async (access) => {
+            const props = {
+                ...onboardingProps(),
+                uses_instance_ai: access === 'instance',
+            };
+            if (access === 'personal')
+                props.ai_keys = [
+                    {
+                        id: 1,
+                        provider: 'gemini',
+                        model: 'test-model',
+                        key_suffix: 'abcd',
+                        position: 0,
+                        consented_at: '2026-10-31T00:00:00Z',
+                        created_at: null,
+                    },
+                ];
+            const view = renderPage(props);
+            await goToStep(view, 4);
+            const schedule = `Pulse prepares your digest every day at ${props.settings.news_time} (${props.settings.timezone}).`;
+            const missing =
+                'Add an AI key in Settings to start receiving digests.';
+            expect(
+                screen.getByText(access === 'none' ? missing : schedule),
+            ).toBeVisible();
+            expect(
+                screen.queryByText(access === 'none' ? schedule : missing),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByText(/arrives tomorrow/),
+            ).not.toBeInTheDocument();
+        },
+    );
+});
+
+describe('Getting started guidance', () => {
+    it.each([
+        'Interests decide which sources you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
+        'Interests marked ‘Coming soon’ are not available to select yet.',
+    ])('explains %s', async (message) => {
+        renderPage();
+        expect(
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    element.textContent?.replace(/\s+/g, ' ').trim() ===
+                        message,
+            ),
+        ).toBeVisible();
+    });
+});
+
+it('defines sources beside the interest guidance', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Help: Sources' })).toBeVisible();
+});
+
+it('explains schedule timing at the timezone step', async () => {
+    const view = renderPage();
+    await goToStep(view, 2);
+    expect(
+        screen.getByText(
+            'Times use your selected timezone. Pulse checks every 15 minutes and starts preparing each digest when it is due. Delivery can take longer.',
+        ),
+    ).toBeVisible();
 });

@@ -4,88 +4,62 @@ import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
 import { setupProps } from '../../support/dayProps';
 
 const rows = [
-    ['interests', 'Pick your interests', 'What the digest is about'],
-    ['sources', 'Review your sources', 'Where news comes from'],
-    ['ai_key', 'Add an AI key', "The digest won't run without one"],
-    ['delivery', 'Choose where to receive it', 'Discord or email'],
+    ['interests', 'Pick your interests', '/sources'],
+    ['sources', 'Review your sources', '/sources'],
+    ['ai_key', 'Add an AI key', '/settings/ai-keys'],
 ] as const;
 
 describe('SetupChecklist', () => {
-    it.each([0, 1, 2, 3, 4])(
-        'shows %i of 4 done and the corresponding progress',
-        (done) => {
-            const state = setupProps();
-            rows.forEach(([key], index) => {
-                state[key] = index < done;
+    it.each([0, 1, 2, 3])('shows %i of 3 required steps done', (done) => {
+        const state = setupProps();
+        rows.forEach(([key], index) => {
+            state[key] = index < done;
+        });
+        render(SetupChecklist, { props: { state } });
+        expect(screen.getByText(`${done} of 3 done`)).toBeVisible();
+        expect(screen.getByRole('progressbar')).toHaveAttribute(
+            'aria-valuenow',
+            String((done / 3) * 100),
+        );
+        const items = screen.getAllByRole('listitem');
+        expect(items).toHaveLength(3);
+        rows.forEach(([, label, href], index) => {
+            expect(within(items[index]).getByText(label)).toBeVisible();
+            if (index < done) {
+                expect(
+                    within(items[index]).getByText('Complete'),
+                ).toBeInTheDocument();
+                expect(
+                    within(items[index]).queryByRole('link'),
+                ).not.toBeInTheDocument();
+            } else {
+                expect(within(items[index]).getByRole('link')).toHaveAttribute(
+                    'href',
+                    href,
+                );
+                expect(
+                    within(items[index]).getByText('Incomplete'),
+                ).toBeInTheDocument();
+            }
+        });
+    });
+
+    it.each([true, false])(
+        'keeps external delivery optional with delivery=%s',
+        (delivery) => {
+            render(SetupChecklist, {
+                props: { state: { ...setupProps(), delivery } },
             });
-            render(SetupChecklist, { props: { state } });
-            expect(screen.getByText('Finish setting up')).toBeVisible();
-            expect(screen.getByText(`${done} of 4 done`)).toBeVisible();
-            const progress = screen.getByRole('progressbar');
-            expect(progress).toHaveAttribute(
+            expect(screen.getByText('3 of 3 done')).toBeVisible();
+            expect(
+                screen.getByRole('link', {
+                    name: 'Optional: also receive digests by Discord or email.',
+                }),
+            ).toHaveAttribute('href', '/settings/delivery');
+            expect(screen.getByRole('progressbar')).toHaveAttribute(
                 'aria-valuenow',
-                String(done * 25),
+                '100',
             );
-            expect(progress).toHaveAttribute('aria-valuemax', '100');
-            const items = screen.getAllByRole('listitem');
-            expect(items).toHaveLength(4);
-            rows.forEach(([, label, hint], index) => {
-                expect(within(items[index]).getByText(label)).toBeVisible();
-                if (index < done) {
-                    expect(screen.queryByText(hint)).not.toBeInTheDocument();
-                    expect(
-                        items[index].querySelector('svg.lucide-check'),
-                    ).toBeInTheDocument();
-                    expect(
-                        items[index].querySelector('svg.lucide-x'),
-                    ).not.toBeInTheDocument();
-                } else {
-                    expect(within(items[index]).getByText(hint)).toBeVisible();
-                    expect(
-                        items[index].querySelector('svg.lucide-x'),
-                    ).toBeInTheDocument();
-                    expect(
-                        items[index].querySelector('svg.lucide-check'),
-                    ).not.toBeInTheDocument();
-                }
-            });
-            expect(screen.queryAllByRole('link')).toHaveLength(4 - done);
-            expect(screen.queryByRole('button')).not.toBeInTheDocument();
         },
     );
-});
-
-describe('SetupChecklist Sources links', () => {
-    it('links incomplete rows to sources and settings, then keeps completed rows plain', async () => {
-        const state = {
-            interests: false,
-            sources: false,
-            ai_key: false,
-            delivery: false,
-        };
-        const view = render(SetupChecklist, { props: { state } });
-        expect(
-            screen.getByRole('link', { name: /Pick your interests/ }),
-        ).toHaveAttribute('href', '/sources');
-        expect(
-            screen.getByRole('link', { name: /Review your sources/ }),
-        ).toHaveAttribute('href', '/sources');
-        expect(
-            screen.getByRole('link', { name: /Add an AI key/ }),
-        ).toHaveAttribute('href', '/settings/ai-keys');
-        expect(
-            screen.getByRole('link', { name: /Choose where to receive it/ }),
-        ).toHaveAttribute('href', '/settings/delivery');
-        await view.rerender({
-            state: {
-                interests: true,
-                sources: true,
-                ai_key: true,
-                delivery: true,
-            },
-        });
-        expect(screen.queryByRole('link')).not.toBeInTheDocument();
-        expect(screen.getByText('Pick your interests')).toBeVisible();
-        expect(screen.getByText('Review your sources')).toBeVisible();
-    });
 });

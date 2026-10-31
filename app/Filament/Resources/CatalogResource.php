@@ -84,7 +84,10 @@ class CatalogResource extends Resource
                     ->icon(Heroicon::OutlinedCheck)
                     ->color('success')
                     ->modalDescription(__('Each feed keeps its own interest. Proposals without one are skipped.'))
-                    ->schema([Toggle::make('is_default')->label(__('Default source'))->default(true)])
+                    ->schema([
+                        Toggle::make('is_default')->label(__('Default source'))->default(true)
+                            ->helperText(__('Automatically subscribe readers who follow these interests, including existing readers.')),
+                    ])
                     ->action(function (Collection $records, array $data): void {
                         self::approveAll($records, (bool) $data['is_default']);
                     })
@@ -141,7 +144,8 @@ class CatalogResource extends Resource
                             ->optionsLimit(100)
                             ->required()
                             ->minItems(1),
-                        Toggle::make('is_default')->label(__('Default source'))->default(true),
+                        Toggle::make('is_default')->label(__('Default source'))->default(true)
+                            ->helperText(__('Automatically subscribe readers who follow these interests, including existing readers.')),
                     ])
                     ->action(function (SourceProposal $record, array $data): void {
                         self::review(

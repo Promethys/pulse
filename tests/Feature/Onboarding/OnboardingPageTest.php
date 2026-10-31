@@ -181,4 +181,21 @@ class OnboardingPageTest extends TestCase
     {
         return ['enabled' => [true], 'disabled' => [false]];
     }
+
+    #[DataProvider('instanceAiStates')]
+    public function test_instance_ai_access_is_exposed_without_personal_keys(bool $usesInstanceAi): void
+    {
+        $user = User::factory()->create(['uses_instance_ai' => $usesInstanceAi]);
+
+        $this->actingAs($user)->get('/onboarding')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Onboarding', false)
+                ->where('ai_keys', [])
+                ->where('uses_instance_ai', $usesInstanceAi));
+    }
+
+    public static function instanceAiStates(): array
+    {
+        return [[true], [false]];
+    }
 }

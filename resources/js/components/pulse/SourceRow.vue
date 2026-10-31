@@ -55,6 +55,9 @@ function toggle(enabled: boolean) {
                     typeLabels[source.type] ?? source.type
                 }}</span>
             </div>
+            <p class="text-sm text-muted-foreground">
+                {{ source.health }}
+            </p>
             <p
                 v-if="source.url"
                 class="mt-0.5 truncate text-sm text-muted-foreground"
@@ -62,8 +65,18 @@ function toggle(enabled: boolean) {
             >
                 {{ source.url }}
             </p>
-            <p v-if="source.retired" class="mt-1 text-xs text-muted-foreground">
-                Retired: this source stopped working.
+            <p v-if="source.retired" class="mt-1 text-sm text-muted-foreground">
+                Retired: this source stopped working. Choose another source.
+            </p>
+            <p
+                v-if="!source.retired && source.health === 'failing'"
+                class="text-sm text-muted-foreground"
+            >
+                {{
+                    source.is_custom
+                        ? 'Check the feed URL or Resend key in Edit, then use Test now.'
+                        : 'This source is unavailable. Choose another source.'
+                }}
             </p>
             <p v-if="lastSuccess" class="mt-0.5 text-xs text-muted-foreground">
                 Last success {{ lastSuccess }}

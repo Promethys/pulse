@@ -125,3 +125,52 @@ describe('DestinationRow', () => {
         expect(view.onDelete).toHaveBeenCalledOnce();
     });
 });
+
+describe('Paused delivery guidance', () => {
+    it.each([
+        ['discord_bot', false, 'failed', true],
+        ['discord_webhook', false, 'failed', true],
+        ['discord_webhook', true, 'failed', false],
+        ['discord_webhook', false, 'delivered', false],
+        ['discord_webhook', false, null, false],
+        ['email', false, 'failed', false],
+    ] as const)(
+        'explains type=%s enabled=%s status=%s',
+        (type, enabled, status, visible) => {
+            const channel = { ...destinationProps(), type, enabled };
+            if (status)
+                channel.latest_delivery = {
+                    id: 1,
+                    status,
+                    attempts: 1,
+                    last_error: null,
+                    delivered_at: null,
+                    updated_at: null,
+                };
+            renderRow(channel);
+            const message = screen.queryByText(
+                'Delivery is paused. Fix the problem, send a test, then turn delivery back on.',
+            );
+            if (visible) expect(message).toBeVisible();
+            else expect(message).not.toBeInTheDocument();
+        },
+    );
+});
+
+it.each(['delivered', 'failed', 'pending'])(
+    'labels the %s delivery time in UTC',
+    (status) => {
+        const channel = destinationProps();
+        channel.latest_delivery = {
+            id: 1,
+            status,
+            attempts: 1,
+            last_error: null,
+            delivered_at:
+                status === 'delivered' ? '2026-10-28T11:02:00+02:00' : null,
+            updated_at: '2026-10-28T11:02:00+02:00',
+        };
+        renderRow(channel);
+        expect(screen.getByText(/28 Oct, 09:02 UTC/)).toBeVisible();
+    },
+);

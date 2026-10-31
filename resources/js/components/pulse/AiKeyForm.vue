@@ -3,6 +3,7 @@ import { useHttp } from '@inertiajs/vue3';
 import { ExternalLink } from '@lucide/vue';
 import { RadioGroupRoot } from 'reka-ui';
 import { computed, ref } from 'vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import MaskedSecretInput from '@/components/pulse/MaskedSecretInput.vue';
 import ProviderCard from '@/components/pulse/ProviderCard.vue';
 import TestButton from '@/components/pulse/TestButton.vue';
@@ -121,6 +122,13 @@ async function testKey(): Promise<KeyTestResult> {
                 </template>
             </p>
         </div>
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium">Provider</span>
+            <HelpTip
+                label="Provider"
+                text="Provider: the service that runs the AI."
+            />
+        </div>
         <RadioGroupRoot
             :model-value="model.provider"
             aria-label="Provider"
@@ -135,7 +143,13 @@ async function testKey(): Promise<KeyTestResult> {
             />
         </RadioGroupRoot>
         <div class="space-y-1.5">
-            <Label for="model">Model</Label>
+            <div class="flex items-center gap-2">
+                <Label for="model">Model</Label>
+                <HelpTip
+                    label="Model"
+                    text="Model: the AI version used to select and write your digest."
+                />
+            </div>
             <Select
                 :model-value="selectedModel"
                 @update:model-value="selectModel"
@@ -157,6 +171,9 @@ async function testKey(): Promise<KeyTestResult> {
         </div>
         <div v-if="otherModel" class="space-y-1.5">
             <Label for="other-model">Model name</Label>
+            <p class="text-sm text-muted-foreground">
+                Enter the exact model ID supplied by your provider.
+            </p>
             <Input
                 id="other-model"
                 :model-value="model.model"
@@ -172,6 +189,15 @@ async function testKey(): Promise<KeyTestResult> {
             :hint="keyHint"
             @update:model-value="update({ api_key: $event })"
         />
+        <p class="text-sm text-muted-foreground">
+            Your AI provider may charge your account for digest generation and
+            key tests. Check your provider’s pricing and balance.
+        </p>
+        <p class="text-sm text-muted-foreground">
+            Pulse sends your About you text, interests and source titles,
+            excerpts and links to your AI provider. Learning requests also
+            include recent tip titles.
+        </p>
         <div class="flex items-start gap-2">
             <Checkbox
                 id="consent"

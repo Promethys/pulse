@@ -142,7 +142,10 @@ onBeforeUnmount(() => clearTimeout(debounce));
 <template>
     <Head title="Search" />
     <div>
-        <PageHeader title="Search" />
+        <PageHeader
+            title="Search"
+            subtitle="Search stories and learning saved in your digests."
+        />
         <div class="md:grid md:grid-cols-[1fr_15rem] md:gap-8">
             <div class="min-w-0">
                 <div

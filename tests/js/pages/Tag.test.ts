@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import Tag from '@/pages/Tag.vue';
 import { newsItemProps, tagProps } from '../support/dayProps';
@@ -91,7 +92,7 @@ describe('Tag', () => {
             screen.getByRole('heading', { name: 'Nothing here yet' }),
         ).toBeVisible();
         expect(
-            screen.getByText('Items with this tag will appear here.'),
+            screen.getByText('No saved news uses this tag yet.'),
         ).toBeVisible();
         expect(
             screen.queryByRole('img', {
@@ -141,4 +142,42 @@ describe('Tag', () => {
         renderPage();
         expect(screen.queryByText(/Page \d+ of/)).not.toBeInTheDocument();
     });
+});
+
+it.each([true, false])(
+    'links to browsing only for an empty tag=%s',
+    (empty) => {
+        const props = tagPageProps();
+        if (empty) {
+            props.count = 0;
+            props.items = [];
+            props.pagination.total = 0;
+        }
+        renderPage(props);
+        for (const [name, href] of [
+            ['Today', '/'],
+            ['Search', '/search'],
+        ]) {
+            const link = screen.queryByRole('link', { name });
+            if (empty) expect(link).toHaveAttribute('href', href);
+            else expect(link).not.toBeInTheDocument();
+        }
+    },
+);
+
+it('defines the weekly story counts', async () => {
+    renderPage();
+    await userEvent
+        .setup()
+        .click(screen.getByRole('button', { name: 'Help: Weekly stories' }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
+        'News stories in your digests with this tag, grouped into weeks over the last 12 weeks.',
+    );
+});
+
+it('hides weekly story help when no stories use the tag', () => {
+    renderPage({ ...tagPageProps(), count: 0, items: [] });
+    expect(
+        screen.queryByRole('button', { name: 'Help: Weekly stories' }),
+    ).not.toBeInTheDocument();
 });

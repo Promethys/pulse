@@ -29,14 +29,64 @@ describe('Today', () => {
         vi.useRealTimers();
     });
 
-    it('says the digest is late once its time has passed', () => {
-        vi.setSystemTime(new Date('2026-10-30T10:00:00Z'));
-        renderPage();
+    it.each(['06:00', '23:00'])(
+        'shows the pending news banner independently of schedule %s',
+        (time) => {
+            const props = todayProps();
+            props.is_today = true;
+            props.day!.news!.status = 'pending';
+            props.next_digest!.time = time;
+            renderPage(props);
+            expect(
+                screen.getByText(
+                    'Your digest is being prepared. Refresh this page shortly.',
+                ),
+            ).toBeVisible();
+        },
+    );
 
+    it.each(['generated', 'failed', 'missing'] as const)(
+        'omits the banner for today with news %s',
+        (status) => {
+            const props = todayProps();
+            props.is_today = true;
+            if (status === 'missing') props.day!.news = null;
+            else props.day!.news!.status = status;
+            renderPage(props);
+            expect(
+                screen.queryByText(
+                    'Your digest is being prepared. Refresh this page shortly.',
+                ),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByText(
+                    'No digest for today yet. Showing your latest day.',
+                ),
+            ).not.toBeInTheDocument();
+            if (status === 'failed') {
+                expect(
+                    screen.getByText(
+                        'News generation failed. Check your AI keys in Settings and check your enabled sources.',
+                    ),
+                ).toBeVisible();
+            }
+        },
+    );
+
+    it('does not show a pending banner for an older day', () => {
+        const props = todayProps();
+        props.day!.news!.status = 'pending';
+        renderPage(props);
         expect(
-            screen.getByText("Today's digest isn't ready yet."),
+            screen.getByText(
+                'No digest for today yet. Showing your latest day.',
+            ),
         ).toBeVisible();
-        expect(screen.queryByText(/arrives at/)).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(
+                'Your digest is being prepared. Refresh this page shortly.',
+            ),
+        ).not.toBeInTheDocument();
     });
 
     it('never offers the archive link for an older digest shown on Today', () => {
@@ -66,14 +116,19 @@ describe('Today', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'Your first digest arrives tomorrow at 06:15 (Pacific/Honolulu).',
+                'Pulse prepares your digest every day at 06:15 (Pacific/Honolulu).',
             ),
         ).toBeVisible();
+        expect(
+            screen.queryByText(
+                'Add an AI key in Settings to start receiving digests.',
+            ),
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Pick a date' }),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText(/Today's digest arrives/),
+            screen.queryByText(/Today's digest will start preparing/),
         ).not.toBeInTheDocument();
     });
 
@@ -92,7 +147,7 @@ describe('Today', () => {
             screen.queryByText(/undefined|null|09:00|Europe\/Paris/),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText(/Today's digest arrives/),
+            screen.queryByText(/Today's digest will start preparing/),
         ).not.toBeInTheDocument();
     });
 
@@ -118,42 +173,18 @@ describe('Today', () => {
         },
     );
 
-    it.each([true, false])(
-        'shows the scheduled notice above an existing digest when is_today=%s',
-        (isToday) => {
-            const props = todayProps();
-            props.is_today = isToday;
-            if (isToday) props.day!.date = props.today;
-            props.next_digest = { time: '07:45', timezone: 'America/New_York' };
-            renderPage(props);
-            const notice = screen.getByText(
-                "Today's digest arrives at 07:45 (America/New_York).",
-            );
-            expect(notice).toBeVisible();
-            const heading = screen.getByRole('heading', { level: 1 });
-            expect(
-                notice.compareDocumentPosition(heading) &
-                    Node.DOCUMENT_POSITION_FOLLOWING,
-            ).toBeTruthy();
-        },
-    );
-
-    it.each([true, false])(
-        'omits the notice without next_digest even when is_today=%s',
-        (isToday) => {
-            const props = todayProps();
-            props.is_today = isToday;
-            if (isToday) props.day!.date = props.today;
-            props.next_digest = null;
-            renderPage(props);
-            expect(
-                screen.queryByText(/Today's digest arrives/),
-            ).not.toBeInTheDocument();
-            expect(
-                screen.getByText(`${isToday ? 'Today' : 'Digest'} · 1 item`),
-            ).toBeVisible();
-        },
-    );
+    it('explains when an older digest is displayed', () => {
+        renderPage();
+        const notice = screen.getByText(
+            'No digest for today yet. Showing your latest day.',
+        );
+        expect(notice).toBeVisible();
+        expect(
+            notice.compareDocumentPosition(
+                screen.getByRole('heading', { level: 1 }),
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
 
     it.each([true, false])(
         'hides a complete checklist with hasDay=%s',
@@ -176,17 +207,17 @@ describe('Today', () => {
         },
     );
 
-    it.each(['interests', 'sources', 'ai_key', 'delivery'] as const)(
+    it.each(['interests', 'sources', 'ai_key'] as const)(
         'shows the checklist while %s is incomplete',
         (key) => {
             const props = todayProps();
             props.setup[key] = false;
             renderPage(props);
             expect(screen.getByText('Finish setting up')).toBeVisible();
-            expect(screen.getByText('3 of 4 done')).toBeVisible();
+            expect(screen.getByText('2 of 3 done')).toBeVisible();
             expect(screen.getByRole('progressbar')).toHaveAttribute(
                 'aria-valuenow',
-                '75',
+                String((2 / 3) * 100),
             );
         },
     );
@@ -218,4 +249,37 @@ describe('Today', () => {
         expect(calls).toHaveLength(1);
         expect(calls[0][0]).toBe('/');
     });
+
+    it('explains missing AI access before the first digest', () => {
+        const props = todayProps();
+        props.day = null;
+        props.setup.ai_key = false;
+        renderPage(props);
+        expect(
+            screen.getByText(
+                'Add an AI key in Settings to start receiving digests.',
+            ),
+        ).toBeVisible();
+        expect(
+            screen.queryByText(
+                /will be prepared at|Today's digest will start preparing|isn't ready yet/,
+            ),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', {
+                name: 'Your first digest is on its way',
+            }),
+        ).not.toBeInTheDocument();
+    });
 });
+
+it.each([true, false])(
+    'does not require external delivery with hasDay=%s',
+    (hasDay) => {
+        const props = todayProps();
+        if (!hasDay) props.day = null;
+        props.setup.delivery = false;
+        renderPage(props);
+        expect(screen.queryByText('Finish setting up')).not.toBeInTheDocument();
+    },
+);

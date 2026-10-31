@@ -222,7 +222,9 @@ describe('Sources', () => {
         await view.user.click(screen.getByRole('button', { name: /^Edit$/ }));
         let dialog = screen.getByRole('dialog');
         expect(
-            within(dialog).getByRole('textbox', { name: /^Name$/ }),
+            within(dialog).getByRole('textbox', {
+                name: /^Name \(required\)$/,
+            }),
         ).toHaveValue('My blog');
         await view.user.keyboard('{Escape}');
         await view.user.click(
@@ -230,7 +232,9 @@ describe('Sources', () => {
         );
         dialog = screen.getByRole('dialog');
         expect(
-            within(dialog).getByRole('textbox', { name: /^Name$/ }),
+            within(dialog).getByRole('textbox', {
+                name: /^Name \(required\)$/,
+            }),
         ).toHaveValue('');
         expect(
             within(dialog).getByRole('radio', { name: 'Feed URL' }),
@@ -344,3 +348,48 @@ describe('Sources', () => {
         expect(view.put).not.toHaveBeenCalled();
     });
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'Turn sources off to leave them out of future digests. This changes only your subscriptions.',
+    ])('explains %s', async (message) => {
+        renderPage();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+describe('Getting started guidance', () => {
+    it.each(['You can save up to 30 custom sources.'])(
+        'explains %s',
+        async (message) => {
+            renderPage(sourcesProps(), '/sources?tab=mine');
+            expect(screen.getByText(message)).toBeVisible();
+        },
+    );
+});
+
+it.each([
+    'Interests decide which sources you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
+    'Interests marked ‘Coming soon’ are not available to select yet. Choose an available interest to continue.',
+])('explains the interest picker: %s', async (message) => {
+    const view = renderPage();
+    await view.user.click(
+        screen.getByRole('button', { name: 'Add or remove interests' }),
+    );
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Help: Sources' })).toBeVisible();
+});
+
+it.each([true, false])(
+    'explains already-suggested feeds with suggested=%s',
+    (suggested) => {
+        const props = sourcesProps();
+        props.custom[0].suggested = suggested;
+        renderPage(props, '/sources?tab=mine');
+        const message = screen.queryByText(
+            'This feed has already been suggested for the catalog.',
+        );
+        if (suggested) expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);

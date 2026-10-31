@@ -20,6 +20,7 @@ const props = defineProps<{
     token: string;
     email: string;
     passwordRules: string;
+    passwordHint: string;
 }>();
 
 const inputEmail = ref(props.email);
@@ -60,6 +61,9 @@ const inputEmail = ref(props.email);
                     placeholder="Password"
                     :passwordrules="passwordRules"
                 />
+                <p class="text-sm text-muted-foreground">
+                    {{ passwordHint }}
+                </p>
                 <InputError :message="errors.password" />
             </div>
 

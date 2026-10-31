@@ -122,6 +122,12 @@ const icons: Record<string, Component> = {
 <template>
     <button
         type="button"
+        :aria-label="interest.status === 'live' ? interest.name : undefined"
+        :aria-description="
+            interest.status === 'live' && interest.has_learning
+                ? 'Includes learning'
+                : undefined
+        "
         :disabled="interest.status !== 'live'"
         :aria-pressed="interest.status === 'live' && selected"
         :class="
@@ -146,6 +152,11 @@ const icons: Record<string, Component> = {
             aria-hidden="true"
         />
         {{ interest.name }}
+        <span
+            v-if="interest.status === 'live' && interest.has_learning"
+            class="text-xs"
+            >Includes learning</span
+        >
         <span
             v-if="interest.status !== 'live'"
             class="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase"

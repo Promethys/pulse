@@ -75,6 +75,10 @@ const user = computed(() => page.props.auth.user);
                         autocomplete="username"
                         placeholder="Email address"
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Changing this address requires email verification again.
+                        Scheduled digests pause until you verify it.
+                    </p>
                     <InputError class="mt-2" :message="errors.email" />
                 </div>
 

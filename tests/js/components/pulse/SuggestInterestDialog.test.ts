@@ -165,3 +165,14 @@ describe('SuggestInterestDialog', () => {
         expect(submitButton()).toBeDisabled();
     });
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'You can have up to 10 suggestions waiting for review, including feeds and interests.',
+        'Explain why this belongs in Pulse. Use 10 to 500 characters.',
+        'Use 2 to 60 characters.',
+    ])('explains %s', async (message) => {
+        await renderDialog();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});

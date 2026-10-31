@@ -66,7 +66,7 @@ class InterestProposalResource extends Resource
                     ->icon(Heroicon::OutlinedCheck)
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalDescription(__('Each interest keeps its suggested name and category. Names already taken are skipped.'))
+                    ->modalDescription(__('Each interest keeps its suggested name and category. Names already taken are skipped.').' '.__('Approval creates a draft interest and starts finding sources. Readers can select it once enough default sources are available.'))
                     ->action(function (Collection $records): void {
                         self::approveAll($records);
                     })
@@ -99,6 +99,7 @@ class InterestProposalResource extends Resource
                     ->iconButton()
                     ->color('success')
                     ->modalHeading(fn (InterestProposal $record): string => __('Approve :name', ['name' => self::title($record)]))
+                    ->modalDescription(__('Approval creates a draft interest and starts finding sources. Readers can select it once enough default sources are available.'))
                     ->visible(fn (InterestProposal $record): bool => $record->status === SourceProposalStatus::Pending)
                     ->fillForm(fn (InterestProposal $record): array => [
                         'name' => $record->name,

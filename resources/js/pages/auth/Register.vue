@@ -13,6 +13,7 @@ import { store } from '@/routes/register';
 
 defineProps<{
     passwordRules: string;
+    passwordHint: string;
 }>();
 
 defineOptions({ layout: [] });
@@ -72,6 +73,9 @@ defineOptions({ layout: [] });
                         placeholder="Password"
                         :passwordrules="passwordRules"
                     />
+                    <p class="text-sm text-muted-foreground">
+                        {{ passwordHint }}
+                    </p>
                     <InputError :message="errors.password" />
                 </div>
 

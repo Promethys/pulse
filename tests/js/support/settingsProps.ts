@@ -29,6 +29,7 @@ export function aiKeysProps() {
         ],
         providers: onboardingProps().providers,
         uses_instance_ai_notice: false,
+        uses_instance_ai: false,
     };
 }
 

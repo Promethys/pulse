@@ -204,4 +204,77 @@ describe('AiKeyForm', () => {
         );
         expect(http.submit).toHaveBeenCalledTimes(2);
     });
+
+    it.each([true, false])(
+        'explains provider costs with explainer=%s',
+        (explainer) => {
+            render(AiKeyForm, {
+                props: {
+                    providers: onboardingProps().providers,
+                    modelValue: {
+                        provider: 'gemini',
+                        model: 'test-model',
+                        api_key: '',
+                        consent: false,
+                    },
+                    explainer,
+                },
+            });
+            expect(
+                screen.getByText(
+                    'Your AI provider may charge your account for digest generation and key tests. Check your provider’s pricing and balance.',
+                ),
+            ).toBeVisible();
+        },
+    );
+
+    it.each([true, false])(
+        'explains data sharing before consent with explainer=%s',
+        (explainer) => {
+            render(AiKeyForm, {
+                props: {
+                    providers: onboardingProps().providers,
+                    modelValue: {
+                        provider: 'gemini',
+                        model: 'test-model',
+                        api_key: '',
+                        consent: false,
+                    },
+                    explainer,
+                },
+            });
+            const disclosure = screen.getByText(
+                'Pulse sends your About you text, interests and source titles, excerpts and links to your AI provider. Learning requests also include recent tip titles.',
+            );
+            expect(disclosure).toBeVisible();
+            expect(
+                disclosure.compareDocumentPosition(
+                    screen.getByRole('checkbox'),
+                ) & Node.DOCUMENT_POSITION_FOLLOWING,
+            ).toBeTruthy();
+        },
+    );
+});
+
+describe('AI choices help', () => {
+    it.each(['Provider', 'Model'])('defines %s', (label) => {
+        renderForm();
+        expect(
+            screen.getByRole('button', { name: `Help: ${label}` }),
+        ).toBeVisible();
+    });
+
+    it('explains exact model IDs only for Other model', async () => {
+        renderForm();
+        const message = 'Enter the exact model ID supplied by your provider.';
+        expect(screen.queryByText(message)).not.toBeInTheDocument();
+        const user = userEvent.setup();
+        await chooseModel(user, 'Other model');
+        expect(screen.getByText(message)).toBeVisible();
+        await chooseModel(
+            user,
+            onboardingProps().providers[0].suggested_models[0],
+        );
+        expect(screen.queryByText(message)).not.toBeInTheDocument();
+    });
 });

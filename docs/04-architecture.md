@@ -56,7 +56,7 @@ The desktop sidebar links Today, Archive, Search, Learning and Sources; the user
 
 Onboarding saves Interests, Sources, About you and AI key on Continue. At least one live interest is required, draft interests are disabled, and About you and AI key can be skipped. The final step offers optional email delivery alongside in-app delivery and sets `onboarded_at`. Completing onboarding without an AI key is allowed; the scheduler still requires personal keys or instance AI access.
 
-Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a news schedule notice until today's news is generated, unless news is disabled, and a checklist for interests, enabled subscriptions, AI access and an external destination. Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
+Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a banner while today's news is being prepared, a note when it falls back to an older day, and a checklist for interests, enabled subscriptions, AI access and an external destination. Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. On Today, the banner replaces the pending news line. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
 
 Archive, Search, Tag and Learning redirect pages beyond the last page to the last valid page. Search and Learning preserve their query filters in pagination links. A known tag without personal news renders an empty page; an unknown slug returns 404. Tag activity uses twelve consecutive seven-day windows ending on the account's local today, oldest first.
 
@@ -102,7 +102,7 @@ Delivery channels store a type (`discord_bot`, `discord_webhook`, `email` or `in
 
 Authenticated users with verified email can visit `/discord/install`. The OAuth2 flow requests the `bot` scope and permissions `274877975568`. `/discord/callback` consumes a single-use session state and records the installed guild in `discord_guilds`. The guild comes only from Discord's token response, never the callback's guild query parameter. Installing records the guild and redirects to `/settings/delivery`; it does not create a delivery channel. Users select a forum there to add a destination. Forum discovery is cached for five minutes per guild; a Discord failure leaves the page usable with an empty forum list and an error indicator.
 
-`DiscordClient::forumChannels($guildId)` returns forum channel ids and names, ordered by Discord channel position. See [Configuration](03-configuration.md) for the client credentials and redirect URL.
+`DiscordClient::forumChannels($guildId)` returns forum channel ids and names, ordered by Discord channel position. `DiscoverDiscordForums` caches a non-empty list for 5 minutes and never caches an empty one, so a forum created in Discord shows up on the next page load. See [Configuration](03-configuration.md) for the client credentials and redirect URL.
 
 ### `pulse:adopt`
 

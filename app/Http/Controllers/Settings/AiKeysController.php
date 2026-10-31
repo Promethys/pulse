@@ -36,6 +36,7 @@ final class AiKeysController extends Controller
                 'key_url' => $provider->keyUrl(),
                 'suggested_models' => $provider->suggestedModels(),
             ], AiProvider::cases()),
+            'uses_instance_ai' => (bool) $user->uses_instance_ai,
             'uses_instance_ai_notice' => $user->uses_instance_ai && $keys->isEmpty(),
         ]);
     }

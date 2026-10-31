@@ -4,6 +4,7 @@ import { router } from '@inertiajs/vue3';
 import { usePasskeyVerify } from '@laravel/passkeys/vue';
 import { KeyRound } from '@lucide/vue';
 import InputError from '@/components/InputError.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
@@ -38,6 +39,15 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
 <template>
     <div v-if="isSupported">
         <div class="grid gap-2">
+            <div class="flex items-center gap-2">
+                <p class="text-sm text-muted-foreground">
+                    Use a passkey you previously added to Pulse.
+                </p>
+                <HelpTip
+                    label="Passkeys"
+                    text="A way to sign in using your device or password manager instead of typing a password."
+                />
+            </div>
             <Button
                 type="button"
                 variant="outline"

@@ -662,3 +662,10 @@ describe('Search', () => {
         );
     });
 });
+
+it('explains the scope of search', () => {
+    renderPage();
+    expect(
+        screen.getByText('Search stories and learning saved in your digests.'),
+    ).toBeVisible();
+});

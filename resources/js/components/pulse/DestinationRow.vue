@@ -36,7 +36,7 @@ const deliveredAt = computed(() => {
     const value = last.value?.delivered_at ?? last.value?.updated_at;
     if (!value) return '';
     const date = new Date(value);
-    return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}`;
+    return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC`;
 });
 </script>
 
@@ -70,6 +70,17 @@ const deliveredAt = computed(() => {
                 @update:model-value="emit('update:enabled', $event)"
             />
         </div>
+        <p
+            v-if="
+                !channel.enabled &&
+                last?.status === 'failed' &&
+                channel.type !== 'email'
+            "
+            class="text-sm text-muted-foreground"
+        >
+            Delivery is paused. Fix the problem, send a test, then turn delivery
+            back on.
+        </p>
         <slot />
         <div class="flex flex-wrap items-center justify-between gap-2">
             <div

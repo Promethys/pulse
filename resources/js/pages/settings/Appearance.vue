@@ -29,12 +29,14 @@ defineOptions({
         <CardHeader>
             <CardTitle class="font-display">Appearance settings</CardTitle>
             <CardDescription
-                >Update the appearance settings for your
-                account</CardDescription
+                >Choose how Pulse looks in this browser.</CardDescription
             >
         </CardHeader>
         <CardContent class="space-y-4">
             <AppearanceTabs />
+            <p class="text-sm text-muted-foreground">
+                System follows the light or dark appearance of this device.
+            </p>
         </CardContent>
     </Card>
 </template>

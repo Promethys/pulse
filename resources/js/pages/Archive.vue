@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import ArchiveRow from '@/components/pulse/ArchiveRow.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
@@ -22,7 +22,17 @@ const subtitle = computed(
             v-if="pagination.total === 0"
             title="No digests yet"
             description="Your past digests will appear here."
-        />
+        >
+            <template #actions>
+                <p class="text-sm text-muted-foreground">
+                    Visit
+                    <Link href="/" class="underline underline-offset-4"
+                        >Today</Link
+                    >
+                    to check your next digest.
+                </p>
+            </template>
+        </EmptyState>
         <template v-else>
             <ul
                 class="divide-y divide-border rounded-2xl border border-border bg-card"

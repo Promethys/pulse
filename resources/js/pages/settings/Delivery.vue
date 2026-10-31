@@ -3,6 +3,7 @@ import { Head, router, useHttp } from '@inertiajs/vue3';
 import { Bell, Plus } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import DestinationRow from '@/components/pulse/DestinationRow.vue';
 import DiscordIcon from '@/components/pulse/DiscordIcon.vue';
 import ReceivesPicker from '@/components/pulse/ReceivesPicker.vue';
@@ -193,6 +194,12 @@ function disconnect() {
         :key="field"
         :message="error"
     />
+    <p class="text-sm text-muted-foreground">
+        You can add up to 20 Discord destinations and one email address.
+    </p>
+    <p class="text-sm text-muted-foreground">
+        Changes save automatically. Text fields save when you leave the field.
+    </p>
     <Card class="mb-4 shadow-none">
         <CardHeader
             ><CardTitle class="font-display">Discord servers</CardTitle
@@ -267,6 +274,7 @@ function disconnect() {
                                 >
                             </Select>
                             <ReceivesPicker
+                                pause-hint
                                 :model-value="channel.kinds"
                                 @update:model-value="
                                     update(channel, { kinds: $event })
@@ -275,7 +283,16 @@ function disconnect() {
                         </div>
                     </DestinationRow>
                 </div>
-                <div class="p-4">
+                <div class="space-y-2 p-4">
+                    <p
+                        v-if="!server.forums_error && !server.forums.length"
+                        class="text-sm text-muted-foreground"
+                    >
+                        No forum channels found in this server. Forum channels
+                        need a Community server: enable Community in the
+                        server's settings, create a channel of type Forum, then
+                        refresh this page. You can also use a webhook below.
+                    </p>
                     <Button
                         variant="outline"
                         :disabled="server.forums_error || !server.forums.length"
@@ -290,7 +307,8 @@ function disconnect() {
                 ></Button
             >
             <p v-else class="text-sm text-muted-foreground">
-                Discord installation is not configured.
+                Discord connections are not available here. Use email or a
+                Discord webhook below.
             </p>
         </CardContent>
     </Card>
@@ -316,7 +334,7 @@ function disconnect() {
                     @update:enabled="update(channel, { enabled: $event })"
                     @delete="remove(channel)"
                 >
-                    <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex flex-wrap items-start gap-4">
                         <div class="space-y-1.5">
                             <Label :for="`webhook-name-${channel.id}`"
                                 >Name</Label
@@ -342,6 +360,7 @@ function disconnect() {
                             />
                         </div>
                         <ReceivesPicker
+                            pause-hint
                             :model-value="channel.kinds"
                             @update:model-value="
                                 update(channel, { kinds: $event })
@@ -357,7 +376,10 @@ function disconnect() {
     </Card>
     <Card class="mb-4 shadow-none">
         <CardHeader
-            ><CardTitle class="font-display">Email</CardTitle></CardHeader
+            ><CardTitle class="font-display">Email</CardTitle
+            ><CardDescription
+                >Receive your digests by email.</CardDescription
+            ></CardHeader
         >
         <CardContent>
             <div
@@ -383,6 +405,7 @@ function disconnect() {
                             />
                         </div>
                         <ReceivesPicker
+                            pause-hint
                             :model-value="email.kinds"
                             @update:model-value="
                                 update(email, { kinds: $event })
@@ -447,13 +470,23 @@ function disconnect() {
                         />
                     </div>
                     <div class="space-y-1.5">
-                        <Label for="add-webhook">Webhook URL</Label
-                        ><Input
+                        <span class="inline-flex items-center gap-1">
+                            <Label for="add-webhook">Webhook URL</Label>
+                            <HelpTip
+                                label="Discord webhooks"
+                                text="A webhook is a private address Pulse uses to post messages to Discord."
+                            />
+                        </span>
+                        <Input
                             id="add-webhook"
                             v-model="input.webhook_url"
                             type="password"
                             autocomplete="off"
                         />
+                        <p class="text-sm text-muted-foreground">
+                            Create a webhook in Discord for the destination
+                            channel, then paste its URL here.
+                        </p>
                     </div>
                 </template>
                 <div v-else class="space-y-1.5">

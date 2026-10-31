@@ -74,6 +74,7 @@ class OnboardingController extends Controller
             'ai_keys' => AiKeyResource::collection($user->aiKeys()->get())->resolve($request),
             'email' => $email?->settings['address'] ?? $user->email,
             'email_delivery' => $email !== null,
+            'uses_instance_ai' => (bool) $user->uses_instance_ai,
         ]);
     }
 
