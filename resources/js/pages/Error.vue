@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PulseLogo from '@/components/pulse/PulseLogo.vue';
 import ThemeToggle from '@/components/pulse/ThemeToggle.vue';
@@ -11,11 +11,11 @@ const props = defineProps<{ status: number }>();
 const messages: Record<number, { title: string; body: string }> = {
     403: {
         title: 'You do not have access',
-        body: 'You do not have permission to open this page. Head back to your digest.',
+        body: 'You do not have permission to open this page.',
     },
     404: {
         title: 'This page wandered off',
-        body: 'The link may be old, or the page moved. Your digest is still where you left it.',
+        body: 'The link may be old, or the page moved.',
     },
     419: {
         title: 'Your session expired',
@@ -43,7 +43,7 @@ const retry = () => router.reload();
     <Head :title="message.title" />
     <div class="flex min-h-screen flex-col bg-background px-4 py-6">
         <header class="flex items-center justify-between">
-            <Link :href="home()"><PulseLogo /></Link>
+            <a :href="home.url()"><PulseLogo /></a>
             <ThemeToggle />
         </header>
         <main class="flex flex-1 items-center justify-center">
@@ -62,7 +62,7 @@ const retry = () => router.reload();
                         >Try again</Button
                     >
                     <Button as-child
-                        ><Link :href="home()">Go to Today</Link></Button
+                        ><a :href="home.url()">Back to Pulse</a></Button
                     >
                 </div>
             </div>

@@ -27,7 +27,7 @@ describe('Error', () => {
             });
             expect(heading).toBeVisible();
             expect(
-                screen.getByRole('link', { name: 'Go to Today' }),
+                screen.getByRole('link', { name: 'Back to Pulse' }),
             ).toHaveAttribute('href', '/');
             expect(
                 [...container.querySelectorAll('p')].some((paragraph) => {
@@ -52,9 +52,7 @@ describe('Error', () => {
 
             if (status === 404) {
                 expect(
-                    screen.getByText(
-                        'The link may be old, or the page moved. Your digest is still where you left it.',
-                    ),
+                    screen.getByText('The link may be old, or the page moved.'),
                 ).toBeVisible();
             }
             if (status === 500) {
