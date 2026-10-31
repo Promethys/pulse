@@ -152,6 +152,97 @@ class PublicUrlTest extends TestCase
         return ['default three redirects' => [null, 4], 'one redirect' => [1, 2], 'no redirects' => [0, 1]];
     }
 
+    public function test_final_url_returns_the_original_url_when_there_is_no_redirect(): void
+    {
+        Http::fake(['https://public.test/feed' => Http::response('feed body')]);
+
+        $this->assertSame('https://public.test/feed', $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/feed'));
+
+        Http::assertSentCount(1);
+    }
+
+    #[DataProvider('relativeLocations')]
+    public function test_final_url_resolves_relative_redirects(string $location, string $target): void
+    {
+        Http::fake([
+            'https://public.test/dir/start' => Http::response('', 302, ['Location' => $location]),
+            $target => Http::response('feed body'),
+        ]);
+
+        $this->assertSame($target, $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/dir/start', maxRedirects: 1));
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_final_url_follows_multiple_hops(): void
+    {
+        Http::fake([
+            'https://public.test/start' => Http::response('', 301, ['Location' => '/next']),
+            'https://public.test/next' => Http::response('', 307, ['Location' => '/feed']),
+            'https://public.test/feed' => Http::response('feed body'),
+        ]);
+
+        $this->assertSame('https://public.test/feed', $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/start'));
+
+        Http::assertSentCount(3);
+    }
+
+    public function test_final_url_refuses_a_private_initial_url_without_requesting_it(): void
+    {
+        Http::fake(['*' => Http::response('secret')]);
+
+        try {
+            $this->publicUrl()->finalUrl(Http::timeout(5), 'http://127.0.0.1/admin');
+            $this->fail('Expected UnsafeUrlException');
+        } catch (UnsafeUrlException) {
+            Http::assertNothingSent();
+        }
+    }
+
+    public function test_final_url_checks_every_hop_before_following_a_private_redirect(): void
+    {
+        Http::fake([
+            'https://public.test/start' => Http::response('', 302, ['Location' => '/next']),
+            'https://public.test/next' => Http::response('', 302, ['Location' => 'http://10.0.0.5/feed']),
+            'http://10.0.0.5/feed' => Http::response('secret'),
+        ]);
+
+        try {
+            $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/start');
+            $this->fail('Expected UnsafeUrlException');
+        } catch (UnsafeUrlException) {
+            Http::assertSentCount(2);
+            Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '10.0.0.5'));
+        }
+    }
+
+    #[DataProvider('redirectLimits')]
+    public function test_final_url_enforces_the_redirect_limit(?int $maxRedirects, int $requests): void
+    {
+        Http::fake(['https://public.test/*' => Http::response('', 302, ['Location' => '/loop'])]);
+
+        try {
+            if ($maxRedirects === null) {
+                $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/start');
+            } else {
+                $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/start', $maxRedirects);
+            }
+            $this->fail('Expected UnsafeUrlException');
+        } catch (UnsafeUrlException) {
+            Http::assertSentCount($requests);
+        }
+    }
+
+    public function test_final_url_refuses_a_redirect_without_a_location(): void
+    {
+        Http::fake(['https://public.test/start' => Http::response('', 302)]);
+
+        $this->expectException(UnsafeUrlException::class);
+        $this->expectExceptionMessage('Redirect has no location');
+
+        $this->publicUrl()->finalUrl(Http::timeout(5), 'https://public.test/start');
+    }
+
     private function publicUrl(): PublicUrl
     {
         return new PublicUrl(fn (string $host) => $host === 'public.test' ? ['93.184.216.34'] : []);

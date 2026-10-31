@@ -49,6 +49,8 @@ final class SourcesController extends Controller
 
     public function subscription(UpdateSourceSubscriptionRequest $request, Source $source): RedirectResponse
     {
+        abort_if($source->retired_at !== null, 403);
+
         $data = $request->validated();
         $subscription = $request->user()->sourceSubscriptions()->where('source_id', $source->id)->firstOrFail();
         $subscription->update($data);

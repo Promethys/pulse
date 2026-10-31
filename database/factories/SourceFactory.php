@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Enums\SourceType;
@@ -29,6 +31,7 @@ class SourceFactory extends Factory
             'max_items' => 10,
             'position' => fake()->unique()->numberBetween(1, 1000000),
             'enabled' => true,
+            'retired_at' => null,
             'is_default' => false,
         ];
     }

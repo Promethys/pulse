@@ -11,6 +11,7 @@ describe('SourceToggleRow', () => {
         async (enabled) => {
             const source = {
                 ...onboardingProps().sources[0].sources[0],
+                retired: false,
                 enabled: !enabled,
                 subscription_enabled: enabled,
             };
@@ -27,8 +28,35 @@ describe('SourceToggleRow', () => {
         },
     );
 
+    it.each([true, false])(
+        'disables a retired source switch with modelValue=%s',
+        async (enabled) => {
+            const source = {
+                ...onboardingProps().sources[0].sources[0],
+                enabled: false,
+                retired: true,
+                health: 'retired',
+                subscription_enabled: enabled,
+            };
+            const result = render<Component>(SourceToggleRow, {
+                props: { source, modelValue: enabled },
+            });
+            const toggle = screen.getByRole('switch', {
+                name: `Use ${source.name}`,
+            });
+
+            expect(toggle).toBeDisabled();
+            expect(toggle).toHaveAttribute('aria-checked', String(enabled));
+            await userEvent.setup().click(toggle);
+            expect(result.emitted()['update:modelValue']).toBeUndefined();
+        },
+    );
+
     it('shows the type label and gives a clamped source name its full title', () => {
-        const source = onboardingProps().sources[0].sources[0];
+        const source = {
+            ...onboardingProps().sources[0].sources[0],
+            retired: false,
+        };
         render<Component>(SourceToggleRow, {
             props: { source, modelValue: true },
         });

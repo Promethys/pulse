@@ -9,6 +9,7 @@ import { onboardingProps } from '../../support/onboardingProps';
 function sourceProps() {
     return {
         ...onboardingProps().sources[0].sources[0],
+        retired: false,
         interests: [],
         has_key: false,
     };
@@ -59,6 +60,29 @@ describe('SourceRow', () => {
             );
         },
     );
+
+    it('explains retirement and shows a muted status dot', () => {
+        const source = { ...sourceProps(), retired: true, health: 'retired' };
+        render(SourceRow, { props: { source } });
+
+        expect(
+            screen.getByText('Retired: this source stopped working.'),
+        ).toBeVisible();
+        const dot = screen.getByLabelText(/^retired$/i);
+        expect(dot).toHaveClass('bg-muted-foreground');
+        expect(dot).not.toHaveClass('bg-muted-foreground/40');
+    });
+
+    it('disables the switch of a retired source', async () => {
+        const put = vi.spyOn(router, 'put').mockImplementation(() => {});
+        const source = { ...sourceProps(), retired: true, health: 'retired' };
+        render(SourceRow, { props: { source } });
+        const toggle = screen.getByRole('switch');
+
+        expect(toggle).toBeDisabled();
+        await userEvent.setup().click(toggle);
+        expect(put).not.toHaveBeenCalled();
+    });
 
     it('shows the last success, destructive error and slotted actions', () => {
         const source = {

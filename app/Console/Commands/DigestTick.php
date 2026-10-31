@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Digest\Catalog\CatalogRefresher;
 use App\Digest\Delivery\PostDeliverer;
 use App\Digest\DueDigest;
 use App\Digest\Sources\SourceCollector;
@@ -25,7 +26,7 @@ class DigestTick extends Command
 
     protected $description = 'Entry point of the cron: run whatever is due now (news, learning), then prune old unreferenced items';
 
-    public function handle(TickScheduler $scheduler, SourceCollector $collector, PostDeliverer $deliverer): int
+    public function handle(TickScheduler $scheduler, SourceCollector $collector, PostDeliverer $deliverer, CatalogRefresher $refresher): int
     {
         $now = CarbonImmutable::now('UTC');
         $due = $scheduler->due($now);
@@ -70,6 +71,12 @@ class DigestTick extends Command
 
         if ($pruned > 0) {
             $this->line("Pruned {$pruned} old unreferenced items");
+        }
+
+        try {
+            $refresher->dispatch();
+        } catch (Throwable $e) {
+            report($e);
         }
 
         return $due === [] && $posts->isNotEmpty() && $failed === $posts->count() ? self::FAILURE : self::SUCCESS;

@@ -79,6 +79,7 @@ export function onboardingProps() {
                         last_success_at: null,
                         last_error: null,
                         health: 'unknown',
+                        retired: false,
                         subscription_enabled: true,
                     },
                     {
@@ -95,6 +96,7 @@ export function onboardingProps() {
                         last_success_at: null,
                         last_error: null,
                         health: 'unknown',
+                        retired: false,
                         subscription_enabled: false,
                     },
                 ],
@@ -116,6 +118,7 @@ export function onboardingProps() {
                         last_success_at: null,
                         last_error: null,
                         health: 'unknown',
+                        retired: false,
                         subscription_enabled: true,
                     },
                 ],

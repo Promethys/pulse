@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Actions\ChooseInterests;
 use App\Enums\InterestCategory;
 use App\Enums\InterestStatus;
 use App\Enums\SourceType;
@@ -14,6 +15,7 @@ use App\Models\Source;
 use App\Models\SourceSubscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -112,6 +114,57 @@ class SourcesPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('Sources', false)
                 ->where('catalog', [])->where('custom', [])->where('interests', [])
                 ->where('counts', ['total' => 0, 'failing' => 0]));
+    }
+
+    public function test_retired_subscribed_sources_remain_visible_with_retired_health_and_active_sources_have_retired_false(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create();
+        $user->interests()->attach($interest);
+        $retired = Source::factory()->create([
+            'name' => 'Alpha retired', 'enabled' => false, 'retired_at' => now(),
+            'last_success_at' => now(), 'last_error' => 'HTTP 404',
+        ]);
+        $active = Source::factory()->create(['name' => 'Zulu active', 'last_success_at' => now()]);
+        foreach ([$retired, $active] as $source) {
+            $source->interests()->attach($interest);
+            SourceSubscription::factory()->for($user)->for($source)->create();
+        }
+
+        $this->actingAs($user)->get('/sources')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('catalog.0.sources.0.id', $retired->id)
+                ->where('catalog.0.sources.0.retired', true)
+                ->where('catalog.0.sources.0.health', 'retired')
+                ->where('catalog.0.sources.0.subscription_enabled', true)
+                ->where('catalog.0.sources.1.id', $active->id)
+                ->where('catalog.0.sources.1.retired', false)
+                ->where('catalog.0.sources.1.health', 'ok'));
+    }
+
+    public function test_retirement_overrides_health_even_without_a_daily_error(): void
+    {
+        $source = Source::factory()->create(['retired_at' => now(), 'enabled' => false, 'last_success_at' => now(), 'last_error' => null]);
+
+        $props = (new SourceResource($source))->resolve();
+
+        $this->assertTrue($props['retired']);
+        $this->assertSame('retired', $props['health']);
+    }
+
+    public function test_choose_interests_does_not_subscribe_a_new_reader_to_a_retired_default_source(): void
+    {
+        $user = User::factory()->create();
+        $interest = Interest::factory()->create();
+        $active = Source::factory()->create(['is_default' => true]);
+        $retired = Source::factory()->create(['is_default' => true, 'enabled' => false, 'retired_at' => now()]);
+        $interest->sources()->attach([$active->id, $retired->id]);
+
+        (new ChooseInterests)->handle($user, new Collection([$interest]));
+
+        $this->assertSame([$active->id], $user->sourceSubscriptions()->pluck('source_id')->all());
+        $this->assertTrue((new SourceResource($retired))->resolve()['retired']);
+        $this->assertDatabaseMissing('source_subscriptions', ['user_id' => $user->id, 'source_id' => $retired->id]);
     }
 
     #[DataProvider('gates')]

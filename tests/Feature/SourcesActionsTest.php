@@ -51,6 +51,18 @@ class SourcesActionsTest extends TestCase
         }
     }
 
+    public function test_toggle_refuses_a_retired_source(): void
+    {
+        $subscription = SourceSubscription::factory()->for(User::factory()->onboarded())->create(['enabled' => false]);
+        $subscription->source->update(['enabled' => false, 'retired_at' => now()]);
+
+        $this->actingAs($subscription->user)
+            ->put("/sources/subscriptions/{$subscription->source_id}", ['enabled' => true])
+            ->assertForbidden();
+
+        $this->assertFalse($subscription->fresh()->enabled);
+    }
+
     public function test_toggle_without_own_subscription_is_404_and_never_creates_one(): void
     {
         $user = User::factory()->onboarded()->create();

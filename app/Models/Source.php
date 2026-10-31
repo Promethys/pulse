@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $max_items
  * @property int $position
  * @property bool $enabled
+ * @property CarbonImmutable|null $retired_at
  * @property CarbonImmutable|null $last_fetched_at
  * @property CarbonImmutable|null $last_success_at
  * @property string|null $last_error
@@ -40,8 +41,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, SourceSubscription> $subscriptions
  * @property-read Collection<int, Item> $items
+ * @property-read Collection<int, SourceCheck> $checks
  */
-#[Fillable(['slug', 'name', 'type', 'url', 'tag', 'max_items', 'position', 'enabled', 'last_fetched_at', 'last_success_at', 'last_error', 'is_default', 'site_url', 'credentials'])]
+#[Fillable(['slug', 'name', 'type', 'url', 'tag', 'max_items', 'position', 'enabled', 'last_fetched_at', 'last_success_at', 'last_error', 'retired_at', 'is_default', 'site_url', 'credentials'])]
 #[Hidden(['credentials'])]
 class Source extends Model
 {
@@ -67,6 +69,7 @@ class Source extends Model
             'credentials' => 'encrypted:array',
             'last_fetched_at' => 'datetime',
             'last_success_at' => 'datetime',
+            'retired_at' => 'datetime',
         ];
     }
 
@@ -100,6 +103,14 @@ class Source extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(SourceSubscription::class);
+    }
+
+    /**
+     * @return HasMany<SourceCheck, $this>
+     */
+    public function checks(): HasMany
+    {
+        return $this->hasMany(SourceCheck::class);
     }
 
     /**
