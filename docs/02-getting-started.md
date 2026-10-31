@@ -94,6 +94,16 @@ Each digest job may run for 300 seconds, since one AI call can take up to 120. K
 
 The scheduler calls `digest:tick`, which collects sources and queues one job per due user, kind and local date. Accounts must have verified email, completed onboarding and either personal AI keys or instance AI access. Their settings control the enabled digests and times. See [Architecture](04-architecture.md#the-daily-schedule).
 
+## Admin access
+
+`pulse:adopt` makes the adopted account an admin. For another account, set `is_admin` from the command line: it is excluded from mass assignment on purpose.
+
+```bash
+docker compose exec app php artisan tinker --execute="App\Models\User::where('email', '<email>')->first()->forceFill(['is_admin' => true])->save();"
+```
+
+Admins reach the panel from their user menu, or from the Settings page on a phone.
+
 ## Adopting existing data
 
 **For an existing single-owner install, run `pulse:adopt` before migrating to this version**, using the previous version that supports adoption. The migration that removes the single-owner columns refuses to run while any post has no owner. A fresh install can migrate directly.
