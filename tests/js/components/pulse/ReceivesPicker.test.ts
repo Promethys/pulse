@@ -26,3 +26,19 @@ describe('ReceivesPicker', () => {
         expect(update).not.toHaveBeenCalled();
     });
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'Choose at least one. To pause this destination, turn off its switch.',
+    ])('explains %s', async (message) => {
+        render(ReceivesPicker, { props: { modelValue: ['news'] } });
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+it('labels the destination kinds as a group', () => {
+    render(ReceivesPicker, { props: { modelValue: ['news'] } });
+    expect(
+        screen.getByRole('group', { name: 'Send to this destination' }),
+    ).toBeVisible();
+});

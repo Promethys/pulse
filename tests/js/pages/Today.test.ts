@@ -34,7 +34,9 @@ describe('Today', () => {
         renderPage();
 
         expect(
-            screen.getByText("Today's digest isn't ready yet."),
+            screen.getByText(
+                "Today's digest is not ready yet. Check the generation status below and refresh this page shortly.",
+            ),
         ).toBeVisible();
         expect(screen.queryByText(/arrives at/)).not.toBeInTheDocument();
     });
@@ -78,7 +80,7 @@ describe('Today', () => {
             screen.queryByRole('button', { name: 'Pick a date' }),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText(/Today's digest arrives/),
+            screen.queryByText(/Today's digest will start preparing/),
         ).not.toBeInTheDocument();
     });
 
@@ -97,7 +99,7 @@ describe('Today', () => {
             screen.queryByText(/undefined|null|09:00|Europe\/Paris/),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText(/Today's digest arrives/),
+            screen.queryByText(/Today's digest will start preparing/),
         ).not.toBeInTheDocument();
     });
 
@@ -132,7 +134,7 @@ describe('Today', () => {
             props.next_digest = { time: '07:45', timezone: 'America/New_York' };
             renderPage(props);
             const notice = screen.getByText(
-                "Today's digest arrives at 07:45 (America/New_York).",
+                "Today's digest will start preparing at 07:45 (America/New_York).",
             );
             expect(notice).toBeVisible();
             const heading = screen.getByRole('heading', { level: 1 });
@@ -152,7 +154,7 @@ describe('Today', () => {
             props.next_digest = null;
             renderPage(props);
             expect(
-                screen.queryByText(/Today's digest arrives/),
+                screen.queryByText(/Today's digest will start preparing/),
             ).not.toBeInTheDocument();
             expect(
                 screen.getByText(`${isToday ? 'Today' : 'Digest'} · 1 item`),
@@ -181,17 +183,17 @@ describe('Today', () => {
         },
     );
 
-    it.each(['interests', 'sources', 'ai_key', 'delivery'] as const)(
+    it.each(['interests', 'sources', 'ai_key'] as const)(
         'shows the checklist while %s is incomplete',
         (key) => {
             const props = todayProps();
             props.setup[key] = false;
             renderPage(props);
             expect(screen.getByText('Finish setting up')).toBeVisible();
-            expect(screen.getByText('3 of 4 done')).toBeVisible();
+            expect(screen.getByText('2 of 3 done')).toBeVisible();
             expect(screen.getByRole('progressbar')).toHaveAttribute(
                 'aria-valuenow',
-                '75',
+                String((2 / 3) * 100),
             );
         },
     );
@@ -238,7 +240,7 @@ describe('Today', () => {
             ).toBeVisible();
             expect(
                 screen.queryByText(
-                    /will be prepared at|Today's digest arrives|isn't ready yet/,
+                    /will be prepared at|Today's digest will start preparing|isn't ready yet/,
                 ),
             ).not.toBeInTheDocument();
             expect(
@@ -249,3 +251,14 @@ describe('Today', () => {
         },
     );
 });
+
+it.each([true, false])(
+    'does not require external delivery with hasDay=%s',
+    (hasDay) => {
+        const props = todayProps();
+        if (!hasDay) props.day = null;
+        props.setup.delivery = false;
+        renderPage(props);
+        expect(screen.queryByText('Finish setting up')).not.toBeInTheDocument();
+    },
+);

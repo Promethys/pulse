@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type { ManagedSource } from '@/types';
@@ -55,6 +56,14 @@ function toggle(enabled: boolean) {
                     typeLabels[source.type] ?? source.type
                 }}</span>
             </div>
+            <p class="text-sm text-muted-foreground">
+                {{ source.health }}
+                <HelpTip
+                    v-if="source.health === 'unknown'"
+                    label="Unknown source health"
+                    text="Unknown means Pulse has not recorded a successful fetch yet."
+                />
+            </p>
             <p
                 v-if="source.url"
                 class="mt-0.5 truncate text-sm text-muted-foreground"
@@ -62,8 +71,19 @@ function toggle(enabled: boolean) {
             >
                 {{ source.url }}
             </p>
-            <p v-if="source.retired" class="mt-1 text-xs text-muted-foreground">
-                Retired: this source stopped working.
+            <p v-if="source.retired" class="mt-1 text-sm text-muted-foreground">
+                Retired: this source stopped working. This source is
+                unavailable. Choose another source.
+            </p>
+            <p
+                v-if="!source.retired && source.health === 'failing'"
+                class="text-sm text-muted-foreground"
+            >
+                {{
+                    source.is_custom
+                        ? 'Check the feed URL or Resend key in Edit, then use Test now.'
+                        : 'This source is unavailable. Choose another source.'
+                }}
             </p>
             <p v-if="lastSuccess" class="mt-0.5 text-xs text-muted-foreground">
                 Last success {{ lastSuccess }}

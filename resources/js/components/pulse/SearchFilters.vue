@@ -120,6 +120,12 @@ function updateDate(field: 'from' | 'to', value: string | null) {
                 </Select>
             </div>
             <div>
+                <p
+                    v-if="modelValue.kind === 'tip'"
+                    class="text-sm text-muted-foreground"
+                >
+                    Categories apply to topics only.
+                </p>
                 <Label :for="`${id}-category`" class="mb-2 block"
                     >Category</Label
                 >

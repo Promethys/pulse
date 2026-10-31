@@ -212,6 +212,9 @@ function remove() {
                     />
                 </li>
             </ul>
+            <p class="text-sm text-muted-foreground">
+                Up to five AI keys, one per provider.
+            </p>
             <Button variant="outline" @click="openAdd"
                 ><Plus aria-hidden="true" />Add a key</Button
             >

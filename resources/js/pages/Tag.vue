@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { Tag as TagIcon } from '@lucide/vue';
 import { computed } from 'vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
@@ -35,8 +35,21 @@ const subtitle = computed(() =>
         <EmptyState
             v-if="count === 0"
             title="Nothing here yet"
-            description="Items with this tag will appear here."
+            description="No saved news uses this tag yet."
         >
+            <template #actions>
+                <p class="text-sm text-muted-foreground">
+                    Browse
+                    <Link href="/" class="underline underline-offset-4"
+                        >Today</Link
+                    >
+                    or
+                    <Link href="/search" class="underline underline-offset-4"
+                        >Search</Link
+                    >
+                    .
+                </p>
+            </template>
             <template #icon>
                 <TagIcon class="size-5" aria-hidden="true" />
             </template>

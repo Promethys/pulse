@@ -223,3 +223,21 @@ describe('SearchFilters', () => {
         }
     });
 });
+
+it.each([
+    ['news', 'tip', false],
+    ['learning', 'tip', true],
+    ['learning', 'topic', false],
+    ['learning', null, false],
+] as const)(
+    'explains categories for type=%s kind=%s',
+    (type, kind, visible) => {
+        const initial = props();
+        initial.modelValue.type = type;
+        initial.modelValue.kind = kind;
+        render(SearchFilters, { props: initial });
+        const message = screen.queryByText('Categories apply to topics only.');
+        if (visible) expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);

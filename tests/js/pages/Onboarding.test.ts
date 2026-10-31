@@ -744,3 +744,28 @@ describe('Onboarding', () => {
         },
     );
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'Interests choose what you follow. Pulse adds their default sources. Removing an interest also removes catalog subscriptions that no longer match.',
+        'Interests marked ‘Coming soon’ are not available to select yet. Choose an available interest to continue.',
+    ])('explains %s', async (message) => {
+        renderPage();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+it('defines sources beside the interest guidance', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: 'Help: Sources' })).toBeVisible();
+});
+
+it('explains schedule timing at the timezone step', async () => {
+    const view = renderPage();
+    await goToStep(view, 2);
+    expect(
+        screen.getByText(
+            'Times use your selected timezone. Pulse checks every 15 minutes and starts preparing each digest when it is due. Delivery can take longer.',
+        ),
+    ).toBeVisible();
+});

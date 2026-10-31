@@ -70,6 +70,10 @@ onMounted(async () => {
                     @success="fetchRecoveryCodes"
                     #default="{ processing }"
                 >
+                    <p class="text-sm text-muted-foreground">
+                        Generating new codes makes all previous recovery codes
+                        stop working. Save the new set.
+                    </p>
                     <Button
                         variant="secondary"
                         type="submit"

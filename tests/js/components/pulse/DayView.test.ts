@@ -226,7 +226,9 @@ describe('DayView', () => {
                     screen.queryByRole('heading', { name: topicTitle }),
                 ).not.toBeInTheDocument();
             expect(
-                screen.queryByText(/learning.*prepared|learning.*could not/i),
+                screen.queryByText(
+                    /learning.*prepared|learning generation failed/i,
+                ),
             ).not.toBeInTheDocument();
         },
     );
@@ -241,7 +243,9 @@ describe('DayView', () => {
             }),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText(/learning.*prepared|learning.*could not/i),
+            screen.queryByText(
+                /learning.*prepared|learning generation failed/i,
+            ),
         ).not.toBeInTheDocument();
     });
 
@@ -264,8 +268,11 @@ describe('DayView', () => {
     });
 
     it.each([
-        ['pending', 'Your news is being prepared.'],
-        ['failed', 'The news could not be generated for this day.'],
+        ['pending', 'Your news is being prepared. Refresh this page shortly.'],
+        [
+            'failed',
+            'News generation failed. Test your AI key in Settings and check your enabled sources.',
+        ],
     ] as const)(
         'shows %s news without a quiet-night fallback',
         (status, message) => {
@@ -292,7 +299,7 @@ describe('DayView', () => {
         ).not.toBeInTheDocument();
         expect(
             screen.queryByText(
-                /Your news is being prepared|news could not be generated/,
+                /Your news is being prepared|News generation failed/,
             ),
         ).not.toBeInTheDocument();
         expect(
@@ -309,7 +316,7 @@ describe('DayView', () => {
             const message =
                 status === 'pending'
                     ? /learning.*being prepared/i
-                    : /learning.*could not be generated/i;
+                    : /learning generation failed/i;
             expect(screen.getByText(message)).toHaveClass(
                 'text-muted-foreground',
             );
@@ -354,7 +361,9 @@ describe('DayView archive navigation', () => {
         const rendered = renderDay({ ...props, isToday: true });
 
         expect(
-            screen.getByText("Today's news could not be generated."),
+            screen.getByText(
+                'News generation failed. Test your AI key in Settings and check your enabled sources.',
+            ),
         ).toBeVisible();
 
         await rendered.view.rerender({
@@ -369,4 +378,17 @@ describe('DayView archive navigation', () => {
 
         expect(screen.queryByText('No news this day.')).not.toBeInTheDocument();
     });
+});
+
+it.each([
+    ['pending', 'Your learning is being prepared. Refresh this page shortly.'],
+    [
+        'failed',
+        'Learning generation failed. Test your AI key in Settings and check your enabled sources.',
+    ],
+] as const)('explains %s learning and its next step', (status, message) => {
+    const props = dayViewProps();
+    props.day.learning = { status, tip: null, topic: null };
+    renderDay(props);
+    expect(screen.getByText(message)).toBeVisible();
 });

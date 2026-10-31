@@ -91,7 +91,7 @@ describe('Tag', () => {
             screen.getByRole('heading', { name: 'Nothing here yet' }),
         ).toBeVisible();
         expect(
-            screen.getByText('Items with this tag will appear here.'),
+            screen.getByText('No saved news uses this tag yet.'),
         ).toBeVisible();
         expect(
             screen.queryByRole('img', {
@@ -142,3 +142,24 @@ describe('Tag', () => {
         expect(screen.queryByText(/Page \d+ of/)).not.toBeInTheDocument();
     });
 });
+
+it.each([true, false])(
+    'links to browsing only for an empty tag=%s',
+    (empty) => {
+        const props = tagPageProps();
+        if (empty) {
+            props.count = 0;
+            props.items = [];
+            props.pagination.total = 0;
+        }
+        renderPage(props);
+        for (const [name, href] of [
+            ['Today', '/'],
+            ['Search', '/search'],
+        ]) {
+            const link = screen.queryByRole('link', { name });
+            if (empty) expect(link).toHaveAttribute('href', href);
+            else expect(link).not.toBeInTheDocument();
+        }
+    },
+);

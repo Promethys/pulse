@@ -19,20 +19,26 @@ function toggle(kind: string, checked: boolean) {
 </script>
 
 <template>
-    <div class="flex gap-4">
-        <div
-            v-for="kind in kinds"
-            :key="kind.value"
-            class="flex items-center gap-2"
-        >
-            <Checkbox
-                :id="`${id}-${kind.value}`"
-                :model-value="modelValue.includes(kind.value)"
-                @update:model-value="toggle(kind.value, $event === true)"
-            />
-            <Label :for="`${id}-${kind.value}`" class="font-normal">{{
-                kind.label
-            }}</Label>
+    <fieldset class="space-y-2">
+        <legend class="text-sm font-medium">Send to this destination</legend>
+        <p class="text-sm text-muted-foreground">
+            Choose at least one. To pause this destination, turn off its switch.
+        </p>
+        <div class="flex gap-4">
+            <div
+                v-for="kind in kinds"
+                :key="kind.value"
+                class="flex items-center gap-2"
+            >
+                <Checkbox
+                    :id="`${id}-${kind.value}`"
+                    :model-value="modelValue.includes(kind.value)"
+                    @update:model-value="toggle(kind.value, $event === true)"
+                />
+                <Label :for="`${id}-${kind.value}`" class="font-normal">{{
+                    kind.label
+                }}</Label>
+            </div>
         </div>
-    </div>
+    </fieldset>
 </template>

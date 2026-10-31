@@ -126,6 +126,12 @@ function reset() {
                         >
                     </SelectContent>
                 </Select>
+                <p
+                    v-if="filters.kind === 'tip'"
+                    class="text-sm text-muted-foreground"
+                >
+                    Categories apply to topics only.
+                </p>
                 <Button variant="outline" as-child>
                     <Link
                         :href="searchIndex.url({ query: { type: 'learning' } })"
@@ -190,7 +196,21 @@ function reset() {
             v-else
             title="No tips yet"
             description="Your daily tips and topics will appear here."
-        />
+        >
+            <template #actions>
+                <p class="text-sm text-muted-foreground">
+                    Choose an interest with learning content on
+                    <Link href="/sources" class="underline underline-offset-4"
+                        >Sources</Link
+                    >, then enable Learning in
+                    <Link
+                        href="/settings/digest"
+                        class="underline underline-offset-4"
+                        >Digest settings</Link
+                    >.
+                </p>
+            </template>
+        </EmptyState>
         <PaginationLinks :pagination="pagination" />
     </div>
 </template>

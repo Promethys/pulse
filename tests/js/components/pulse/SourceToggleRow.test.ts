@@ -69,3 +69,19 @@ describe('SourceToggleRow', () => {
         expect(screen.getByText(/^(RSS|RSS feed|Feed)$/i)).toBeVisible();
     });
 });
+
+describe('Retired source guidance', () => {
+    it.each([true, false])('shows recovery only for retired=%s', (retired) => {
+        render(SourceToggleRow, {
+            props: {
+                source: { ...onboardingProps().sources[0].sources[0], retired },
+                modelValue: true,
+            },
+        });
+        const message = screen.queryByText(
+            'This source is unavailable. Choose another source.',
+        );
+        if (retired) expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    });
+});

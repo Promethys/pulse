@@ -124,17 +124,14 @@ function selectDate(date: DateValue | undefined) {
                 v-if="day.learning.status === 'pending'"
                 class="text-sm text-muted-foreground"
             >
-                Your learning is being prepared.
+                Your learning is being prepared. Refresh this page shortly.
             </p>
             <p
                 v-else-if="day.learning.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                {{
-                    isToday
-                        ? "Today's learning could not be generated."
-                        : 'The learning could not be generated for this day.'
-                }}
+                Learning generation failed. Test your AI key in Settings and
+                check your enabled sources.
             </p>
         </template>
         <section v-if="day.news" class="mt-8">
@@ -142,17 +139,14 @@ function selectDate(date: DateValue | undefined) {
                 v-if="day.news.status === 'pending'"
                 class="text-sm text-muted-foreground"
             >
-                Your news is being prepared.
+                Your news is being prepared. Refresh this page shortly.
             </p>
             <p
                 v-else-if="day.news.status === 'failed'"
                 class="text-sm text-muted-foreground"
             >
-                {{
-                    isToday
-                        ? "Today's news could not be generated."
-                        : 'The news could not be generated for this day.'
-                }}
+                News generation failed. Test your AI key in Settings and check
+                your enabled sources.
             </p>
             <EmptyState
                 v-else-if="count === 0"

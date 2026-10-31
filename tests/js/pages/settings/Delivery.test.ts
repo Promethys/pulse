@@ -70,7 +70,7 @@ describe('Delivery settings', () => {
             screen.queryByRole('link', { name: 'Add to Discord' }),
         ).not.toBeInTheDocument();
         expect(
-            screen.getByText(/Discord.*not configured|Discord.*unavailable/i),
+            screen.getByText(/Discord.*not configured|Discord.*not available/i),
         ).toBeVisible();
     });
 
@@ -298,4 +298,41 @@ describe('Delivery settings', () => {
             expect.any(Object),
         );
     });
+});
+
+describe('Getting started guidance', () => {
+    it.each([
+        'You can add up to 20 Discord destinations and one email address.',
+        'Changes save automatically. Text fields save when you leave the field.',
+    ])('explains %s', async (message) => {
+        renderPage();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+it.each([true, false])(
+    'explains unavailable Discord connections only with install_url missing=%s',
+    (missing) => {
+        const props = deliveryProps();
+        if (missing) props.install_url = null;
+        renderPage(props);
+        const message = screen.queryByText(
+            'Discord connections are not available here. Use email or a Discord webhook below.',
+        );
+        if (missing) expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);
+
+it('explains obtaining a webhook beside its field', async () => {
+    const view = renderPage();
+    await view.user.click(screen.getByRole('button', { name: 'Add webhook' }));
+    expect(
+        await screen.findByText(
+            'Create a webhook in Discord for the destination channel, then paste its URL here.',
+        ),
+    ).toBeVisible();
+    expect(
+        screen.getByRole('button', { name: 'Help: Discord webhooks' }),
+    ).toBeVisible();
 });

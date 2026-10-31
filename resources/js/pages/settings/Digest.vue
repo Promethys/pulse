@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -87,9 +88,12 @@ function save() {
                         v-model="form.profile"
                         :rows="4"
                         :maxlength="2000"
+                        placeholder="Laravel developer, curious about AI agents, not interested in crypto. I like short summaries with a link to the source."
                     />
                     <p class="text-sm text-muted-foreground">
-                        Sent to your AI provider to tailor your digest.
+                        Optional. Describe your experience, interests and what
+                        to avoid so the AI can choose and explain content for
+                        you. This text is sent to your AI provider.
                     </p>
                     <p class="text-right text-xs text-muted-foreground">
                         {{ form.profile.length.toLocaleString('en') }} / 2,000
@@ -112,6 +116,11 @@ function save() {
                     >
                     <InputError :message="errors.timezone" />
                 </div>
+                <p class="text-sm text-muted-foreground">
+                    Times use your selected timezone. Pulse checks every 15
+                    minutes and starts preparing each digest when it is due.
+                    Delivery can take longer.
+                </p>
                 <div
                     v-for="schedule in schedules"
                     :key="schedule.kind"
@@ -130,13 +139,23 @@ function save() {
                             <Label :for="schedule.kind">{{
                                 schedule.label
                             }}</Label>
-                            <p class="text-xs text-muted-foreground">
-                                {{
+                            <p
+                                v-if="
                                     schedule.kind === 'learning' &&
                                     !settings.learning_available
-                                        ? 'Available with a learning interest'
-                                        : schedule.description
-                                }}
+                                "
+                                class="text-sm text-muted-foreground"
+                            >
+                                Choose an interest marked ‘Includes learning’ on
+                                <Link
+                                    href="/sources"
+                                    class="underline underline-offset-4"
+                                    >Sources</Link
+                                >
+                                to enable daily tips and topics.
+                            </p>
+                            <p v-else class="text-xs text-muted-foreground">
+                                {{ schedule.description }}
                             </p>
                         </div>
                         <Select v-model="form[`${schedule.kind}_time`]"
@@ -173,6 +192,14 @@ function save() {
                             form.max_items
                         }}</span>
                     </div>
+                    <p class="text-sm text-muted-foreground">
+                        Maximum news stories in each daily digest. You may
+                        receive fewer.
+                        <HelpTip
+                            label="News limit"
+                            text="This does not limit the daily tip and topic."
+                        />
+                    </p>
                     <Slider
                         :model-value="[form.max_items]"
                         :min="1"

@@ -66,7 +66,9 @@ describe('SourceRow', () => {
         render(SourceRow, { props: { source } });
 
         expect(
-            screen.getByText('Retired: this source stopped working.'),
+            screen.getByText(
+                'Retired: this source stopped working. This source is unavailable. Choose another source.',
+            ),
         ).toBeVisible();
         const dot = screen.getByLabelText(/^retired$/i);
         expect(dot).toHaveClass('bg-muted-foreground');
@@ -103,4 +105,50 @@ describe('SourceRow', () => {
         );
         expect(screen.getByRole('button', { name: 'Edit' })).toBeVisible();
     });
+});
+
+describe('Source recovery guidance', () => {
+    it.each([
+        [
+            'failing',
+            true,
+            false,
+            'Check the feed URL or Resend key in Edit, then use Test now.',
+        ],
+        [
+            'failing',
+            false,
+            false,
+            'This source is unavailable. Choose another source.',
+        ],
+        ['ok', true, false, null],
+        ['unknown', true, false, null],
+        ['retired', true, true, null],
+    ] as const)(
+        'explains health=%s custom=%s retired=%s',
+        (health, is_custom, retired, message) => {
+            render(SourceRow, {
+                props: {
+                    source: { ...sourceProps(), health, is_custom, retired },
+                },
+            });
+            expect(screen.getByText(health, { exact: true })).toBeVisible();
+            for (const copy of [
+                'Check the feed URL or Resend key in Edit, then use Test now.',
+                'This source is unavailable. Choose another source.',
+            ]) {
+                if (copy === message)
+                    expect(screen.getByText(copy)).toBeVisible();
+                else
+                    expect(
+                        screen.queryByText(copy, { exact: true }),
+                    ).not.toBeInTheDocument();
+            }
+            const help = screen.queryByRole('button', {
+                name: 'Help: Unknown source health',
+            });
+            if (health === 'unknown') expect(help).toBeVisible();
+            else expect(help).not.toBeInTheDocument();
+        },
+    );
 });

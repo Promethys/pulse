@@ -78,6 +78,14 @@ function submit() {
                     to the catalog.</DialogDescription
                 >
             </DialogHeader>
+            <p class="text-sm text-muted-foreground">
+                You can have up to 10 suggestions waiting for review, including
+                feeds and interests.
+            </p>
+            <p class="text-sm text-muted-foreground">
+                Catalog feeds must be public and have at least three posts from
+                the last 30 days.
+            </p>
             <form class="space-y-4" @submit.prevent="submit">
                 <div class="space-y-1.5">
                     <Label for="suggest-source-interest">Interest</Label>
@@ -122,6 +130,10 @@ function submit() {
                                 : undefined
                         "
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Explain why this belongs in Pulse. Use 10 to 500
+                        characters.
+                    </p>
                     <p class="text-right text-xs text-muted-foreground">
                         {{ form.reason.length }} / 500
                     </p>

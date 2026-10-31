@@ -39,11 +39,11 @@ async function renderForm(
 
 async function fillFeed(view: Awaited<ReturnType<typeof renderForm>>) {
     await view.user.type(
-        screen.getByRole('textbox', { name: /^Name$/ }),
+        screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
         'My feed',
     );
     await view.user.type(
-        screen.getByRole('textbox', { name: /^Feed URL$/ }),
+        screen.getByRole('textbox', { name: /^Feed URL \(required\)$/ }),
         'https://example.test/feed',
     );
     await view.user.click(
@@ -78,18 +78,18 @@ describe('SourceFormDialog', () => {
             screen.getByRole('radio', { name: 'Newsletter inbox' }),
         );
         expect(
-            screen.queryByRole('textbox', { name: /^Feed URL$/ }),
+            screen.queryByRole('textbox', { name: /^Feed URL \(required\)$/ }),
         ).not.toBeInTheDocument();
         expect(
             screen.getByText(
-                'Used to read the newsletter from your own Resend account.',
+                'Connect a Resend account that receives your newsletters. Pulse reads recent received emails from that account.',
             ),
         ).toBeVisible();
         const key = screen.getByLabelText('Resend API key');
         expect(key).toHaveAttribute('type', 'password');
         await view.user.type(key, 'fake-resend-key');
         await view.user.type(
-            screen.getByRole('textbox', { name: /^Name$/ }),
+            screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
             'Newsletter',
         );
         await view.user.click(
@@ -124,9 +124,11 @@ describe('SourceFormDialog', () => {
         expect(
             screen.getByRole('checkbox', { name: 'Artificial intelligence' }),
         ).toBeChecked();
-        await view.user.clear(screen.getByRole('textbox', { name: /^Name$/ }));
+        await view.user.clear(
+            screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
+        );
         await view.user.type(
-            screen.getByRole('textbox', { name: /^Name$/ }),
+            screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
             'Renamed',
         );
         await view.user.click(screen.getByRole('button', { name: /^Save$/ }));
@@ -147,11 +149,11 @@ describe('SourceFormDialog', () => {
         const view = await renderForm();
         expect(screen.getByRole('button', { name: 'Test now' })).toBeDisabled();
         await view.user.type(
-            screen.getByRole('textbox', { name: /^Name$/ }),
+            screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
             'My feed',
         );
         await view.user.type(
-            screen.getByRole('textbox', { name: /^Feed URL$/ }),
+            screen.getByRole('textbox', { name: /^Feed URL \(required\)$/ }),
             'https://example.test/feed',
         );
         expect(screen.getByRole('button', { name: /^Add$/ })).toBeDisabled();
@@ -241,4 +243,111 @@ describe('SourceFormDialog', () => {
         );
         expect(http.submit).toHaveBeenCalledTimes(2);
     });
+});
+
+describe('Getting started guidance', () => {
+    it.each([
+        'You can save up to 30 custom sources.',
+        'Paste the site’s public RSS or Atom feed URL. Look for an RSS or Subscribe link on the site.',
+        'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+    ])('explains %s', async (message) => {
+        await renderForm();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+describe('Source help conditions', () => {
+    it('shows feed help and hides newsletter help for feeds', async () => {
+        await renderForm();
+        expect(
+            screen.getByRole('button', { name: 'Help: Feeds' }),
+        ).toBeVisible();
+        expect(
+            screen.queryByRole('button', { name: 'Help: Resend' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/A source’s type cannot be changed/),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/To test here, enter a Resend key/),
+        ).not.toBeInTheDocument();
+    });
+
+    it('explains a locked source type', async () => {
+        await renderForm(customSource());
+        expect(
+            screen.getByText(
+                'A source’s type cannot be changed. Create a new source to use another type.',
+            ),
+        ).toBeVisible();
+    });
+
+    it.each([true, false])(
+        'explains retaining a newsletter key only with a saved key=%s',
+        async (has_key) => {
+            await renderForm({
+                ...customSource(),
+                type: 'resend_inbox',
+                has_key,
+            });
+            expect(
+                screen.getByRole('button', { name: 'Help: Resend' }),
+            ).toBeVisible();
+            expect(
+                screen.queryByRole('button', { name: 'Help: Feeds' }),
+            ).not.toBeInTheDocument();
+            const hint = screen.queryByText(
+                'To test here, enter a Resend key. Leave it blank to keep the saved key when saving.',
+            );
+            if (has_key) expect(hint).toBeVisible();
+            else expect(hint).not.toBeInTheDocument();
+        },
+    );
+
+    it('removes the unmet requirements once the form can save', async () => {
+        const view = await renderForm();
+        await fillFeed(view);
+        expect(
+            screen.queryByText(
+                'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+            ),
+        ).not.toBeInTheDocument();
+    });
+});
+
+it('hides unmet requirements while saving', async () => {
+    const view = await renderForm();
+    await fillFeed(view);
+    await view.user.click(screen.getByRole('button', { name: /^Add$/ }));
+    expect(screen.getByRole('button', { name: /^Add$/ })).toBeDisabled();
+    expect(
+        screen.queryByText(
+            'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+        ),
+    ).not.toBeInTheDocument();
+});
+
+it('marks the source requirements before submission', async () => {
+    await renderForm();
+    expect(
+        screen.getByRole('group', {
+            name: 'Interests it belongs to (at least one required)',
+        }),
+    ).toBeVisible();
+    expect(
+        screen.getByRole('textbox', { name: 'Name (required)' }),
+    ).toBeVisible();
+    expect(
+        screen.getByRole('textbox', { name: 'Feed URL (required)' }),
+    ).toBeVisible();
+});
+
+it('identifies the key requirement for a new newsletter inbox', async () => {
+    const view = await renderForm();
+    await view.user.click(
+        screen.getByRole('radio', { name: 'Newsletter inbox' }),
+    );
+    expect(
+        screen.getByText('Required for a new newsletter inbox.'),
+    ).toBeVisible();
 });

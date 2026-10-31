@@ -70,6 +70,17 @@ const deliveredAt = computed(() => {
                 @update:model-value="emit('update:enabled', $event)"
             />
         </div>
+        <p
+            v-if="
+                !channel.enabled &&
+                last?.status === 'failed' &&
+                channel.type !== 'email'
+            "
+            class="text-sm text-muted-foreground"
+        >
+            Delivery is paused. Check Pulse’s access to this destination and the
+            webhook URL if used, send a test, then turn delivery back on.
+        </p>
         <slot />
         <div class="flex flex-wrap items-center justify-between gap-2">
             <div

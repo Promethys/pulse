@@ -279,3 +279,13 @@ describe('AI keys settings', () => {
         },
     );
 });
+
+describe('Getting started guidance', () => {
+    it.each(['Up to five AI keys, one per provider.'])(
+        'explains %s',
+        async (message) => {
+            renderPage();
+            expect(screen.getByText(message)).toBeVisible();
+        },
+    );
+});

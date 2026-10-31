@@ -3,6 +3,7 @@ import { Head, router, useHttp } from '@inertiajs/vue3';
 import { Bell, Plus } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import DestinationRow from '@/components/pulse/DestinationRow.vue';
 import DiscordIcon from '@/components/pulse/DiscordIcon.vue';
 import ReceivesPicker from '@/components/pulse/ReceivesPicker.vue';
@@ -193,6 +194,12 @@ function disconnect() {
         :key="field"
         :message="error"
     />
+    <p class="text-sm text-muted-foreground">
+        You can add up to 20 Discord destinations and one email address.
+    </p>
+    <p class="text-sm text-muted-foreground">
+        Changes save automatically. Text fields save when you leave the field.
+    </p>
     <Card class="mb-4 shadow-none">
         <CardHeader
             ><CardTitle class="font-display">Discord servers</CardTitle
@@ -299,7 +306,8 @@ function disconnect() {
                 ></Button
             >
             <p v-else class="text-sm text-muted-foreground">
-                Discord installation is not configured.
+                Discord connections are not available here. Use email or a
+                Discord webhook below.
             </p>
         </CardContent>
     </Card>
@@ -459,6 +467,14 @@ function disconnect() {
                         />
                     </div>
                     <div class="space-y-1.5">
+                        <p class="text-sm text-muted-foreground">
+                            Create a webhook in Discord for the destination
+                            channel, then paste its URL here.
+                            <HelpTip
+                                label="Discord webhooks"
+                                text="A webhook is a private address Pulse uses to post messages to Discord."
+                            />
+                        </p>
                         <Label for="add-webhook">Webhook URL</Label
                         ><Input
                             id="add-webhook"

@@ -10,8 +10,8 @@ import { timeHasPassed } from '@/lib/dates';
 import type { TodayProps } from '@/types';
 
 const props = defineProps<TodayProps>();
-const incomplete = computed(() =>
-    Object.values(props.setup).some((done) => !done),
+const incomplete = computed(
+    () => !props.setup.interests || !props.setup.sources || !props.setup.ai_key,
 );
 const firstDigest = computed(() => {
     if (!props.setup.ai_key)
@@ -28,8 +28,8 @@ const notice = computed(() => {
     const { time, timezone } = props.next_digest;
 
     return timeHasPassed(time, timezone)
-        ? "Today's digest isn't ready yet."
-        : `Today's digest arrives at ${time} (${timezone}).`;
+        ? "Today's digest is not ready yet. Check the generation status below and refresh this page shortly."
+        : `Today's digest will start preparing at ${time} (${timezone}).`;
 });
 </script>
 

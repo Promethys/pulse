@@ -50,7 +50,9 @@ describe('Digest settings', () => {
             screen.getByRole('switch', { name: /^Learning$/ }),
         ).toBeDisabled();
         expect(
-            screen.getByText('Available with a learning interest'),
+            screen.getByText(
+                /Choose an interest marked.*Includes learning.*on/,
+            ),
         ).toBeVisible();
         await view.user.click(screen.getByRole('button', { name: /^Save$/ }));
         expect(view.put).toHaveBeenCalledWith(
@@ -118,7 +120,34 @@ describe('Digest settings', () => {
     it('explains that the reader profile is shared with the AI provider', () => {
         renderPage();
         expect(
-            screen.getByText('Sent to your AI provider to tailor your digest.'),
+            screen.getByText(
+                'Optional. Describe your experience, interests and what to avoid so the AI can choose and explain content for you. This text is sent to your AI provider.',
+            ),
         ).toBeVisible();
     });
 });
+
+describe('Getting started guidance', () => {
+    it.each([
+        'Times use your selected timezone. Pulse checks every 15 minutes and starts preparing each digest when it is due. Delivery can take longer.',
+        'Maximum news stories in each daily digest. You may receive fewer.',
+    ])('explains %s', async (message) => {
+        renderPage();
+        expect(screen.getByText(message)).toBeVisible();
+    });
+});
+
+it.each([true, false])(
+    'links learning setup only when unavailable=%s',
+    (unavailable) => {
+        const props = digestProps();
+        props.settings.learning_available = !unavailable;
+        renderPage(props);
+        expect(
+            screen.getByRole('button', { name: 'Help: News limit' }),
+        ).toBeVisible();
+        const link = screen.queryByRole('link', { name: 'Sources' });
+        if (unavailable) expect(link).toHaveAttribute('href', '/sources');
+        else expect(link).not.toBeInTheDocument();
+    },
+);

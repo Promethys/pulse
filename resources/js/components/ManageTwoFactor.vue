@@ -69,6 +69,10 @@ onUnmounted(() => clearTwoFactorAuthData());
                 your phone.
             </p>
 
+            <p class="text-sm text-muted-foreground">
+                Turning this off removes the authenticator-code check when you
+                sign in.
+            </p>
             <div class="relative inline">
                 <Form v-bind="disable.form()" #default="{ processing }">
                     <Button

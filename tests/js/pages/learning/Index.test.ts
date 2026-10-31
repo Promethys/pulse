@@ -354,3 +354,36 @@ describe('Learning Index', () => {
         },
     );
 });
+
+it.each([null, 'tip', 'topic'] as const)(
+    'explains categories only for kind=%s',
+    (kind) => {
+        const props = learningProps();
+        props.filters.kind = kind;
+        renderPage(props);
+        const message = screen.queryByText('Categories apply to topics only.');
+        if (kind === 'tip') expect(message).toBeVisible();
+        else expect(message).not.toBeInTheDocument();
+    },
+);
+
+it.each(['empty', 'filtered', 'populated'])(
+    'offers setup links for the %s learning state',
+    (state) => {
+        const props = learningProps();
+        if (state !== 'populated') {
+            props.entries = [];
+            props.pagination.total = 0;
+        }
+        if (state === 'filtered') props.filters.kind = 'tip';
+        renderPage(props);
+        for (const [name, href] of [
+            ['Sources', '/sources'],
+            ['Digest settings', '/settings/digest'],
+        ]) {
+            const link = screen.queryByRole('link', { name });
+            if (state === 'empty') expect(link).toHaveAttribute('href', href);
+            else expect(link).not.toBeInTheDocument();
+        }
+    },
+);

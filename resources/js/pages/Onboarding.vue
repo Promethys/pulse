@@ -9,6 +9,7 @@ import {
     interests,
     sources,
 } from '@/actions/App/Http/Controllers/OnboardingController';
+import HelpTip from '@/components/pulse/HelpTip.vue';
 import AiKeyForm from '@/components/pulse/AiKeyForm.vue';
 import CategoryGroup from '@/components/pulse/CategoryGroup.vue';
 import DeliveryOptions from '@/components/pulse/DeliveryOptions.vue';
@@ -184,6 +185,19 @@ function next() {
                             {{ interestForm.interests.length }} selected.
                         </p>
                     </div>
+                    <p class="text-sm text-muted-foreground">
+                        Interests choose what you follow. Pulse adds their
+                        default sources. Removing an interest also removes
+                        catalog subscriptions that no longer match.
+                        <HelpTip
+                            label="Sources"
+                            text="A source is a site or newsletter that supplies news."
+                        />
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                        Interests marked ‘Coming soon’ are not available to
+                        select yet. Choose an available interest to continue.
+                    </p>
                     <div class="relative">
                         <Search
                             class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -275,6 +289,11 @@ function next() {
                     </div>
                     <div class="space-y-1.5">
                         <Label for="timezone">Timezone</Label>
+                        <p class="text-sm text-muted-foreground">
+                            Times use your selected timezone. Pulse checks every
+                            15 minutes and starts preparing each digest when it
+                            is due. Delivery can take longer.
+                        </p>
                         <Select v-model="aboutForm.timezone">
                             <SelectTrigger id="timezone" class="w-full"
                                 ><SelectValue

@@ -125,3 +125,34 @@ describe('DestinationRow', () => {
         expect(view.onDelete).toHaveBeenCalledOnce();
     });
 });
+
+describe('Paused delivery guidance', () => {
+    it.each([
+        ['discord_bot', false, 'failed', true],
+        ['discord_webhook', false, 'failed', true],
+        ['discord_webhook', true, 'failed', false],
+        ['discord_webhook', false, 'delivered', false],
+        ['discord_webhook', false, null, false],
+        ['email', false, 'failed', false],
+    ] as const)(
+        'explains type=%s enabled=%s status=%s',
+        (type, enabled, status, visible) => {
+            const channel = { ...destinationProps(), type, enabled };
+            if (status)
+                channel.latest_delivery = {
+                    id: 1,
+                    status,
+                    attempts: 1,
+                    last_error: null,
+                    delivered_at: null,
+                    updated_at: null,
+                };
+            renderRow(channel);
+            const message = screen.queryByText(
+                'Delivery is paused. Check Pulse’s access to this destination and the webhook URL if used, send a test, then turn delivery back on.',
+            );
+            if (visible) expect(message).toBeVisible();
+            else expect(message).not.toBeInTheDocument();
+        },
+    );
+});

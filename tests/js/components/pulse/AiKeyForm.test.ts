@@ -255,3 +255,26 @@ describe('AiKeyForm', () => {
         },
     );
 });
+
+describe('AI choices help', () => {
+    it.each(['Provider', 'Model'])('defines %s', (label) => {
+        renderForm();
+        expect(
+            screen.getByRole('button', { name: `Help: ${label}` }),
+        ).toBeVisible();
+    });
+
+    it('explains exact model IDs only for Other model', async () => {
+        renderForm();
+        const message = 'Enter the exact model ID supplied by your provider.';
+        expect(screen.queryByText(message)).not.toBeInTheDocument();
+        const user = userEvent.setup();
+        await chooseModel(user, 'Other model');
+        expect(screen.getByText(message)).toBeVisible();
+        await chooseModel(
+            user,
+            onboardingProps().providers[0].suggested_models[0],
+        );
+        expect(screen.queryByText(message)).not.toBeInTheDocument();
+    });
+});

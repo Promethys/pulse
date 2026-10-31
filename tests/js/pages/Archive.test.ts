@@ -147,3 +147,20 @@ describe('Archive', () => {
         },
     );
 });
+
+it.each([true, false])(
+    'links to Today only for an empty archive=%s',
+    (empty) => {
+        const props = archiveProps();
+        if (empty) {
+            props.days = [];
+            props.pagination.total = 0;
+        }
+        renderPage(props);
+        const link = screen.queryByRole('link', { name: 'Today' });
+        if (empty) {
+            expect(link).toHaveAttribute('href', '/');
+            expect(screen.getByText(/to check your next digest/)).toBeVisible();
+        } else expect(link).not.toBeInTheDocument();
+    },
+);
