@@ -12,6 +12,20 @@ Digest behavior is stored per account: timezone, schedule, toggles, profile, max
 
 `REGISTRATION_ENABLED` defaults to `true`. Set it to `false` at runtime to close registration for everyone: `/register` returns a 404 and the Create an account links disappear, while existing accounts can still log in. Leave it unset during the front-end build, because the Wayfinder route helpers are generated from the routes that exist at that moment.
 
+## Login limits
+
+Login allows 5 attempts per minute per account and IP, 30 per hour per account, and 30 per minute per IP. IPv6 addresses share limits within a /64 network. Passkeys allow 10 requests per minute per IP, and two-factor challenges 5 per minute per pending login, falling back to the session.
+
+## Trusted proxies
+
+`TRUSTED_PROXIES` says whose forwarded headers to believe, which decides the client IP and whether a request counts as HTTPS. Rate limits depend on it, so set it to match how you host Pulse.
+
+| Setup | Value |
+|---|---|
+| Behind one reverse proxy or platform router | leave unset (default `REMOTE_ADDR`, the direct peer) |
+| Also behind a CDN or edge network | `REMOTE_ADDR,` followed by the network's published IP ranges, comma separated |
+| Exposed directly, with no proxy | `none`, otherwise clients can forge their IP |
+
 ## Schedule and content
 
 | Variable | What it does | Default |

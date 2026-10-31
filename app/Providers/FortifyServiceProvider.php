@@ -13,6 +13,7 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -83,19 +84,30 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRateLimiting(): void
     {
         RateLimiter::for('two-factor', function (Request $request) {
-            return Limit::perMinute(5)->by($request->session()->get('login.id'));
+            return Limit::perMinute(5)->by('two-factor:'.($request->session()->get('login.id') ?? $request->session()->getId()));
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $email = $request->input(Fortify::username());
+            $account = Str::transliterate(Str::lower(is_string($email) ? $email : ''));
+            $ip = $this->ipKey($request);
 
-            return Limit::perMinute(5)->by($throttleKey);
+            return [
+                Limit::perMinute(5)->by('account-ip:'.$account.'|'.$ip),
+                Limit::perHour(30)->by('account:'.$account),
+                Limit::perMinute(30)->by('ip:'.$ip),
+            ];
         });
 
         RateLimiter::for('passkeys', function (Request $request) {
-            return Limit::perMinute(10)->by(
-                ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
-            );
+            return Limit::perMinute(10)->by('passkeys:'.$this->ipKey($request));
         });
+    }
+
+    private function ipKey(Request $request): string
+    {
+        $ip = (string) $request->ip();
+
+        return str_contains($ip, ':') ? IpUtils::anonymize($ip, 0, 8) : $ip;
     }
 }

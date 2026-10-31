@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Digest;
 
+use App\Enums\InterestCategory;
 use App\Enums\InterestStatus;
 use App\Jobs\ScoutInterest;
 use App\Models\Interest;
@@ -67,6 +68,28 @@ class CatalogScoutCommandTest extends TestCase
         Interest::factory()->create(['status' => InterestStatus::Draft]);
 
         $this->artisan('catalog:scout')->expectsOutputToContain('Dispatched 0')->assertExitCode(0);
+
+        Bus::assertNothingDispatched();
+    }
+
+    public function test_a_category_dispatches_its_draft_interests_only(): void
+    {
+        Bus::fake();
+        $draft = Interest::factory()->create(['category' => InterestCategory::Technology, 'status' => InterestStatus::Draft]);
+        $live = Interest::factory()->create(['category' => InterestCategory::Technology, 'status' => InterestStatus::Live]);
+        $other = Interest::factory()->create(['category' => InterestCategory::Media, 'status' => InterestStatus::Draft]);
+
+        $this->artisan('catalog:scout', ['--category' => 'technology', '--max' => 3])->assertSuccessful();
+
+        Bus::assertDispatched(ScoutInterest::class, fn (ScoutInterest $job) => $job->interest->is($draft) && $job->max === 3);
+        Bus::assertNotDispatched(ScoutInterest::class, fn (ScoutInterest $job) => $job->interest->is($live) || $job->interest->is($other));
+    }
+
+    public function test_an_unknown_category_fails_and_dispatches_nothing(): void
+    {
+        Bus::fake();
+
+        $this->artisan('catalog:scout', ['--category' => 'nope'])->assertFailed();
 
         Bus::assertNothingDispatched();
     }
