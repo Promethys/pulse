@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vite-plus/test';
 import Sparkline from '@/components/pulse/Sparkline.vue';
 
 function coordinates(container: Element): [number, number][] {
-    const points = container.querySelector('polyline')?.getAttribute('points');
-    if (!points) throw new Error('Expected a polyline with points');
+    const path = container.querySelector('path')?.getAttribute('d');
+    if (!path) throw new Error('Expected a path');
+    const pairs = path.match(/-?[\d.]+,-?[\d.]+/g) ?? [];
+    const points = pairs
+        .filter((_, index) => index === 0 || index % 3 === 0)
+        .join(' ');
 
     return points
         .split(/\s+/)
@@ -28,11 +32,15 @@ describe('Sparkline', () => {
         ).toBeVisible();
     });
 
-    it('draws one point per week in a single polyline', () => {
+    it('draws one curved point per week in a single path', () => {
         const view = render(Sparkline, {
             props: { data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
         });
-        expect(view.container.querySelectorAll('polyline')).toHaveLength(1);
+        expect(view.container.querySelectorAll('path')).toHaveLength(1);
+        expect(view.container.querySelector('polyline')).toBeNull();
+        expect(
+            view.container.querySelector('path')?.getAttribute('d'),
+        ).toContain('C');
         expect(coordinates(view.container)).toHaveLength(12);
     });
 
