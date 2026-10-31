@@ -55,7 +55,7 @@ class CatalogResourceTest extends TestCase
             ->assertActionDoesNotExist(TestAction::make('edit')->table($proposal))
             ->assertActionDoesNotExist(TestAction::make('delete')->table($proposal));
 
-        $this->assertSame([], $page->instance()->getTable()->getBulkActions());
+        $this->assertSame(['bulkApprove', 'bulkReject'], array_map(fn ($action) => $action->getName(), $page->instance()->getTable()->getBulkActions()));
         $url = CatalogResource::getUrl('index', panel: 'admin');
         $this->get($url.'/create')->assertNotFound();
         $this->get($url.'/'.$proposal->id.'/edit')->assertNotFound();
@@ -375,6 +375,66 @@ class CatalogResourceTest extends TestCase
 
         $page = $this->catalogPageForTest();
         $this->assertSame('No proposals', $page->instance()->getTable()->getEmptyStateHeading());
+    }
+
+    public function test_search_covers_names_urls_and_interests(): void
+    {
+        $interest = Interest::factory()->create(['name' => 'Astronomy']);
+        $byName = SourceProposal::factory()->create(['name' => 'Findable feed', 'url' => 'https://a.test/feed']);
+        $byUrl = SourceProposal::factory()->create(['name' => 'Other', 'url' => 'https://findable.test/feed']);
+        $byInterest = SourceProposal::factory()->create(['name' => 'Third', 'url' => 'https://c.test/feed', 'interest_id' => $interest->id]);
+
+        $this->catalogPageForTest()->searchTable('findable')->assertCanSeeTableRecords([$byName, $byUrl])->assertCanNotSeeTableRecords([$byInterest]);
+        $this->catalogPageForTest()->searchTable('astronomy')->assertCanSeeTableRecords([$byInterest])->assertCanNotSeeTableRecords([$byName, $byUrl]);
+    }
+
+    public function test_it_filters_by_interest_and_every_column_can_be_toggled(): void
+    {
+        $interest = Interest::factory()->create();
+        $match = SourceProposal::factory()->create(['interest_id' => $interest->id]);
+        $other = SourceProposal::factory()->create();
+        $page = $this->catalogPageForTest();
+
+        $page->filterTable('interest', $interest->id)->assertCanSeeTableRecords([$match])->assertCanNotSeeTableRecords([$other]);
+
+        foreach ($page->instance()->getTable()->getColumns() as $column) {
+            $this->assertTrue($column->isToggleable(), $column->getName());
+        }
+    }
+
+    public function test_bulk_approve_uses_each_proposal_and_skips_what_it_cannot_approve(): void
+    {
+        $interest = Interest::factory()->create();
+        $feed = SourceProposal::factory()->create(['interest_id' => $interest->id, 'name' => 'Bulk feed', 'url' => 'https://bulk.test/feed']);
+        $noInterest = SourceProposal::factory()->create(['interest_id' => null]);
+        $source = Source::factory()->create(['url' => 'https://old.test/feed']);
+        $move = SourceProposal::factory()->for($source)->create(['kind' => SourceProposalKind::UrlChange, 'url' => 'https://new.test/feed']);
+
+        $this->catalogPageForTest()
+            ->selectTableRecords([$feed->id, $noInterest->id, $move->id])
+            ->callAction(TestAction::make('bulkApprove')->table()->bulk(), ['is_default' => false])
+            ->assertNotified();
+
+        $this->assertSame(SourceProposalStatus::Approved, $feed->fresh()?->status);
+        $this->assertSame(SourceProposalStatus::Pending, $noInterest->fresh()?->status);
+        $this->assertSame(SourceProposalStatus::Approved, $move->fresh()?->status);
+        $this->assertSame('https://new.test/feed', $source->fresh()?->url);
+        $this->assertFalse(Source::query()->where('url', 'https://bulk.test/feed')->sole()->is_default);
+    }
+
+    public function test_bulk_reject_only_changes_pending_proposals(): void
+    {
+        $pending = SourceProposal::factory()->create();
+        $approved = SourceProposal::factory()->create(['status' => SourceProposalStatus::Approved]);
+
+        $this->catalogPageForTest()
+            ->removeTableFilters()
+            ->selectTableRecords([$pending->id, $approved->id])
+            ->callAction(TestAction::make('bulkReject')->table()->bulk())
+            ->assertNotified();
+
+        $this->assertSame(SourceProposalStatus::Rejected, $pending->fresh()?->status);
+        $this->assertSame(SourceProposalStatus::Approved, $approved->fresh()?->status);
     }
 
     private function catalogPageForTest(): Testable

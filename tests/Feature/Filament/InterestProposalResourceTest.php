@@ -8,6 +8,7 @@ use App\Enums\InterestCategory;
 use App\Enums\InterestStatus;
 use App\Enums\SourceProposalStatus;
 use App\Filament\Resources\InterestProposalResource;
+use App\Jobs\ScoutInterest;
 use App\Models\Interest;
 use App\Models\InterestProposal;
 use App\Models\User;
@@ -37,7 +38,7 @@ class InterestProposalResourceTest extends TestCase
         Bus::fake();
     }
 
-    public function test_only_a_list_page_is_registered_with_no_create_edit_delete_or_bulk_actions(): void
+    public function test_only_a_list_page_is_registered_with_no_create_edit_or_delete(): void
     {
         $this->assertContains(InterestProposalResource::class, Filament::getPanel('admin')->getResources());
         $this->assertSame(InterestProposal::class, InterestProposalResource::getModel());
@@ -48,7 +49,7 @@ class InterestProposalResourceTest extends TestCase
             ->assertActionDoesNotExist(TestAction::make('create')->table())
             ->assertActionDoesNotExist(TestAction::make('edit')->table($proposal))
             ->assertActionDoesNotExist(TestAction::make('delete')->table($proposal));
-        $this->assertSame([], $page->instance()->getTable()->getBulkActions());
+        $this->assertSame(['bulkApprove', 'bulkReject'], array_map(fn ($action) => $action->getName(), $page->instance()->getTable()->getBulkActions()));
         $url = InterestProposalResource::getUrl('index', panel: 'admin');
         $this->get($url.'/create')->assertNotFound();
         $this->get($url.'/'.$proposal->id.'/edit')->assertNotFound();
@@ -188,6 +189,51 @@ class InterestProposalResourceTest extends TestCase
         InterestProposal::query()->whereKey($proposal->id)->update(['status' => SourceProposalStatus::Approved]);
         $page->callMountedAction()->assertHasNoErrors();
         $this->assertSame(SourceProposalStatus::Approved, $proposal->fresh()->status);
+    }
+
+    public function test_search_category_filter_and_toggleable_columns(): void
+    {
+        $match = InterestProposal::factory()->create(['name' => 'Astronomy', 'category' => InterestCategory::Technology]);
+        $other = InterestProposal::factory()->create(['name' => 'Cooking', 'category' => InterestCategory::Life]);
+        $page = $this->listPage();
+
+        $page->searchTable('astro')->assertCanSeeTableRecords([$match])->assertCanNotSeeTableRecords([$other]);
+        $this->listPage()->filterTable('category', 'life')->assertCanSeeTableRecords([$other])->assertCanNotSeeTableRecords([$match]);
+
+        foreach ($page->instance()->getTable()->getColumns() as $column) {
+            $this->assertTrue($column->isToggleable(), $column->getName());
+        }
+    }
+
+    public function test_bulk_approve_creates_drafts_and_skips_taken_names(): void
+    {
+        Interest::factory()->create(['slug' => 'taken', 'name' => 'Taken']);
+        $fresh = InterestProposal::factory()->create(['name' => 'Fresh topic']);
+        $taken = InterestProposal::factory()->create(['name' => 'Taken']);
+
+        $this->listPage()
+            ->selectTableRecords([$fresh->id, $taken->id])
+            ->callAction(TestAction::make('bulkApprove')->table()->bulk())
+            ->assertNotified();
+
+        $this->assertSame(SourceProposalStatus::Approved, $fresh->fresh()?->status);
+        $this->assertSame(SourceProposalStatus::Pending, $taken->fresh()?->status);
+        Bus::assertDispatchedTimes(ScoutInterest::class, 1);
+    }
+
+    public function test_bulk_reject_only_changes_pending_proposals(): void
+    {
+        $pending = InterestProposal::factory()->create();
+        $approved = InterestProposal::factory()->create(['status' => SourceProposalStatus::Approved]);
+
+        $this->listPage()
+            ->removeTableFilters()
+            ->selectTableRecords([$pending->id, $approved->id])
+            ->callAction(TestAction::make('bulkReject')->table()->bulk())
+            ->assertNotified();
+
+        $this->assertSame(SourceProposalStatus::Rejected, $pending->fresh()?->status);
+        $this->assertSame(SourceProposalStatus::Approved, $approved->fresh()?->status);
     }
 
     private function listPage(): Testable
