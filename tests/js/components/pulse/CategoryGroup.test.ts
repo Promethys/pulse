@@ -24,8 +24,10 @@ describe('CategoryGroup', () => {
                 .getAllByRole('button')
                 .map((button) => button.textContent?.trim()),
         ).toEqual([
-            'Artificial intelligence',
-            'Security',
+            expect.stringMatching(
+                /Artificial intelligence.*Includes learning/is,
+            ),
+            expect.stringMatching(/Security.*Includes learning/is),
             expect.stringMatching(/Robotics.*Coming soon/is),
         ]);
         await userEvent
