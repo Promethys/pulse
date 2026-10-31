@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Digest\Catalog;
 
 use App\Jobs\CheckCatalogSource;
+use App\Jobs\ScoutInterest;
+use App\Models\Interest;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +29,22 @@ final class CatalogRefresher
 
         foreach ($sources->get() as $source) {
             Bus::dispatch(new CheckCatalogSource($source, $force));
+            $dispatched++;
+        }
+
+        return $dispatched;
+    }
+
+    public function dispatchScouts(): int
+    {
+        $start = CarbonImmutable::now('UTC')->startOfMonth();
+        $interests = Interest::query()->live()
+            ->where(fn (Builder $query) => $query->whereNull('scouted_at')->orWhere('scouted_at', '<', $start))
+            ->get();
+        $dispatched = 0;
+
+        foreach ($interests as $interest) {
+            Bus::dispatch(new ScoutInterest($interest));
             $dispatched++;
         }
 

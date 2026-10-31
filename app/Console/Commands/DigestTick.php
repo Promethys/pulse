@@ -75,6 +75,7 @@ class DigestTick extends Command
 
         try {
             $refresher->dispatch();
+            $refresher->dispatchScouts();
         } catch (Throwable $e) {
             report($e);
         }

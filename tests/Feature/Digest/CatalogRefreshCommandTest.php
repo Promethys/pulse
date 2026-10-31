@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Digest;
 
+use App\Digest\Catalog\CatalogRefresher;
+use App\Enums\InterestStatus;
 use App\Jobs\CheckCatalogSource;
+use App\Jobs\ScoutInterest;
+use App\Models\Interest;
 use App\Models\Source;
 use App\Models\SourceCheck;
 use App\Models\User;
@@ -23,7 +27,7 @@ class CatalogRefreshCommandTest extends TestCase
     {
         parent::setUp();
         $this->travelTo(CarbonImmutable::parse('2026-03-01 00:00:00', 'UTC'));
-        Bus::fake([CheckCatalogSource::class]);
+        Bus::fake([CheckCatalogSource::class, ScoutInterest::class]);
     }
 
     public function test_dispatches_only_enabled_catalog_sources_without_a_check_in_the_current_utc_month(): void
@@ -78,6 +82,48 @@ class CatalogRefreshCommandTest extends TestCase
         foreach ([$source, $unchecked] as $expected) {
             Bus::assertDispatched(CheckCatalogSource::class, fn (CheckCatalogSource $job) => $job->source->is($expected) && $job->force);
         }
+    }
+
+    public function test_automatic_scout_dispatch_only_selects_live_interests_due_in_the_current_utc_month(): void
+    {
+        config(['app.timezone' => 'America/Los_Angeles']);
+        $never = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $previous = Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => now()->subSecond()]);
+        Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => now()]);
+        Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => now()->addMonth()]);
+        Interest::factory()->create(['status' => InterestStatus::Draft]);
+        Interest::factory()->create(['status' => InterestStatus::Draft, 'scouted_at' => now()->subMonth()]);
+
+        $this->assertSame(2, app(CatalogRefresher::class)->dispatchScouts());
+
+        Bus::assertDispatchedTimes(ScoutInterest::class, 2);
+        foreach ([$never, $previous] as $interest) {
+            Bus::assertDispatched(ScoutInterest::class, fn (ScoutInterest $job) => $job->interest->is($interest));
+        }
+        $this->assertNull($never->fresh()->scouted_at);
+        $this->assertTrue($previous->fresh()->scouted_at->equalTo(now()->subSecond()));
+        Bus::assertNotDispatched(CheckCatalogSource::class);
+    }
+
+    public function test_automatic_scout_dispatch_does_not_repeat_earlier_this_month_even_after_thirty_days(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-03-31 23:59:59', 'UTC'));
+        Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => '2026-03-01 00:00:00']);
+
+        $this->assertSame(0, app(CatalogRefresher::class)->dispatchScouts());
+
+        Bus::assertNothingDispatched();
+    }
+
+    public function test_scouted_at_is_nullable_and_cast_to_an_immutable_date(): void
+    {
+        $interest = Interest::factory()->create();
+        $this->assertNull($interest->fresh()->scouted_at);
+
+        $interest->forceFill(['scouted_at' => now()])->save();
+
+        $this->assertInstanceOf(CarbonImmutable::class, $interest->fresh()->scouted_at);
+        $this->assertTrue($interest->fresh()->scouted_at->equalTo(now()));
     }
 
     /** @return array<string, array{bool}> */

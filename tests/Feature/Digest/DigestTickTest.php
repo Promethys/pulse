@@ -12,9 +12,11 @@ use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\FetchException;
 use App\Digest\Sources\SourceFetcher;
 use App\Enums\DeliveryStatus;
+use App\Enums\InterestStatus;
 use App\Enums\PostKind;
 use App\Jobs\CheckCatalogSource;
 use App\Jobs\RunDigest;
+use App\Jobs\ScoutInterest;
 use App\Models\AiKey;
 use App\Models\Delivery;
 use App\Models\DigestSettings;
@@ -31,6 +33,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Queue;
+use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
@@ -51,7 +54,7 @@ class DigestTickTest extends TestCase
         $this->freezeSecond();
         config(['digest.max_attempts' => 4, 'digest.news_time' => '23:59', 'digest.learning_time' => '23:59']);
         Queue::fake();
-        Bus::fake([RunDigest::class, CheckCatalogSource::class]);
+        Bus::fake([RunDigest::class, CheckCatalogSource::class, ScoutInterest::class]);
         $this->mock(NewsPipeline::class)->shouldNotReceive('run', 'runFor');
         $this->mock(LearningPipeline::class)->shouldNotReceive('run', 'runFor');
         $this->mock(PostDeliverer::class)->shouldNotReceive('deliver');
@@ -237,6 +240,49 @@ class DigestTickTest extends TestCase
 
                 return true;
             })->andThrow($failure);
+
+        $this->artisan('digest:tick')->assertExitCode($exitCode);
+
+        Exceptions::assertReported(fn (RuntimeException $actual) => $actual === $failure);
+    }
+
+    public function test_dispatches_scouts_after_catalog_checks_even_when_no_digest_is_due(): void
+    {
+        $source = Source::factory()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        Interest::factory()->create(['status' => InterestStatus::Live, 'scouted_at' => now()->startOfMonth()]);
+        Interest::factory()->create(['status' => InterestStatus::Draft]);
+        $old = Item::factory()->create(['created_at' => now()->subDays(31)]);
+        $order = [];
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(CheckCatalogSource::class))->andReturnUsing(function (CheckCatalogSource $job) use ($source, $old, &$order): void {
+            $this->assertModelMissing($old);
+            $this->assertTrue($job->source->is($source));
+            $order[] = 'check';
+        });
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(ScoutInterest::class))->andReturnUsing(function (ScoutInterest $job) use ($interest, &$order): void {
+            $this->assertSame(['check'], $order);
+            $this->assertTrue($job->interest->is($interest));
+            $order[] = 'scout';
+        });
+
+        $this->artisan('digest:tick')->assertExitCode(0);
+
+        $this->assertSame(['check', 'scout'], $order);
+        $this->assertSame([], $this->fetched);
+    }
+
+    #[DataProvider('tickExitCodes')]
+    public function test_scout_dispatch_failure_is_reported_without_changing_the_tick_exit_code(int $exitCode): void
+    {
+        Exceptions::fake();
+        Interest::factory()->create(['status' => InterestStatus::Live]);
+        if ($exitCode === 1) {
+            $post = Post::factory()->create(['user_id' => User::factory()]);
+            Delivery::factory()->create(['post_id' => $post->id, 'status' => DeliveryStatus::Failed]);
+            $this->mock(PostDeliverer::class)->shouldReceive('deliver')->once()->andReturn(1);
+        }
+        $failure = new RuntimeException('Scout queue unavailable');
+        Bus::shouldReceive('dispatch')->once()->with(Mockery::type(ScoutInterest::class))->andThrow($failure);
 
         $this->artisan('digest:tick')->assertExitCode($exitCode);
 
