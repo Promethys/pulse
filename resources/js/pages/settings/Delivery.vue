@@ -275,7 +275,16 @@ function disconnect() {
                         </div>
                     </DestinationRow>
                 </div>
-                <div class="p-4">
+                <div class="space-y-2 p-4">
+                    <p
+                        v-if="!server.forums_error && !server.forums.length"
+                        class="text-sm text-muted-foreground"
+                    >
+                        No forum channels found in this server. Forum channels
+                        need a Community server: enable Community in the
+                        server's settings, create a channel of type Forum, then
+                        refresh this page. You can also use a webhook below.
+                    </p>
                     <Button
                         variant="outline"
                         :disabled="server.forums_error || !server.forums.length"
@@ -357,7 +366,10 @@ function disconnect() {
     </Card>
     <Card class="mb-4 shadow-none">
         <CardHeader
-            ><CardTitle class="font-display">Email</CardTitle></CardHeader
+            ><CardTitle class="font-display">Email</CardTitle
+            ><CardDescription
+                >Receive your digests by email.</CardDescription
+            ></CardHeader
         >
         <CardContent>
             <div

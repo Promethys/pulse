@@ -16,7 +16,12 @@ final class DiscoverDiscordForums
     public function handle(string $guildId): array
     {
         try {
-            $forums = Cache::remember('discord.forums.'.$guildId, 300, fn () => $this->discord->forumChannels($guildId));
+            $key = 'discord.forums.'.$guildId;
+            $forums = Cache::get($key) ?? $this->discord->forumChannels($guildId);
+
+            if ($forums !== []) {
+                Cache::put($key, $forums, 300);
+            }
 
             return ['forums' => $forums, 'forums_error' => false];
         } catch (Throwable) {

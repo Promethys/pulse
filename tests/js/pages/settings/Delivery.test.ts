@@ -34,6 +34,34 @@ describe('Delivery settings', () => {
         expect(screen.getAllByRole('switch')).toHaveLength(2);
     });
 
+    it('explains why a forum cannot be added when the server has none', () => {
+        const props = deliveryProps();
+        props.guilds[0].forums = [];
+        renderPage(props);
+
+        expect(
+            screen.getByRole('button', { name: 'Add a forum channel' }),
+        ).toBeDisabled();
+        expect(screen.getByText(/No forum channels found/)).toBeVisible();
+        expect(screen.getByText(/Community server/)).toBeVisible();
+    });
+
+    it('does not show the no forum hint when forums exist or loading failed', () => {
+        const props = deliveryProps();
+        renderPage(props);
+        expect(
+            screen.queryByText(/No forum channels found/),
+        ).not.toBeInTheDocument();
+    });
+
+    it('describes the email section', () => {
+        renderPage();
+
+        expect(
+            screen.getByText('Receive your digests by email.'),
+        ).toBeVisible();
+    });
+
     it('hides installation when unavailable and explains why', () => {
         const props = deliveryProps();
         props.install_url = null;
