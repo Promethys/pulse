@@ -71,6 +71,12 @@ describe('AppearanceTabs', () => {
         expect(localStorage.getItem('appearance')).toBe('light');
     });
 
+    it('holds only the three theme options', () => {
+        render(AppearanceTabs);
+
+        expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
+
     it('uses plain buttons that never submit a form', () => {
         render(AppearanceTabs);
 
@@ -80,16 +86,4 @@ describe('AppearanceTabs', () => {
                 expect(button).toHaveAttribute('type', 'button'),
             );
     });
-});
-
-it('defines System beside its choice without nesting buttons', async () => {
-    render(AppearanceTabs);
-    const help = screen.getByRole('button', {
-        name: 'Help: System appearance',
-    });
-    expect(help.closest('button button')).toBeNull();
-    await userEvent.setup().click(help);
-    expect(await screen.findByRole('dialog')).toHaveTextContent(
-        'Follow this device’s light or dark appearance.',
-    );
 });
