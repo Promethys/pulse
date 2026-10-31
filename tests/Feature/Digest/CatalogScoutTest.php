@@ -263,24 +263,6 @@ class CatalogScoutTest extends TestCase
         Exceptions::assertNothingReported();
     }
 
-    /** @return array<string, array{SourceProposalStatus}> */
-    public static function proposalStatuses(): array
-    {
-        return ['pending' => [SourceProposalStatus::Pending], 'approved' => [SourceProposalStatus::Approved], 'rejected' => [SourceProposalStatus::Rejected]];
-    }
-
-    /** @return array{name: string, url: string, site_url: string, reason: string} */
-    private function proposal(string $domain): array
-    {
-        return ['name' => ucfirst($domain), 'url' => 'https://'.$domain.'.test/feed', 'site_url' => 'https://'.$domain.'.test', 'reason' => 'Original reporting'];
-    }
-
-    /** @param  list<array{name: string, url: string, site_url: string, reason: string}>  $proposals */
-    private function fakeProposals(array $proposals): void
-    {
-        SourceScout::fake([json_encode(['proposals' => $proposals], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
-    }
-
     public function test_a_guessed_feed_url_is_replaced_by_the_feed_the_site_advertises(): void
     {
         Http::fake(['https://site.test/*' => Http::response('<html><head><link rel="alternate" type="application/rss+xml" href="/real/feed"></head></html>')]);
@@ -325,5 +307,23 @@ class CatalogScoutTest extends TestCase
         $this->assertSame(0, app(CatalogScout::class)->scout(Interest::factory()->create()));
 
         $this->assertDatabaseCount('source_proposals', 0);
+    }
+
+    /** @return array<string, array{SourceProposalStatus}> */
+    public static function proposalStatuses(): array
+    {
+        return ['pending' => [SourceProposalStatus::Pending], 'approved' => [SourceProposalStatus::Approved], 'rejected' => [SourceProposalStatus::Rejected]];
+    }
+
+    /** @return array{name: string, url: string, site_url: string, reason: string} */
+    private function proposal(string $domain): array
+    {
+        return ['name' => ucfirst($domain), 'url' => 'https://'.$domain.'.test/feed', 'site_url' => 'https://'.$domain.'.test', 'reason' => 'Original reporting'];
+    }
+
+    /** @param  list<array{name: string, url: string, site_url: string, reason: string}>  $proposals */
+    private function fakeProposals(array $proposals): void
+    {
+        SourceScout::fake([json_encode(['proposals' => $proposals], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
     }
 }
