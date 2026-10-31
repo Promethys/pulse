@@ -9,6 +9,7 @@ use App\Digest\Ai\AiConfigurationException;
 use App\Digest\Catalog\CatalogScout;
 use App\Digest\Sources\Candidate;
 use App\Digest\Sources\FeedFetcher;
+use App\Digest\Sources\FetchException;
 use App\Digest\Sources\SourceFetcher;
 use App\Digest\Support\PublicUrl;
 use App\Enums\SourceProposalKind;
@@ -50,6 +51,10 @@ class CatalogScoutTest extends TestCase
             public function fetch(Source $source, CarbonImmutable $since): array
             {
                 $this->test->fetched[] = $source->url;
+
+                if (str_contains((string) $source->url, 'guessed')) {
+                    throw new FetchException('HTTP 404');
+                }
 
                 return array_map(fn (int $index) => new Candidate('Post '.$index, $source->url.'/'.$index, '', CarbonImmutable::now(), []), [1, 2, 3]);
             }
@@ -274,5 +279,51 @@ class CatalogScoutTest extends TestCase
     private function fakeProposals(array $proposals): void
     {
         SourceScout::fake([json_encode(['proposals' => $proposals], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
+    }
+
+    public function test_a_guessed_feed_url_is_replaced_by_the_feed_the_site_advertises(): void
+    {
+        Http::fake(['https://site.test/*' => Http::response('<html><head><link rel="alternate" type="application/rss+xml" href="/real/feed"></head></html>')]);
+        SourceScout::fake([json_encode(['proposals' => [[
+            'name' => 'Site',
+            'url' => 'https://site.test/guessed.xml',
+            'site_url' => 'https://site.test/',
+            'reason' => 'Regular original posts.',
+        ]]], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
+
+        $this->assertSame(1, app(CatalogScout::class)->scout(Interest::factory()->create()));
+
+        $this->assertDatabaseHas('source_proposals', ['url' => 'https://site.test/real/feed', 'name' => 'Site']);
+        $this->assertDatabaseMissing('source_proposals', ['url' => 'https://site.test/guessed.xml']);
+    }
+
+    public function test_without_a_site_url_it_looks_on_the_host_of_the_guess(): void
+    {
+        Http::fake(['https://site.test/*' => Http::response('<html><head><link rel="alternate" type="application/atom+xml" href="https://site.test/atom"></head></html>')]);
+        SourceScout::fake([json_encode(['proposals' => [[
+            'name' => 'Site',
+            'url' => 'https://site.test/blog/guessed.xml',
+            'site_url' => null,
+            'reason' => 'Regular original posts.',
+        ]]], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
+
+        $this->assertSame(1, app(CatalogScout::class)->scout(Interest::factory()->create()));
+
+        $this->assertDatabaseHas('source_proposals', ['url' => 'https://site.test/atom']);
+    }
+
+    public function test_a_site_without_a_feed_stores_nothing(): void
+    {
+        Http::fake(['https://site.test/*' => Http::response('<html><head></head></html>')]);
+        SourceScout::fake([json_encode(['proposals' => [[
+            'name' => 'Site',
+            'url' => 'https://site.test/guessed.xml',
+            'site_url' => 'https://site.test/',
+            'reason' => 'Regular original posts.',
+        ]]], JSON_THROW_ON_ERROR)])->preventStrayPrompts();
+
+        $this->assertSame(0, app(CatalogScout::class)->scout(Interest::factory()->create()));
+
+        $this->assertDatabaseCount('source_proposals', 0);
     }
 }

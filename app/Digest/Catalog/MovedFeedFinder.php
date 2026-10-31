@@ -36,13 +36,7 @@ final class MovedFeedFinder
                     return null;
                 }
 
-                $response = $this->publicUrl->get($http, $source->site_url);
-                if ($response->failed()) {
-                    return null;
-                }
-
-                $pageUrl = (string) ($response->effectiveUri() ?? $source->site_url);
-                $candidate = $this->discover($response->body(), $pageUrl);
+                $candidate = $this->advertisedFeed($source->site_url);
             }
 
             if ($candidate === null || $candidate === $url || ! $this->publicUrl->isPublic($candidate)) {
@@ -56,6 +50,22 @@ final class MovedFeedFinder
             $this->collector->fetch($replica, CarbonImmutable::now()->subDays(30));
 
             return $candidate;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    public function advertisedFeed(string $siteUrl): ?string
+    {
+        try {
+            $http = Http::timeout(10)->withUserAgent(FeedFetcher::USER_AGENT);
+            $response = $this->publicUrl->get($http, $siteUrl);
+
+            if ($response->failed()) {
+                return null;
+            }
+
+            return $this->discover($response->body(), (string) ($response->effectiveUri() ?? $siteUrl));
         } catch (Throwable) {
             return null;
         }

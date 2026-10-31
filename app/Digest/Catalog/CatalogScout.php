@@ -24,6 +24,7 @@ final class CatalogScout
     public function __construct(
         private readonly ScoutResponseParser $parser,
         private readonly ProposalChecker $checker,
+        private readonly MovedFeedFinder $feeds,
     ) {}
 
     public function scout(Interest $interest, int $max = 5): int
@@ -49,6 +50,20 @@ final class CatalogScout
             }
 
             $check = $this->checker->check($proposal['url']);
+
+            if ($check->failure === 'feed_parses') {
+                $site = $proposal['site_url'] ?: parse_url($proposal['url'], PHP_URL_SCHEME).'://'.parse_url($proposal['url'], PHP_URL_HOST).'/';
+                $feed = $this->feeds->advertisedFeed($site);
+
+                if ($feed === null || SourceProposal::query()->where('url', $feed)->exists()) {
+                    Log::info('Scout proposal failed a check', ['url' => $proposal['url'], 'failure' => $check->failure]);
+
+                    continue;
+                }
+
+                $proposal['url'] = $feed;
+                $check = $this->checker->check($feed);
+            }
 
             if (! $check->passed) {
                 Log::info('Scout proposal failed a check', ['url' => $proposal['url'], 'failure' => $check->failure]);
