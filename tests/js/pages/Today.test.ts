@@ -66,9 +66,14 @@ describe('Today', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'Your first digest arrives tomorrow at 06:15 (Pacific/Honolulu).',
+                'Your first digest will be prepared at 06:15 (Pacific/Honolulu).',
             ),
         ).toBeVisible();
+        expect(
+            screen.queryByText(
+                'Add an AI key in Settings to start receiving digests.',
+            ),
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Pick a date' }),
         ).not.toBeInTheDocument();
@@ -218,4 +223,29 @@ describe('Today', () => {
         expect(calls).toHaveLength(1);
         expect(calls[0][0]).toBe('/');
     });
+
+    it.each([true, false])(
+        'explains missing AI access with an existing digest=%s',
+        (hasDay) => {
+            const props = todayProps();
+            if (!hasDay) props.day = null;
+            props.setup.ai_key = false;
+            renderPage(props);
+            expect(
+                screen.getByText(
+                    'Add an AI key in Settings to start receiving digests.',
+                ),
+            ).toBeVisible();
+            expect(
+                screen.queryByText(
+                    /will be prepared at|Today's digest arrives|isn't ready yet/,
+                ),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('heading', {
+                    name: 'Your first digest is on its way',
+                }),
+            ).not.toBeInTheDocument();
+        },
+    );
 });

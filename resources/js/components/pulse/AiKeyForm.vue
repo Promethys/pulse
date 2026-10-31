@@ -172,6 +172,15 @@ async function testKey(): Promise<KeyTestResult> {
             :hint="keyHint"
             @update:model-value="update({ api_key: $event })"
         />
+        <p class="text-sm text-muted-foreground">
+            Your AI provider may charge your account for digest generation and
+            key tests. Check your provider’s pricing and balance.
+        </p>
+        <p class="text-sm text-muted-foreground">
+            Pulse sends your reader profile, interests and source titles,
+            excerpts and links to your AI provider. Learning requests also
+            include recent tip titles.
+        </p>
         <div class="flex items-start gap-2">
             <Checkbox
                 id="consent"

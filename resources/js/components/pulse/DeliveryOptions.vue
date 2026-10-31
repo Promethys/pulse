@@ -27,7 +27,8 @@ const emailDelivery = defineModel<boolean>('emailDelivery', { required: true });
                 <div class="flex-1">
                     <p class="font-semibold">Email</p>
                     <p class="text-sm text-muted-foreground">
-                        One email each morning.
+                        Receive your digests by email. News and learning arrive
+                        as separate emails.
                     </p>
                 </div>
                 <Switch v-model="emailDelivery" aria-label="Email" />

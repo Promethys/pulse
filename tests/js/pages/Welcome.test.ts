@@ -45,7 +45,7 @@ describe('Welcome', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'Pulse reads your sources overnight and sends you a short, grouped summary each morning. Free and open source.',
+                'Pulse reads your sources overnight and sends you a short, grouped summary each morning. Free and open source. You bring your own AI key.',
             ),
         ).toBeVisible();
         [
@@ -55,7 +55,7 @@ describe('Welcome', () => {
             ],
             [
                 'Add your AI key',
-                'Gemini, Anthropic, OpenAI, Groq or OpenRouter. Free tiers are usually enough.',
+                'Gemini, Anthropic, OpenAI, Groq or OpenRouter. Free tiers are often enough, and your provider may charge beyond them.',
             ],
             [
                 'Choose where to receive it',

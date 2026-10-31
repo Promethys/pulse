@@ -13,12 +13,16 @@ const props = defineProps<TodayProps>();
 const incomplete = computed(() =>
     Object.values(props.setup).some((done) => !done),
 );
-const firstDigest = computed(() =>
-    props.next_digest
-        ? `Your first digest arrives tomorrow at ${props.next_digest.time} (${props.next_digest.timezone}).`
-        : undefined,
-);
+const firstDigest = computed(() => {
+    if (!props.setup.ai_key)
+        return 'Add an AI key in Settings to start receiving digests.';
+    return props.next_digest
+        ? `Your first digest will be prepared at ${props.next_digest.time} (${props.next_digest.timezone}).`
+        : undefined;
+});
 const notice = computed(() => {
+    if (!props.setup.ai_key)
+        return 'Add an AI key in Settings to start receiving digests.';
     if (!props.next_digest) return null;
 
     const { time, timezone } = props.next_digest;
@@ -52,7 +56,11 @@ const notice = computed(() => {
         <PageHeader title="Today" subtitle="Welcome to Pulse" />
         <SetupChecklist v-if="incomplete" :state="setup" />
         <EmptyState
-            title="Your first digest is on its way"
+            :title="
+                setup.ai_key
+                    ? 'Your first digest is on its way'
+                    : 'Set up your first digest'
+            "
             :description="firstDigest"
         >
             <template #icon

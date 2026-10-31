@@ -21,6 +21,7 @@ import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 // oxfmt-ignore
 type Props = {
     passwordRules: string;
+    passwordHint: string;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
@@ -86,6 +87,9 @@ defineOptions({
                         placeholder="New password"
                         :passwordrules="props.passwordRules"
                     />
+                    <p class="text-sm text-muted-foreground">
+                        {{ passwordHint }}
+                    </p>
                     <InputError :message="errors.password" />
                 </div>
 

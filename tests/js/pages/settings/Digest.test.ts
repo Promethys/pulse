@@ -114,4 +114,11 @@ describe('Digest settings', () => {
             'A curious reader',
         );
     });
+
+    it('explains that the reader profile is shared with the AI provider', () => {
+        renderPage();
+        expect(
+            screen.getByText('Sent to your AI provider to tailor your digest.'),
+        ).toBeVisible();
+    });
 });

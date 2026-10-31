@@ -88,6 +88,9 @@ function save() {
                         :rows="4"
                         :maxlength="2000"
                     />
+                    <p class="text-sm text-muted-foreground">
+                        Sent to your AI provider to tailor your digest.
+                    </p>
                     <p class="text-right text-xs text-muted-foreground">
                         {{ form.profile.length.toLocaleString('en') }} / 2,000
                     </p>

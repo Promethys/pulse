@@ -265,6 +265,9 @@ function next() {
                             :maxlength="2000"
                             placeholder="Laravel developer, curious about AI agents, not interested in crypto. I like short summaries with a link to the source."
                         />
+                        <p class="text-sm text-muted-foreground">
+                            Sent to your AI provider to tailor your digest.
+                        </p>
                         <p class="text-right text-xs text-muted-foreground">
                             {{ aboutForm.profile.length.toLocaleString('en') }}
                             / 2,000
@@ -337,11 +340,17 @@ function next() {
                             aria-hidden="true"
                         />
                         <div>
-                            <p class="font-semibold">
-                                Your first digest arrives tomorrow at
-                                {{ settings.news_time }}
-                            </p>
                             <p class="text-sm text-muted-foreground">
+                                {{
+                                    ai_keys.length || uses_instance_ai
+                                        ? `Your first digest will be prepared at ${settings.news_time} (${settings.timezone}).`
+                                        : 'Add an AI key in Settings to start receiving digests.'
+                                }}
+                            </p>
+                            <p
+                                v-if="ai_keys.length || uses_instance_ai"
+                                class="text-sm text-muted-foreground"
+                            >
                                 In the app{{
                                     deliveryForm.email_delivery
                                         ? ' and by email'

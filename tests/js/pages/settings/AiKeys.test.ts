@@ -85,7 +85,7 @@ describe('AI keys settings', () => {
             within(dialog).queryByText('Why your own key?'),
         ).not.toBeInTheDocument();
         expect(
-            within(dialog).getByRole('button', { name: /^Add$/ }),
+            within(dialog).getByRole('button', { name: /^Replace key$/ }),
         ).toBeDisabled();
         await view.user.type(
             within(dialog).getByLabelText('Gemini API key'),
@@ -97,7 +97,7 @@ describe('AI keys settings', () => {
             }),
         );
         await view.user.click(
-            within(dialog).getByRole('button', { name: /^Add$/ }),
+            within(dialog).getByRole('button', { name: /^Replace key$/ }),
         );
         expect(view.post).toHaveBeenCalledWith(
             '/settings/ai-keys',
@@ -212,4 +212,70 @@ describe('AI keys settings', () => {
             expect.any(Object),
         );
     });
+
+    it('explains replacement and updates the title and button when changing provider', async () => {
+        const view = renderPage();
+        await view.user.click(
+            screen.getByRole('button', { name: 'Add a key' }),
+        );
+        const dialog = await screen.findByRole('dialog');
+        expect(
+            within(dialog).getByText(
+                'You can save one key per provider. Adding another key for this provider replaces its saved key and model.',
+            ),
+        ).toBeVisible();
+        expect(
+            within(dialog).getByRole('heading', { name: 'Replace key' }),
+        ).toBeVisible();
+        expect(
+            within(dialog).getByRole('button', { name: 'Replace key' }),
+        ).toBeDisabled();
+        await view.user.click(
+            within(dialog).getByRole('radio', { name: 'Anthropic' }),
+        );
+        expect(
+            within(dialog).getByRole('heading', { name: 'Add an AI key' }),
+        ).toBeVisible();
+        expect(
+            within(dialog).getByRole('button', { name: 'Add' }),
+        ).toBeDisabled();
+        expect(
+            within(dialog).queryByRole('heading', { name: 'Replace key' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it.each([
+        [
+            1,
+            false,
+            'Deleting your last AI key pauses scheduled digests until you add another.',
+        ],
+        [1, true, 'Pulse will use its own AI key for future digests.'],
+        [2, false, 'Pulse will stop using this key for your digests.'],
+        [2, true, 'Pulse will stop using this key for your digests.'],
+    ] as const)(
+        'explains deleting from %i keys with instance AI=%s',
+        async (count, instance, message) => {
+            const props = { ...aiKeysProps(), uses_instance_ai: instance };
+            props.keys = props.keys.slice(0, count);
+            const view = renderPage(props);
+            await view.user.click(
+                screen.getAllByRole('button', { name: 'Delete' })[0],
+            );
+            const dialog = await screen.findByRole('alertdialog');
+            expect(within(dialog).getByText(message)).toBeVisible();
+            const pause =
+                'Deleting your last AI key pauses scheduled digests until you add another.';
+            const fallback =
+                'Pulse will use its own AI key for future digests.';
+            if (message !== pause)
+                expect(
+                    within(dialog).queryByText(pause),
+                ).not.toBeInTheDocument();
+            if (message !== fallback)
+                expect(
+                    within(dialog).queryByText(fallback),
+                ).not.toBeInTheDocument();
+        },
+    );
 });

@@ -699,4 +699,48 @@ describe('Onboarding', () => {
                 );
         },
     );
+
+    it('explains profile sharing beside the reader profile', async () => {
+        const view = renderPage();
+        await goToStep(view, 2);
+        expect(
+            screen.getByText('Sent to your AI provider to tailor your digest.'),
+        ).toBeVisible();
+    });
+
+    it.each(['none', 'personal', 'instance'] as const)(
+        'shows honest first-digest guidance with %s AI access',
+        async (access) => {
+            const props = {
+                ...onboardingProps(),
+                uses_instance_ai: access === 'instance',
+            };
+            if (access === 'personal')
+                props.ai_keys = [
+                    {
+                        id: 1,
+                        provider: 'gemini',
+                        model: 'test-model',
+                        key_suffix: 'abcd',
+                        position: 0,
+                        consented_at: '2026-10-31T00:00:00Z',
+                        created_at: null,
+                    },
+                ];
+            const view = renderPage(props);
+            await goToStep(view, 4);
+            const schedule = `Your first digest will be prepared at ${props.settings.news_time} (${props.settings.timezone}).`;
+            const missing =
+                'Add an AI key in Settings to start receiving digests.';
+            expect(
+                screen.getByText(access === 'none' ? missing : schedule),
+            ).toBeVisible();
+            expect(
+                screen.queryByText(access === 'none' ? schedule : missing),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByText(/arrives tomorrow/),
+            ).not.toBeInTheDocument();
+        },
+    );
 });

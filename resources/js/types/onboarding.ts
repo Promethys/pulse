@@ -80,4 +80,5 @@ export type OnboardingProps = {
     }[];
     email: string;
     email_delivery: boolean;
+    uses_instance_ai: boolean;
 };

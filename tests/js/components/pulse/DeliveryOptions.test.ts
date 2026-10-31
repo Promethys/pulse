@@ -53,4 +53,21 @@ describe('DeliveryOptions', () => {
             screen.queryByRole('textbox', { name: 'Email address' }),
         ).not.toBeInTheDocument();
     });
+
+    it.each([true, false])(
+        'explains separate emails with email enabled=%s',
+        (emailDelivery) => {
+            render(DeliveryOptions, {
+                props: { email: 'reader@example.test', emailDelivery },
+            });
+            expect(
+                screen.getByText(
+                    'Receive your digests by email. News and learning arrive as separate emails.',
+                ),
+            ).toBeVisible();
+            expect(
+                screen.queryByText('One email each morning.'),
+            ).not.toBeInTheDocument();
+        },
+    );
 });

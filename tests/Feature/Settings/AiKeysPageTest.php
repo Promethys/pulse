@@ -40,7 +40,7 @@ class AiKeysPageTest extends TestCase
             ->component('settings/AiKeys', false)->has('keys', 2)->where('keys.0.id', $first->id)->where('keys.1.id', $last->id)
             ->where('keys.1.key_suffix', 'abcd')->missing('keys.0.api_key')->missing('keys.0.user_id')
             ->has('providers', 6)->where('providers.0.value', 'gemini')->has('providers.0.suggested_models')
-            ->where('uses_instance_ai_notice', false)->missing('uses_instance_ai'));
+            ->where('uses_instance_ai_notice', false)->where('uses_instance_ai', false));
         $this->assertStringNotContainsString('fake-secret-last-abcd', $response->getContent());
         $this->assertStringNotContainsString('fake-other-secret', $response->getContent());
         Http::assertNothingSent();
@@ -54,12 +54,12 @@ class AiKeysPageTest extends TestCase
             AiKey::factory()->for($user)->create();
         }
         $this->actingAs($user)->get('/settings/ai-keys')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('settings/AiKeys', false)->where('uses_instance_ai_notice', $notice)->missing('uses_instance_ai'));
+            ->component('settings/AiKeys', false)->where('uses_instance_ai_notice', $notice)->where('uses_instance_ai', $flag));
     }
 
     public static function instanceNotice(): array
     {
-        return [[false, false, false], [true, false, true], [true, true, false]];
+        return [[false, false, false], [false, true, false], [true, false, true], [true, true, false]];
     }
 
     public function test_save_encrypts_appends_and_replaces_only_the_same_users_provider(): void
