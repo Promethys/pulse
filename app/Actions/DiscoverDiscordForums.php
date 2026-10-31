@@ -17,10 +17,14 @@ final class DiscoverDiscordForums
     {
         try {
             $key = 'discord.forums.'.$guildId;
-            $forums = Cache::get($key) ?? $this->discord->forumChannels($guildId);
+            $forums = Cache::get($key);
 
-            if ($forums !== []) {
-                Cache::put($key, $forums, 300);
+            if ($forums === null) {
+                $forums = $this->discord->forumChannels($guildId);
+
+                if ($forums !== []) {
+                    Cache::put($key, $forums, 300);
+                }
             }
 
             return ['forums' => $forums, 'forums_error' => false];
