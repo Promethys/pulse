@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import Welcome from '@/pages/Welcome.vue';
 import { login, register } from '@/routes';
+import { page } from '../support/inertia';
 
-function renderWelcome(canRegister = true) {
+function renderWelcome(canRegister = true, signedIn = false) {
+    page.props = { auth: { user: signedIn ? { id: 1 } : null }, canRegister };
     return render(Welcome, {
-        props: { canRegister },
         global: { stubs: { Head: true } },
     });
 }
@@ -15,9 +16,11 @@ describe('Welcome', () => {
     it('offers account creation and login through the generated routes', () => {
         renderWelcome();
 
-        expect(
-            screen.getByRole('link', { name: 'Create an account' }),
-        ).toHaveAttribute('href', register.url());
+        screen
+            .getAllByRole('link', { name: 'Create an account' })
+            .forEach((link) =>
+                expect(link).toHaveAttribute('href', register.url()),
+            );
         const links = screen.getAllByRole('link', { name: 'Log in' });
         expect(links).toHaveLength(2);
         links.forEach((link) =>
@@ -32,6 +35,20 @@ describe('Welcome', () => {
             screen.queryByRole('link', { name: 'Create an account' }),
         ).not.toBeInTheDocument();
         expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2);
+    });
+
+    it('offers one Open Pulse action to signed-in readers', () => {
+        renderWelcome(true, true);
+
+        expect(
+            screen.getAllByRole('link', { name: 'Open Pulse' }),
+        ).toHaveLength(1);
+        expect(
+            screen.queryByRole('link', { name: 'Log in' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('link', { name: 'Create an account' }),
+        ).not.toBeInTheDocument();
     });
 
     it('explains the digest and its three setup steps without preview or deferred features', () => {

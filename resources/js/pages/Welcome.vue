@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { FolderGit2, KeyRound, Send, Sparkles } from '@lucide/vue';
-import PulseLogo from '@/components/pulse/PulseLogo.vue';
-import ThemeToggle from '@/components/pulse/ThemeToggle.vue';
 import { Button } from '@/components/ui/button';
-import { home, login, register } from '@/routes';
+import PublicLayout from '@/layouts/PublicLayout.vue';
+import { login, register } from '@/routes';
 
-defineProps<{ canRegister: boolean }>();
+defineOptions({ layout: [] });
+
+const page = usePage<{ canRegister: boolean }>();
 
 const steps = [
     {
@@ -34,19 +35,8 @@ const steps = [
             content="Pick your interests, bring your own AI key, and get one calm daily digest in the app, on Discord or by email. Open source."
         />
     </Head>
-    <div class="min-h-screen bg-background">
-        <header
-            class="mx-auto flex max-w-5xl items-center justify-between px-4 py-5"
-        >
-            <Link :href="home()"><PulseLogo /></Link>
-            <div class="flex items-center gap-1">
-                <ThemeToggle />
-                <Button variant="ghost" as-child
-                    ><Link :href="login()">Log in</Link></Button
-                >
-            </div>
-        </header>
-        <main class="mx-auto max-w-5xl px-4 pb-16">
+    <PublicLayout>
+        <div class="mx-auto max-w-5xl px-4 pb-16">
             <section class="py-10 md:py-16">
                 <h1
                     class="max-w-2xl text-4xl leading-tight font-semibold md:text-5xl"
@@ -59,12 +49,19 @@ const steps = [
                     bring your own AI key.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
-                    <Button v-if="canRegister" size="lg" as-child
+                    <Button
+                        v-if="!page.props.auth.user && page.props.canRegister"
+                        size="lg"
+                        as-child
                         ><Link :href="register()"
                             >Create an account</Link
                         ></Button
                     >
-                    <Button size="lg" variant="outline" as-child
+                    <Button
+                        v-if="!page.props.auth.user"
+                        size="lg"
+                        variant="outline"
+                        as-child
                         ><Link :href="login()">Log in</Link></Button
                     >
                     <Button size="lg" variant="ghost" as-child>
@@ -99,6 +96,6 @@ const steps = [
                     </p>
                 </div>
             </section>
-        </main>
-    </div>
+        </div>
+    </PublicLayout>
 </template>
