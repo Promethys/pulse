@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import Welcome from '@/pages/Welcome.vue';
-import { login, register } from '@/routes';
+import { features, login, register } from '@/routes';
 import { page } from '../support/inertia';
 
 function renderWelcome(canRegister = true, signedIn = false) {
@@ -37,21 +37,24 @@ describe('Welcome', () => {
         expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2);
     });
 
-    it('offers one Open Pulse action to signed-in readers', () => {
-        renderWelcome(true, true);
+    it.each([true, false])(
+        'offers one Open Pulse action to signed-in readers with registration=%s',
+        (canRegister) => {
+            renderWelcome(canRegister, true);
 
-        expect(
-            screen.getAllByRole('link', { name: 'Open Pulse' }),
-        ).toHaveLength(1);
-        expect(
-            screen.queryByRole('link', { name: 'Log in' }),
-        ).not.toBeInTheDocument();
-        expect(
-            screen.queryByRole('link', { name: 'Create an account' }),
-        ).not.toBeInTheDocument();
-    });
+            expect(
+                screen.getAllByRole('link', { name: 'Open Pulse' }),
+            ).toHaveLength(1);
+            expect(
+                screen.queryByRole('link', { name: 'Log in' }),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('link', { name: 'Create an account' }),
+            ).not.toBeInTheDocument();
+        },
+    );
 
-    it('explains the digest and its three setup steps without preview or deferred features', () => {
+    it('shows a sample morning, setup steps, features, costs and questions', () => {
         const { container } = renderWelcome();
 
         expect(
@@ -61,37 +64,32 @@ describe('Welcome', () => {
             }),
         ).toBeVisible();
         expect(
-            screen.getByText(
-                'Pulse reads your sources overnight and sends you a short, grouped summary each morning. Free and open source. You bring your own AI key.',
-            ),
+            screen.getByRole('region', { name: 'Sample morning in Pulse' }),
         ).toBeVisible();
+        expect(screen.getByText('Sample digest')).toBeVisible();
         [
-            [
-                'Pick your interests',
-                'AI, cooking, finance, football… choose what you follow. Tech interests also get a daily tip and topic.',
-            ],
-            [
-                'Add your AI key',
-                'Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI. Some providers have free tiers, and yours may charge beyond them.',
-            ],
-            [
-                'Choose where to receive it',
-                'In the app, in as many Discord servers as you like, or by email.',
-            ],
-        ].forEach(([title, body], index) => {
-            expect(
-                screen.getByRole('heading', { level: 2, name: title }),
-            ).toBeVisible();
-            expect(screen.getByText(body)).toBeVisible();
+            'Pick your interests',
+            'Add your AI key',
+            'Choose where to receive it',
+        ].forEach((name, index) => {
+            expect(screen.getByRole('heading', { name })).toBeVisible();
             expect(screen.getByText(`Step ${index + 1}`)).toBeVisible();
         });
+        expect(
+            screen.getByRole('link', { name: 'Explore features' }),
+        ).toHaveAttribute('href', features.url());
+        expect(
+            screen.getByRole('link', { name: /A digest written for you/ }),
+        ).toHaveAttribute('href', `${features.url()}#digest`);
+        expect(
+            screen.getByRole('heading', { name: 'Free. You bring your key.' }),
+        ).toBeVisible();
+        expect(screen.getByText('Which AI providers can I use?')).toBeVisible();
         expect(container).not.toHaveTextContent(
-            /\bask\b|quiz|rating|too basic|not useful|what a morning looks like/i,
+            /usually enough|data export|52 interests/,
         );
         expect(
-            screen.queryByRole('button', {
-                name: /ask|quiz|rate|useful|too basic/i,
-            }),
+            screen.queryByRole('button', { name: 'Pick a date' }),
         ).not.toBeInTheDocument();
     });
 
