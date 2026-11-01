@@ -1,40 +1,95 @@
 # Pulse
 
-A personal daily digest, built with Laravel. Every morning Pulse reads the tech sources you follow (blogs, release notes, Hacker News, GitHub trending, newsletters), asks an AI model to keep only what matters, and posts:
+One calm daily digest of the news you actually follow. Pulse reads your sources overnight, asks an AI model to keep what matters to you, and gives you a short summary each morning, in the app, on Discord or by email.
 
-- **09:00** by default: the news of the night, grouped by topic, each item with a one-line summary and its source link;
-- **09:30** by default: a developer tip and a software-engineering topic of the day.
+Free and open source. You bring your own AI key. Try it at <https://pulse.promethys.dev>.
 
-Read your digests in the Vue 3/Inertia web app: Today, past days, Archive, news and learning search, tag history and Learning. Manage interests, sources, digest settings, AI keys and delivery from the app. Items, tags and posts are stored in PostgreSQL.
+## What it does
 
-Each account has its own timezone, schedule, profile, interests, source subscriptions and AI chain. Posts are delivered to every enabled destination that accepts their kind: Discord bot, Discord webhook, email or in-app. Learning requires an interest with learning content.
+- **Daily news**: items grouped by topic, each with a one-line summary and a link to the original. 09:00 by default, in your timezone.
+- **Tip and topic of the day**: a second post for tech interests, at 09:30 by default.
+- **Your interests and sources**: 50+ interests with reviewed sources. Switch sources off, or add your own feed or newsletter.
+- **Written for you**: a short profile tells the AI what you care about and what to skip.
+- **Your AI keys**: Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI, ordered as a fallback chain. Keys are stored encrypted.
+- **Delivery**: always in the app, plus as many Discord servers as you like (bot or webhook) and email.
+- **Reading**: Today, past days, Archive, Search, tag history and a Learning library.
+- **Accounts**: email verification, two-factor authentication and passkeys.
 
-## Quick start
+Built with Laravel 13, Vue 3, Inertia, PostgreSQL, Filament and `laravel/ai`.
+
+## Setup
+
+### Option 1: Docker (recommended)
+
+Requirements:
+
+- Docker with Compose
+- Ports `8000`, `5173` and `5433` free
+
+PHP, Node and PostgreSQL all run in containers, with the same PHP version as production.
 
 ```bash
+git clone https://github.com/Promethys/pulse.git
+cd pulse
 cp .env.example .env
 docker compose up -d --build
 docker compose exec app composer install
 docker compose exec app npm ci
 docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate
-docker compose exec app php artisan db:seed --class=InterestTableSeeder
-docker compose exec app php artisan db:seed --class=SourceTableSeeder
-docker compose exec app php artisan db:seed --class=TagTableSeeder
-docker compose exec app php artisan db:seed --class=LearningTopicTableSeeder
-docker compose exec app php artisan digest:sources
+docker compose exec app php artisan migrate --seed
+docker compose exec app npm run dev
 ```
 
-Run `docker compose exec app npm run dev`, then open <http://localhost:8000>. Register, verify your email and complete onboarding. The default log mailer writes verification messages to the application log. See [Getting started](docs/02-getting-started.md#first-run) for local preview data.
+### Option 2: Without Docker
 
-**Existing single-owner installs:** run `pulse:adopt` on the previous version, before migrating to this version. The migration that removes the single-owner columns refuses posts without an owner. To assign the configuration and history to a registered account:
+Requirements:
+
+- PHP 8.4.1 or newer with the `pdo_pgsql`, `intl`, `zip` and `pcntl` extensions
+- Composer
+- Node 24
+- PostgreSQL. Pulse does not run on SQLite
+- Ports `8000` and `5173` free
 
 ```bash
-docker compose exec app php artisan pulse:adopt <email> --dry-run
-docker compose exec app php artisan pulse:adopt <email>
+git clone https://github.com/Promethys/pulse.git
+cd pulse
+cp .env.example .env
+createdb pulse
 ```
 
-Replace `<email>` with the account's address. For scheduled digests, run `php artisan schedule:run` every 15 minutes and keep `php artisan queue:work` running. See [Getting started](docs/02-getting-started.md) for details.
+Set `DB_USERNAME` and `DB_PASSWORD` in `.env` to your PostgreSQL user, then install, seed and start the app:
+
+```bash
+composer setup
+php artisan db:seed
+composer dev
+```
+
+### First steps
+
+Open <http://localhost:8000> and sign in as `test@example.com` with password `password`, or register your own account. The default log mailer writes verification emails to `storage/logs/laravel.log`.
+
+The commands below use Docker. Without Docker, drop `docker compose exec app`.
+
+To see the app full of data, load 90 days of fictional history, then sign in as `showcase@example.com` with password `password`:
+
+```bash
+docker compose exec app php artisan db:seed --class=ShowcaseDataSeeder
+```
+
+To generate a real digest, complete onboarding with an AI key, then run:
+
+```bash
+docker compose exec app php artisan digest:news --user=<email>
+```
+
+## Running it for real
+
+Scheduled digests need two processes: `php artisan schedule:run` every 15 minutes, and `php artisan queue:work` always running. Production builds the `prod` stage of the `Dockerfile`, with its own PostgreSQL database. To send email, set the `MAIL_*` variables.
+
+- [Getting started](docs/02-getting-started.md) has the full setup and the everyday commands.
+- [Configuration](docs/03-configuration.md) lists every setting.
+- Upgrading an old single-owner install? Read [Adopting existing data](docs/02-getting-started.md#adopting-existing-data) before you migrate.
 
 ## Documentation
 
@@ -48,7 +103,7 @@ Replace `<email>` with the account's address. For scheduled digests, run `php ar
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Coding agents read [AGENTS.md](AGENTS.md).
 
 ## License
 
