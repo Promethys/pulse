@@ -1,6 +1,6 @@
 # Contributing
 
-Pulse is a Laravel console app that posts a daily tech-news digest and a developer tip to Discord. The MVP is single-user. Multi-user support is planned.
+Pulse is a Laravel and Vue web app that turns the sources each reader follows into two short daily posts: the news, and a developer tip with a topic of the day.
 
 Use the issue templates for bug reports and feature ideas. Keep each pull request focused on one change.
 
@@ -13,9 +13,10 @@ Follow [Getting started](docs/02-getting-started.md) to set up the app with Dock
 - Use PHPUnit, not Pest. Write a failing test first, then implement the change and make it pass.
 - Use conventional commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`.
 - Make AI calls only through `laravel/ai` agents. Never write provider clients by hand.
-- Never commit secrets or personal data. Keep the reader profile in `.env` as `DIGEST_PROFILE`.
+- Never commit secrets or personal data. Reader profiles live in the database.
 - Disable sources with `enabled = false` rather than deleting them. Seeders only create missing rows, so deleted sources return on the next run.
 - Keep the documentation in `docs/` updated when behavior or setup changes.
+- `AGENTS.md` holds the guidance for AI coding agents, and `CLAUDE.md` is a symlink to it, so edit `AGENTS.md`. Generate the agent skills listed in `boost.json` with `php artisan boost:update --no-discover`.
 
 ## Before opening a pull request
 

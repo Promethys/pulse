@@ -16,7 +16,6 @@ use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Exceptions\ProviderConnectionException;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
-use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 final class TestAiKey
@@ -34,7 +33,7 @@ final class TestAiKey
                 'key' => $apiKey,
             ]);
             $response = (new HealthCheck)->prompt('Health check.', provider: [$name => $model], timeout: (int) config('digest.ai_timeout'));
-            $ok = $response instanceof StructuredAgentResponse && ($response->toArray()['ok'] ?? false) === true;
+            $ok = ($response->toArray()['ok'] ?? false) === true;
 
             return ['ok' => $ok, 'message' => $ok ? __('Key works.') : __('Unexpected provider response.')];
         } catch (Throwable $exception) {

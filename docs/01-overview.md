@@ -1,6 +1,6 @@
 # Pulse
 
-Pulse turns the tech sources you follow into two short daily posts: the news and a tip + topic of the day. Each account has its own timezone and post times (09:00 and 09:30 by default). The Vue 3/Inertia web app provides registration, onboarding, daily reading, history, search and account settings.
+Pulse turns the sources you follow into two short daily posts: the news and a tip + topic of the day. Each account has its own timezone and post times (09:00 and 09:30 by default). The Vue 3/Inertia web app provides registration, onboarding, daily reading, history, search and account settings.
 
 ## How a day works
 

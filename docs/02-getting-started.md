@@ -1,6 +1,6 @@
 # Getting started
 
-Pulse runs in Docker for development and production. You don't need PHP or Node on your machine.
+Pulse runs in Docker for development and production, so you don't need PHP or Node on your machine. To run it without Docker, see the [README](../README.md#option-2-without-docker).
 
 ## Requirements
 

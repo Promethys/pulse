@@ -34,7 +34,6 @@ final class PublicUrl
         $ips = filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : ($this->resolve)($host);
 
         foreach ($ips as $ip) {
-            // @phpstan-ignore identical.alwaysFalse (PHPStan doesn't model FILTER_FLAG_GLOBAL_RANGE)
             if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE) === false) {
                 return false;
             }
