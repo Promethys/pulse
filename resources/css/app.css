@@ -332,3 +332,69 @@
         }
     }
 }
+
+@layer components {
+    .prose-pulse {
+        & .docs-callout {
+            margin: 1.25rem 0;
+            border: 0;
+            border-left: 4px solid var(--accent-foreground);
+            border-radius: var(--radius-xl);
+            background: color-mix(in oklch, var(--accent) 40%, transparent);
+            padding: 1rem;
+            color: var(--foreground);
+            font-size: 0.875rem;
+        }
+        & .docs-callout-tip {
+            border-color: var(--primary-strong);
+            background: color-mix(in oklch, var(--primary) 40%, transparent);
+        }
+        & .docs-callout-warning {
+            border-color: var(--warning);
+            background: color-mix(in oklch, var(--warning) 15%, transparent);
+        }
+        & .docs-callout > p {
+            margin: 0;
+        }
+        & .docs-callout > .docs-callout-title {
+            margin-bottom: 0.25rem;
+            color: var(--accent-foreground);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        & .docs-callout-tip > .docs-callout-title {
+            color: var(--primary-strong);
+        }
+        & .docs-callout-warning > .docs-callout-title {
+            color: var(--foreground);
+        }
+        & pre {
+            position: relative;
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background: var(--card);
+            padding: 3rem 1rem 1rem;
+            font-size: 0.875rem;
+        }
+        & .docs-code-copy {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--background);
+            padding: 0.25rem 0.5rem;
+            color: var(--foreground);
+            font-family: var(--pulse-sans);
+            font-size: 0.75rem;
+        }
+        & .docs-code-copy:focus-visible {
+            outline: 2px solid var(--ring);
+            outline-offset: 2px;
+        }
+    }
+}

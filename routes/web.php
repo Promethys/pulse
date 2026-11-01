@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\InterestProposalController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\OnboardingController;
@@ -45,8 +46,8 @@ Route::inertia('features', 'Features')->name('features');
 Route::inertia('open-source', 'OpenSource')->name('open-source');
 Route::inertia('privacy', 'legal/Privacy')->name('privacy');
 Route::inertia('terms', 'legal/Terms')->name('terms');
-Route::inertia('docs', 'docs/Index')->name('docs.index');
-Route::inertia('docs/{section}/{article}', 'docs/Show')
+Route::get('docs', [DocsController::class, 'index'])->name('docs.index');
+Route::get('docs/{section}/{article}', [DocsController::class, 'show'])
     ->where(['section' => '[a-z0-9]+(?:-[a-z0-9]+)*', 'article' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
     ->name('docs.show');
 
