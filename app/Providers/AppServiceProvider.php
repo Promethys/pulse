@@ -29,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('suggestions', fn (Request $request) => Limit::perMinute(6)->by((string) $request->user()?->id));
+        RateLimiter::for('delivery-test', fn (Request $request) => [
+            Limit::perMinute(6)->by('minute:'.$request->user()?->id),
+            Limit::perHour(20)->by('hour:'.$request->user()?->id),
+        ]);
 
         $this->configureDefaults();
     }

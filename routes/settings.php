@@ -30,7 +30,7 @@ Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
     Route::post('settings/delivery', [DeliveryController::class, 'store'])->name('delivery.store');
     Route::put('settings/delivery/{channel}', [DeliveryController::class, 'update'])->name('delivery.update');
     Route::delete('settings/delivery/{channel}', [DeliveryController::class, 'destroy'])->name('delivery.destroy');
-    Route::post('settings/delivery/{channel}/test', [DeliveryController::class, 'test'])->middleware('throttle:6,1')->name('delivery.test');
+    Route::post('settings/delivery/{channel}/test', [DeliveryController::class, 'test'])->middleware('throttle:delivery-test')->name('delivery.test');
     Route::delete('settings/delivery/guilds/{guild}', [DeliveryController::class, 'destroyGuild'])->name('delivery.guilds.destroy');
 
     Route::inertia('settings', 'settings/Index')->name('settings.index');
