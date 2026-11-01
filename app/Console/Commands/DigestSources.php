@@ -26,7 +26,7 @@ class DigestSources extends Command
         $email = $this->option('user');
 
         if ($email !== null) {
-            if (! is_string($email) || $email === '') {
+            if ($email === '') {
                 $this->error('The --user option requires an email.');
 
                 return self::FAILURE;

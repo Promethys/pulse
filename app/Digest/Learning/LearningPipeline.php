@@ -132,10 +132,6 @@ class LearningPipeline
             throw new AiUnavailableException($e->getMessage(), previous: $e);
         }
 
-        if (! $response instanceof StructuredAgentResponse) {
-            throw new AiUnavailableException('The AI provider returned no structured output');
-        }
-
         return $response;
     }
 

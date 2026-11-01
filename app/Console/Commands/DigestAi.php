@@ -8,7 +8,6 @@ use App\Ai\Agents\HealthCheck;
 use App\Digest\Ai\AiConfigurationException;
 use App\Digest\Ai\ProviderChain;
 use Illuminate\Console\Command;
-use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 class DigestAi extends Command
@@ -34,7 +33,7 @@ class DigestAi extends Command
         foreach ($chain as $provider => $model) {
             try {
                 $response = (new HealthCheck)->prompt('Health check.', provider: [$provider => $model], timeout: (int) config('digest.ai_timeout'));
-                $ok = $response instanceof StructuredAgentResponse && ($response->toArray()['ok'] ?? false) === true;
+                $ok = ($response->toArray()['ok'] ?? false) === true;
                 $rows[] = [$provider, $model, $ok ? 'OK' : 'Unexpected answer'];
                 $failed = $failed || ! $ok;
             } catch (Throwable $e) {
