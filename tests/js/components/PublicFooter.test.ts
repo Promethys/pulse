@@ -6,6 +6,15 @@ import { index as docs } from '@/routes/docs';
 import { page } from '../support/inertia';
 
 describe('PublicFooter', () => {
+    it('invites readers to star the project', () => {
+        page.props = { auth: { user: null }, canRegister: true };
+        render(PublicFooter);
+
+        expect(
+            screen.getByRole('link', { name: 'Leave a star on GitHub' }),
+        ).toHaveAttribute('href', 'https://github.com/Promethys/pulse');
+    });
+
     it.each([
         ['guest', null, true],
         ['signed in', { id: 1 }, true],
@@ -46,7 +55,7 @@ describe('PublicFooter', () => {
                 expect(link).toHaveAttribute('rel', 'noreferrer');
             }
             expect(
-                screen.getByText('Free and open source, MIT license.'),
+                screen.getByText(/Free and open source, MIT license\./),
             ).toBeVisible();
             expect(
                 screen.queryByRole('link', { name: 'Create an account' }),

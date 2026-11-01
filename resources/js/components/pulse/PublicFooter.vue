@@ -96,7 +96,14 @@ const legalLinks = [
         <p
             class="border-t border-border py-4 text-center text-xs text-muted-foreground"
         >
-            Free and open source, MIT license.
+            Free and open source, MIT license. Find Pulse useful?
+            <a
+                :href="github"
+                target="_blank"
+                rel="noreferrer"
+                class="underline underline-offset-2 hover:text-foreground"
+                >Leave a star on GitHub</a
+            >.
         </p>
     </footer>
 </template>
