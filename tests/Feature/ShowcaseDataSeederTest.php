@@ -125,8 +125,9 @@ class ShowcaseDataSeederTest extends TestCase
         $this->assertNotEmpty($custom->last_error);
         $this->assertDatabaseHas('source_subscriptions', ['user_id' => $user->id, 'source_id' => $custom->id]);
 
-        $this->assertSame(['email', 'in_app'], $user->deliveryChannels()->orderBy('type')->pluck('type')->map(fn ($type): string => $type->value)->all());
-        $this->assertSame(2, $user->deliveryChannels()->where('enabled', true)->count());
+        $this->assertEqualsCanonicalizing(['discord_webhook', 'email', 'in_app'], $user->deliveryChannels()->pluck('type')->map(fn ($type): string => $type->value)->all());
+        $this->assertSame(3, $user->deliveryChannels()->where('enabled', true)->count());
+        $this->assertSame(['a1b2', 'c3d4'], $user->aiKeys()->orderBy('position')->pluck('key_suffix')->all());
         $email = $user->deliveryChannels()->where('type', DeliveryChannelType::Email)->sole();
         $this->assertSame('showcase@example.com', $email->settings['address']);
     }
