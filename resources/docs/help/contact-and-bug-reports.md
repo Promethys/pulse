@@ -10,4 +10,6 @@ For a digest problem, include the digest kind, date, selected timezone and any e
 
 GitHub issues are public. Do not include passwords, API keys, webhook URLs, recovery codes, personal email addresses or private newsletter content. Remove secrets from any error text before posting.
 
+For a privacy or account request, use the email address on the [Privacy](/privacy) page instead of a public issue.
+
 For catalog additions, use [Suggest a source or interest](/docs/interests-and-sources/suggest-a-source-or-interest) inside Pulse so the suggestion reaches the review queue.

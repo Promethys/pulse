@@ -1,12 +1,15 @@
 import { render, screen, within } from '@testing-library/vue';
 import { describe, expect, it } from 'vite-plus/test';
-import { legalContact } from '@/lib/legal';
 import Terms from '@/pages/legal/Terms.vue';
 import { page } from '../../support/inertia';
 
 describe('Terms', () => {
     it('renders the terms with linked sections, its date and shared contact', () => {
-        page.props = { auth: { user: null }, canRegister: true };
+        page.props = {
+            auth: { user: null },
+            canRegister: true,
+            supportEmail: 'hello@example.test',
+        };
         const { container } = render(Terms);
         expect(
             screen.getByRole('heading', { level: 1, name: 'Terms of use' }),
@@ -33,8 +36,8 @@ describe('Terms', () => {
             }
         }
         expect(
-            screen.getByRole('link', { name: 'Contact us on GitHub' }),
-        ).toHaveAttribute('href', legalContact);
+            screen.getByRole('link', { name: 'hello@example.test' }),
+        ).toHaveAttribute('href', 'mailto:hello@example.test');
     });
 
     it('explains service limits, provider charges and the code license', () => {

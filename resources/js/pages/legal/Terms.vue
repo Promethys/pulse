@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import LegalLayout from '@/components/pulse/LegalLayout.vue';
-import { legalContact } from '@/lib/legal';
 import { privacy } from '@/routes';
 
 defineOptions({ layout: [] });
+const page = usePage<{ supportEmail: string }>();
 
 const lastUpdated = 'November 1, 2026';
 const sections = [
@@ -120,9 +120,11 @@ const sections = [
         </template>
         <template #contact>
             <p>
-                <a :href="legalContact">Contact us on GitHub</a> with questions
-                about these terms. Issues are public, so leave out personal
-                data, passwords and API keys.
+                Email
+                <a :href="`mailto:${page.props.supportEmail}`">{{
+                    page.props.supportEmail
+                }}</a>
+                with questions about these terms.
             </p>
         </template>
     </LegalLayout>

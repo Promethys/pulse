@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'canRegister' => Features::enabled(Features::registration()),
+            'supportEmail' => config('app.support_email'),
             'auth' => [
                 'user' => $request->user(),
                 'canAccessAdmin' => $request->user()?->canAccessPanel(Filament::getPanel('admin')) ?? false,

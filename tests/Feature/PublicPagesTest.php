@@ -31,6 +31,14 @@ class PublicPagesTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component($component));
     }
 
+    public function test_the_support_email_comes_from_configuration(): void
+    {
+        config(['app.support_email' => 'hello@example.test']);
+
+        $this->get(route('privacy'))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('supportEmail', 'hello@example.test'));
+    }
+
     #[DataProvider('registrationStates')]
     public function test_registration_availability_is_shared_on_public_pages(bool $enabled): void
     {

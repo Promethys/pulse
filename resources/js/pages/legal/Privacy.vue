@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import LegalLayout from '@/components/pulse/LegalLayout.vue';
-import { legalContact } from '@/lib/legal';
 
 defineOptions({ layout: [] });
+const page = usePage<{ supportEmail: string }>();
 
 const lastUpdated = 'November 1, 2026';
 const sections = [
@@ -142,8 +142,7 @@ const sections = [
             </p>
             <p>
                 Log retention depends on the configured logging destination.
-                Account deletion does not automatically erase logs or password
-                reset records.
+                Account deletion does not automatically erase logs.
             </p>
         </template>
         <template #deleting-your-account>
@@ -155,10 +154,9 @@ const sections = [
                 records, passkeys, saved posts and learning topic history.
             </p>
             <p>
-                The current session is invalidated. Other session records are
-                not directly deleted by account deletion and remain subject to
-                session cleanup. Shared source items follow the retention rule
-                above, including items collected from your custom sources.
+                Your sessions and password reset records are deleted too. Shared
+                source items follow the retention rule above, including items
+                collected from your custom sources.
             </p>
             <p>
                 Posts already sent to Discord or email stay there. Deleting your
@@ -180,10 +178,11 @@ const sections = [
         </template>
         <template #contact>
             <p>
-                <a :href="legalContact">Contact us on GitHub</a> with questions
-                about privacy or a request about your data. GitHub issues are
-                public: do not post personal data, passwords or API keys. Ask
-                how to arrange a private exchange first.
+                Email
+                <a :href="`mailto:${page.props.supportEmail}`">{{
+                    page.props.supportEmail
+                }}</a>
+                with questions about privacy or a request about your data.
             </p>
         </template>
     </LegalLayout>

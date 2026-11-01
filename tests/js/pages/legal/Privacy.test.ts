@@ -1,12 +1,15 @@
 import { render, screen, within } from '@testing-library/vue';
 import { describe, expect, it } from 'vite-plus/test';
-import { legalContact } from '@/lib/legal';
 import Privacy from '@/pages/legal/Privacy.vue';
 import { page } from '../../support/inertia';
 
 describe('Privacy', () => {
     it('renders the policy with linked sections, its date and shared contact', () => {
-        page.props = { auth: { user: null }, canRegister: true };
+        page.props = {
+            auth: { user: null },
+            canRegister: true,
+            supportEmail: 'hello@example.test',
+        };
         const { container } = render(Privacy);
         expect(
             screen.getByRole('heading', { level: 1, name: 'Privacy' }),
@@ -33,9 +36,8 @@ describe('Privacy', () => {
             }
         }
         expect(
-            screen.getByRole('link', { name: 'Contact us on GitHub' }),
-        ).toHaveAttribute('href', legalContact);
-        expect(legalContact).toBe('https://github.com/Promethys/pulse/issues');
+            screen.getByRole('link', { name: 'hello@example.test' }),
+        ).toHaveAttribute('href', 'mailto:hello@example.test');
     });
 
     it('explains data handling and deletion limits without promising complete erasure', () => {
@@ -51,10 +53,9 @@ describe('Privacy', () => {
             'recent tip titles',
             'newsletter excerpts',
             'older than 30 days',
-            'Other session records',
+            'Your sessions and password reset records are deleted too',
             'Posts already sent to Discord or email stay there',
             'no built-in data export',
-            'GitHub issues are public',
         ]) {
             expect(container).toHaveTextContent(text);
         }
