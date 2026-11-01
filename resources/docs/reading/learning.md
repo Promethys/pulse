@@ -1,5 +1,7 @@
 **Learning** keeps your saved tips and topics together, grouped by digest date.
 
+![The Learning page, with saved tips and topics](/images/shots/learning-desktop.webp)
+
 ## Browse entries
 
 Choose **All**, **Tips** or **Topics**. Use **Category** to narrow topics; categories do not apply to tips. Select a tag to filter by it, and select it again to clear it.

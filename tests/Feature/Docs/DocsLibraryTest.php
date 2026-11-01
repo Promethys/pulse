@@ -45,6 +45,26 @@ class DocsLibraryTest extends TestCase
         $this->assertStringContainsString('&gt; [!TIP]', $rendered['html']);
     }
 
+    public function test_product_screenshots_get_a_version_for_each_theme(): void
+    {
+        $html = app(DocsLibrary::class)->render('![Today](/images/shots/today-desktop.webp) ![Other](/images/other.webp)')['html'];
+
+        $this->assertStringContainsString('src="/images/shots/today-desktop.webp" alt="Today" loading="lazy" class="shot-light"', $html);
+        $this->assertStringContainsString('src="/images/shots/today-desktop-dark.webp" alt="Today" loading="lazy" class="shot-dark"', $html);
+        $this->assertStringNotContainsString('other-dark', $html);
+    }
+
+    public function test_every_screenshot_in_the_docs_exists_in_both_themes(): void
+    {
+        foreach (File::allFiles(resource_path('docs')) as $file) {
+            preg_match_all('#/images/shots/([a-z0-9-]+)\.webp#', $file->getContents(), $matches);
+            foreach ($matches[1] as $name) {
+                $this->assertFileExists(public_path("images/shots/{$name}.webp"));
+                $this->assertFileExists(public_path("images/shots/{$name}-dark.webp"));
+            }
+        }
+    }
+
     public function test_only_configured_slugs_can_be_read(): void
     {
         File::shouldReceive('isFile')->never();

@@ -1,5 +1,7 @@
 **Search** finds content saved in your own digests. It searches news titles and summaries, or learning titles and bodies.
 
+![Search results, with the tag, source and date filters](/images/shots/search-desktop.webp)
+
 ## Choose what to search
 
 Select **News** or **Learning**, then type into the search field. Results update as you type. You can also leave the text empty and browse with filters.

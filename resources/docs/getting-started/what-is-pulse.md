@@ -1,5 +1,7 @@
 Pulse turns the sources you follow into a daily news post. If your interests include learning, you can also receive a short tip and a deeper topic each day.
 
+![A day in Pulse, with the tip, the topic and news grouped by topic](/images/shots/today-desktop.webp)
+
 ## Make it yours
 
 Choose your interests, review their sources and add an optional About you text. Your AI provider uses these choices to select and explain content for you.

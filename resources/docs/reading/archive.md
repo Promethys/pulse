@@ -1,5 +1,7 @@
 **Archive** lists your saved digest days, newest first. News and learning from the same date share a day entry.
 
+![The Archive page, with one row per saved day](/images/shots/archive-desktop.webp)
+
 ## Open a day
 
 Choose a row to read that day's content. The list shows the news item count, tags and post status information. Use the pagination controls to browse older days.

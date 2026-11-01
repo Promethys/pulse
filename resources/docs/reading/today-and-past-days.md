@@ -1,5 +1,7 @@
 **Today** opens your daily reading view using the timezone in your digest settings.
 
+![The Today page, with its previous, calendar and next buttons](/images/shots/today-desktop.webp)
+
 ## Check the date
 
 If there is no saved post for today, Pulse shows your latest saved day when one exists. The date heading tells you which day you are reading.

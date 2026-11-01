@@ -10,7 +10,7 @@ return [
             'articles' => [
                 ['slug' => 'what-is-pulse', 'title' => 'What is Pulse', 'summary' => 'Daily news, plus tips and topics when learning is available.'],
                 ['slug' => 'create-your-account', 'title' => 'Create your account', 'summary' => 'Sign up, choose a password, confirm your email.'],
-                ['slug' => 'your-first-digest', 'title' => 'Your first digest', 'summary' => 'What happens between sign-up and the first morning.'],
+                ['slug' => 'your-first-digest', 'title' => 'Your first digest', 'summary' => 'What happens between sign-up and your first digest.'],
                 ['slug' => 'when-digests-arrive', 'title' => 'When digests arrive', 'summary' => 'Default times, your timezone, and how to change them.'],
             ],
         ],

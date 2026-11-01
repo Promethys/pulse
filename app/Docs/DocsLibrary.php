@@ -124,7 +124,16 @@ final class DocsLibrary
         });
         $html = (new MarkdownConverter($environment))->convert($markdown)->getContent();
 
-        return ['html' => $html, 'headings' => $headings];
+        return ['html' => $this->themeShots($html), 'headings' => $headings];
+    }
+
+    private function themeShots(string $html): string
+    {
+        return (string) preg_replace(
+            '#<img src="(/images/shots/[a-z0-9-]+)\.webp" alt="([^"]*)" />#',
+            '<img src="$1.webp" alt="$2" loading="lazy" class="shot-light" /><img src="$1-dark.webp" alt="$2" loading="lazy" class="shot-dark" />',
+            $html,
+        );
     }
 
     private function text(Node $node): string

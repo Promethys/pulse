@@ -1,5 +1,7 @@
 Sources supply the stories considered for your news digest. Open **Sources** to control your own subscriptions.
 
+![The Sources page, with each source and its switch](/images/shots/sources-desktop.webp)
+
 ## Switch sources on or off
 
 **By interest** shows catalog sources for your interests. **My sources** shows the feeds and newsletter inboxes you added yourself.

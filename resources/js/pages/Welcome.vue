@@ -2,10 +2,10 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ArrowRight, FolderGit2, KeyRound, Send, Sparkles } from '@lucide/vue';
 import Faq from '@/components/pulse/Faq.vue';
-import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
+import ProductShot from '@/components/pulse/ProductShot.vue';
 import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import { publicFaq, publicLearning, publicNews } from '@/lib/publicSamples';
+import { publicFaq } from '@/lib/publicSamples';
 import { features, register } from '@/routes';
 import { index as docs, show as article } from '@/routes/docs';
 
@@ -65,9 +65,9 @@ const highlights = [
                     One calm daily digest of the news you actually follow.
                 </h1>
                 <p class="mt-4 max-w-xl text-muted-foreground">
-                    Pulse reads your sources overnight and sends you a short,
-                    grouped summary each morning. Free and open source. You
-                    bring your own AI key.
+                    Pulse reads your sources and sends you a short, grouped
+                    summary each day, at the time you choose. Free and open
+                    source. You bring your own AI key.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
                     <Button
@@ -91,53 +91,18 @@ const highlights = [
                     </Button>
                 </div>
             </section>
-            <section aria-label="Sample morning in Pulse">
+            <section aria-label="A day in Pulse">
                 <p
                     class="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                 >
-                    What a morning looks like
+                    What a day looks like
                 </p>
                 <div
-                    class="rounded-3xl border border-border bg-card p-4 md:p-8"
+                    class="overflow-hidden rounded-3xl border border-border bg-card"
                 >
-                    <p
-                        class="text-xs font-semibold tracking-wider text-primary-strong uppercase"
-                    >
-                        Sample digest
-                    </p>
-                    <h2 class="mt-1 text-2xl font-semibold">
-                        Your morning, at a glance
-                    </h2>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2">
-                        <article
-                            v-for="post in publicLearning"
-                            :key="post.kind"
-                            class="rounded-2xl border border-border bg-secondary/40 p-5"
-                        >
-                            <p
-                                class="text-xs font-semibold tracking-wider text-primary-strong uppercase"
-                            >
-                                {{ post.kind }}
-                            </p>
-                            <h3 class="mt-1 text-lg font-semibold">
-                                {{ post.title }}
-                            </h3>
-                            <p
-                                class="mt-3 text-sm leading-relaxed text-muted-foreground"
-                            >
-                                {{ post.body }}
-                            </p>
-                        </article>
-                    </div>
-                    <h3
-                        class="mt-6 border-b border-border pb-2 text-lg font-semibold"
-                    >
-                        Development
-                    </h3>
-                    <NewsItemRow
-                        v-for="item in publicNews"
-                        :key="item.id"
-                        :item="item"
+                    <ProductShot
+                        name="today-desktop"
+                        alt="A day in Pulse, with the tip, the topic and news grouped by topic"
                     />
                 </div>
             </section>
@@ -239,7 +204,7 @@ const highlights = [
                 aria-label="Get started"
             >
                 <h2 class="text-2xl font-semibold md:text-3xl">
-                    Tomorrow morning, read less and know more.
+                    Read less, know more.
                 </h2>
                 <p class="mx-auto mt-2 max-w-md text-muted-foreground">
                     Choose your interests, add an AI key, and decide where to

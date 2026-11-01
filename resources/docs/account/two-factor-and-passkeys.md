@@ -1,5 +1,7 @@
 Open **Settings → Security** to manage two-factor authentication and passkeys. You may be asked to confirm your password before entering this page.
 
+![Security settings, with two-factor authentication](/images/shots/security-desktop.webp)
+
 ## Enable two-factor authentication
 
 1. Select **Enable 2FA**.

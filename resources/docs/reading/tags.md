@@ -1,5 +1,7 @@
 Tags connect related stories in your saved news. Open a news tag to browse stories carrying that tag.
 
+![A tag page, with its items and activity chart](/images/shots/tag-desktop.webp)
+
 ## Read a tag page
 
 The page lists your matching news stories newest first, with their digest dates. Use pagination to reach older results.

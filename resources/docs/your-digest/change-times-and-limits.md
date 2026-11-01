@@ -1,5 +1,7 @@
 Open **Settings → Digest** to change what Pulse prepares and when it starts.
 
+![Digest settings, with the news and learning times](/images/shots/digest-desktop.webp)
+
 ## Choose your times
 
 Set **Timezone**, then choose **News time** and **Learning time**. Times are available in 15-minute steps. Select **Save** to apply your changes.

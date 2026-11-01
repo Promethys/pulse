@@ -1,5 +1,7 @@
 You can save up to five AI keys, with one key per provider. Their order decides which provider Pulse tries first.
 
+![AI key settings, with two keys in fallback order](/images/shots/ai-keys-desktop.webp)
+
 ## Add or replace a key
 
 1. Open **Settings → AI keys → Add a key**.

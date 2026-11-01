@@ -1,5 +1,7 @@
 A Discord webhook lets Pulse post without installing the Pulse bot. Pulse sends each digest as a new forum thread, so use a webhook for a forum channel.
 
+![Delivery settings, with Discord webhooks and email](/images/shots/delivery-desktop.webp)
+
 ## Add a webhook
 
 1. Create a webhook in Discord for the destination forum channel and copy its URL. You need permission to manage webhooks there.

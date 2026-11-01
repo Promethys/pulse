@@ -54,7 +54,7 @@ describe('Welcome', () => {
         },
     );
 
-    it('shows a sample morning, setup steps, features, costs and questions', () => {
+    it('shows a day in Pulse, setup steps, features, costs and questions', () => {
         const { container } = renderWelcome();
 
         expect(
@@ -64,9 +64,18 @@ describe('Welcome', () => {
             }),
         ).toBeVisible();
         expect(
-            screen.getByRole('region', { name: 'Sample morning in Pulse' }),
+            screen.getByRole('region', { name: 'A day in Pulse' }),
         ).toBeVisible();
-        expect(screen.getByText('Sample digest')).toBeVisible();
+        expect(
+            container.querySelector(
+                'img[src="/images/shots/today-desktop.webp"]',
+            ),
+        ).toBeInTheDocument();
+        expect(
+            container.querySelector(
+                'img[src="/images/shots/today-desktop-dark.webp"]',
+            ),
+        ).toBeInTheDocument();
         [
             'Pick your interests',
             'Add your AI key',

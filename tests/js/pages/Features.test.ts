@@ -1,5 +1,4 @@
 import { render, screen, within } from '@testing-library/vue';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vite-plus/test';
 import Features from '@/pages/Features.vue';
 import { register } from '@/routes';
@@ -76,20 +75,20 @@ describe('Features', () => {
         expect(
             container.querySelector('a[href^="/learning/"]'),
         ).not.toBeInTheDocument();
-        expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     });
 
-    it('lets visitors try selecting sample interests without saving', async () => {
+    it('shows a product screenshot for each theme in every section', () => {
         page.props = { auth: { user: null }, canRegister: true };
-        const user = userEvent.setup();
-        render(Features);
-        const interest = screen.getByRole('button', {
-            name: 'Artificial Intelligence',
-        });
-        expect(interest).toHaveAttribute('aria-pressed', 'true');
-        await user.click(interest);
-        expect(interest).toHaveAttribute('aria-pressed', 'false');
-        await user.click(interest);
-        expect(interest).toHaveAttribute('aria-pressed', 'true');
+        const { container } = render(Features);
+
+        const sources = [...container.querySelectorAll('section img')].map(
+            (image) => image.getAttribute('src'),
+        );
+        expect(sources).toHaveLength(14);
+        expect(sources).toContain('/images/shots/sources-mobile.webp');
+        expect(sources).toContain('/images/shots/sources-mobile-dark.webp');
+        container
+            .querySelectorAll('section img')
+            .forEach((image) => expect(image.getAttribute('alt')).not.toBe(''));
     });
 });
