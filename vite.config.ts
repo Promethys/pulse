@@ -82,6 +82,7 @@ export default defineConfig({
         htmlWhitespaceSensitivity: 'css',
         ignorePatterns: [
             '.github/**',
+            'boost.json',
             'composer.json',
             'docs/**',
             'compose.yaml',
