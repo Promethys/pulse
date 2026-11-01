@@ -4,6 +4,7 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
@@ -77,6 +78,25 @@ class ProfileUpdateTest extends TestCase
 
         $this->assertGuest();
         $this->assertNull($user->fresh());
+    }
+
+    public function test_deleting_an_account_removes_its_other_sessions_and_reset_tokens(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $other = User::factory()->create();
+        foreach ([$user, $other] as $owner) {
+            DB::table('sessions')->insert(['id' => 'session-'.$owner->id, 'user_id' => $owner->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+            DB::table('password_reset_tokens')->insert(['email' => $owner->email, 'token' => 'token', 'created_at' => now()]);
+        }
+
+        $this->actingAs($user)
+            ->delete(route('profile.destroy'), ['password' => 'password'])
+            ->assertRedirect(route('home'));
+
+        $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
+        $this->assertDatabaseHas('sessions', ['user_id' => $other->id]);
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => $other->email]);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account()

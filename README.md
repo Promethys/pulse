@@ -1,6 +1,6 @@
 # Pulse
 
-One calm daily digest of the news you actually follow. Pulse reads your sources overnight, asks an AI model to keep what matters to you, and gives you a short summary each morning, in the app, on Discord or by email.
+One calm daily digest of the news you actually follow. Pulse reads your sources, asks an AI model to keep what matters to you, and gives you a short summary each day at the time you choose, in the app, on Discord or by email.
 
 Free and open source. You bring your own AI key. Try it at <https://pulse.promethys.dev>.
 

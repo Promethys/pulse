@@ -37,6 +37,10 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 | GET path | Page and behavior |
 |---|---|
 | `/` | Landing page for guests; verification and onboarding gates for signed-in users, then Today |
+| `/features`, `/open-source` | Public pages, open to guests and signed-in users |
+| `/privacy`, `/terms` | Public legal pages. The contact address comes from `SUPPORT_EMAIL` |
+| `/docs` | Public user documentation home, with search in the browser over titles, summaries and headings |
+| `/docs/{section}/{article}` | One article; slugs not listed in `config/docs.php` show the docs 404 |
 | `/dashboard` | Permanent redirect to `/` after the app gates |
 | `/onboarding` | Interests, Sources, About you, AI key, Delivery; completed accounts redirect to `/` |
 | `/days/{date}` | Saved day for the account; real `Y-m-d` required, today redirects to `/`, missing days return 404 |
@@ -59,6 +63,10 @@ Onboarding saves Interests, Sources, About you and AI key on Continue. At least 
 Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a banner while today's news is being prepared, a note when it falls back to an older day, and a checklist for interests, enabled subscriptions, AI access and an external destination. Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. On Today, the banner replaces the pending news line. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
 
 Archive, Search, Tag and Learning redirect pages beyond the last page to the last valid page. Search and Learning preserve their query filters in pagination links. A known tag without personal news renders an empty page; an unknown slug returns 404. Tag activity uses twelve consecutive seven-day windows ending on the account's local today, oldest first.
+
+### User documentation
+
+Articles are Markdown files at `resources/docs/{section}/{article}.md`. `config/docs.php` holds the order, titles and summaries: an article needs both a config entry and a file. `App\Docs\DocsLibrary` finds articles through config only, and renders them on the server with raw HTML stripped and unsafe links disabled. Callouts use `> [!NOTE]`, `> [!TIP]` and `> [!WARNING]`. The article text is written for readers; these `docs/` pages are for developers.
 
 ### Read layer and resources
 

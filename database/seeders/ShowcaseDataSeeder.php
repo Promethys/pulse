@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Digest\Rendering\RenderedPost;
+use App\Enums\AiProvider;
 use App\Enums\DeliveryChannelType;
 use App\Enums\DeliveryStatus;
 use App\Enums\LearningKind;
@@ -124,6 +125,7 @@ class ShowcaseDataSeeder extends Seeder
 
             $this->seedSources($user);
             $this->seedChannels($user);
+            $this->seedAiKeys($user);
             $this->seedItems($user);
 
             $user->posts()->delete();
@@ -206,6 +208,29 @@ class ShowcaseDataSeeder extends Seeder
                 'enabled' => true,
                 'settings' => $type === DeliveryChannelType::Email ? ['address' => self::EMAIL] : null,
                 'verified_at' => now(),
+            ]);
+        }
+
+        $user->deliveryChannels()->updateOrCreate(['type' => DeliveryChannelType::DiscordWebhook], [
+            'name' => 'Team news',
+            'kinds' => [PostKind::News->value],
+            'enabled' => true,
+            'settings' => ['webhook_url' => 'https://discord.com/api/webhooks/100000000000000000/showcase-webhook-token'],
+            'verified_at' => now(),
+        ]);
+    }
+
+    private function seedAiKeys(User $user): void
+    {
+        foreach ([
+            [AiProvider::Gemini, 'gemini-3.8-flash', 'showcase-gemini-key-a1b2'],
+            [AiProvider::Anthropic, 'claude-haiku-5-5', 'showcase-anthropic-key-c3d4'],
+        ] as $position => [$provider, $model, $key]) {
+            $user->aiKeys()->updateOrCreate(['provider' => $provider], [
+                'model' => $model,
+                'api_key' => $key,
+                'position' => $position + 1,
+                'consented_at' => now(),
             ]);
         }
     }

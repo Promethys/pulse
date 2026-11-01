@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\InterestProposalController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\OnboardingController;
@@ -34,12 +35,21 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/', function (Request $request) {
     if ($request->user() === null) {
-        return Inertia::render('Welcome', ['canRegister' => Features::enabled(Features::registration())]);
+        return Inertia::render('Welcome');
     }
 
     return app(EnsureEmailIsVerified::class)->handle($request,
         fn () => app(EnsureOnboarded::class)->handle($request, fn () => app(TodayController::class)($request)->toResponse($request)));
 })->name('home');
+
+Route::inertia('features', 'Features')->name('features');
+Route::inertia('open-source', 'OpenSource')->name('open-source');
+Route::inertia('privacy', 'legal/Privacy')->name('privacy');
+Route::inertia('terms', 'legal/Terms')->name('terms');
+Route::get('docs', [DocsController::class, 'index'])->name('docs.index');
+Route::get('docs/{section}/{article}', [DocsController::class, 'show'])
+    ->where(['section' => '[a-z0-9]+(?:-[a-z0-9]+)*', 'article' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
+    ->name('docs.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', fn () => redirect('/', 301))->middleware('onboarded')->name('dashboard');

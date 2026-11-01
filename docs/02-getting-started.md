@@ -39,7 +39,7 @@ docker compose exec app php artisan digest:ai
 
 Both commands only read: they never store anything.
 
-For a local preview with 90 days of fictional digest history, run `docker compose exec app php artisan db:seed --class=ShowcaseDataSeeder`, then sign in as `showcase@example.com` with password `password`. The seeder runs only in `local` and `testing`; rerunning it refreshes that account's history through the latest due digest in Europe/Paris without changing other accounts. It seeds the catalog, includes quiet and failed days, missing digests and a failed email delivery, and is never called by `DatabaseSeeder`.
+For a local preview with 90 days of fictional digest history, run `docker compose exec app php artisan db:seed --class=ShowcaseDataSeeder`, then sign in as `showcase@example.com` with password `password`. The seeder runs only in `local` and `testing`; rerunning it refreshes that account's history through the latest due digest in Europe/Paris without changing other accounts. It seeds the catalog, fake AI keys and a fake Discord webhook, includes quiet and failed days, missing digests and a failed email delivery, and is never called by `DatabaseSeeder`.
 
 ## The Docker setup
 

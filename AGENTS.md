@@ -6,7 +6,7 @@ Pulse turns the sources a reader follows into two short daily posts: the news, a
 
 - **Tests**: PHPUnit (not Pest) for PHP, Vitest (`vp test`) with Vue Test Utils and Testing Library for JS. TDD for both: write the failing test, watch it fail, implement, watch it pass. Cover every state, interaction and edge case. Run the tests related to your change; CI runs the full suites.
 - **AI**: always through `laravel/ai` agents (provider-agnostic), never hand-written provider clients.
-- **Docs**: keep `README.md` and `docs/*.md` (numbered `NN-name.md`) up to date with behavior, commands and settings. No task progress in them.
+- **Docs**: keep `README.md`, `docs/*.md` (numbered `NN-name.md`) and the user docs in `resources/docs/` up to date with behavior, commands and settings. No task progress in them.
 - **No hosting details in committed files**: don't name a hosting provider or its config in code, docs, comments or tests, and add no provider-specific config files.
 - **No personal data committed**: reader profiles live in the database or in `.env`.
 - **`.env.example`**: Pulse variables are commented out, because an empty `KEY=` makes `env()` return `""` instead of the default.
@@ -55,6 +55,7 @@ See `docs/04-architecture.md` for the details.
 - `app/Digest/Catalog/`: monthly health check, moved feed detection, scout and proposal checks.
 - `app/Digest/TickScheduler.php` and `digest:tick`: decides what is due from each user's local time and the `posts` table.
 - `app/Reading/`, `app/Http/Resources/`: read layer for the web app. `app/Actions/`: write actions. `app/Filament/`: admin panel.
+- `app/Docs/`, `config/docs.php`, `resources/docs/`: public user documentation. Public pages use `PublicLayout`.
 - Text formats: item title and summary are plain text (escaped when rendered), learning bodies are Markdown (not escaped), `posts.rendered` is a structured array holding the title, Discord Markdown messages and tags. The web app converts learning Markdown and strips raw HTML and unsafe links.
 
 ## Gotchas
@@ -69,4 +70,5 @@ See `docs/04-architecture.md` for the details.
 - Discord: forum tag names up to 20 characters, up to 20 tags per forum and 5 per post, thread title up to 100, message up to 2,000. Each forum has its own tag ids. Send `allowed_mentions: {parse: []}`. `403 Missing Access` means the bot is not in the server or has no channel access.
 - Filament pages are not Inertia pages. Link to `/admin` with a plain `<a>`; `ForceFullPageLoad` catches Inertia visits. Panel colors are applied only when the panel serves a request, so read them from the panel in tests.
 - Wayfinder generates helpers from the routes that exist at build time, so `REGISTRATION_ENABLED` must stay unset during the front-end build.
+- `public/images/shots/` holds screenshots of the real UI, shown on Landing, Features and the docs, in light and dark. A design change can leave them out of date: check them, and refresh them if needed.
 - `tmp/` is optional local scratch space. Pint scans it unless excluded (`pint.json` excludes it).
