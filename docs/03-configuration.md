@@ -78,7 +78,20 @@ Email delivery uses Laravel's mail configuration (`MAIL_*`, including the transp
 
 ## Web test limits
 
-Source tests, AI key tests (new or saved, including onboarding) and delivery tests use `throttle:6,1`: six requests per minute for authenticated users. Results are transient. Source and AI key tests do not save records; delivery tests send a real Discord post or email.
+Source tests and AI key tests (new or saved, including onboarding) use `throttle:6,1`: six requests per minute for authenticated users. Delivery tests allow six per minute and twenty per hour for each user. Results are transient. Source and AI key tests do not save records; delivery tests send a real Discord post or email.
+
+## Account mail limits
+
+These routes send email, so their limits protect the sending quota and the domain's reputation. Limiters live in `FortifyServiceProvider`.
+
+| Route | Per IP | Per account | Whole instance |
+| --- | --- | --- | --- |
+| `POST /register` | 5 per minute, 20 per hour | | 50 accounts created per day |
+| `POST /forgot-password` | 5 per minute, 20 per hour | 5 per hour | 50 links sent per day |
+| `POST /reset-password` | 5 per minute, 20 per hour | | |
+| `POST /email/verification-notification` | | 6 per minute, 12 per hour | |
+
+The instance limits count only mail actually sent, so failed forms cannot use them up. Once an instance limit is reached, real signups or reset requests get a 429 until the counter expires, so set `DAILY_MAIL_BUDGET` to match your mail plan.
 
 ## Database
 
