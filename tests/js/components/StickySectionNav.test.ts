@@ -38,7 +38,7 @@ describe('StickySectionNav', () => {
             return 0;
         });
         const remove = vi.spyOn(window, 'removeEventListener');
-        const { unmount } = render(
+        const view = render(
             defineComponent({
                 setup: () => () =>
                     h('div', [
@@ -88,7 +88,7 @@ describe('StickySectionNav', () => {
         current('The digest');
         window.history.replaceState(null, '', '#');
 
-        unmount();
+        view.unmount();
         expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function));
     });
 
@@ -96,10 +96,10 @@ describe('StickySectionNav', () => {
         const target = document.createElement('section');
         target.id = 'digest';
         document.body.append(target);
-        const { rerender, unmount } = render(StickySectionNav, {
+        const view = render(StickySectionNav, {
             props: { sections },
         });
-        await rerender({
+        await view.rerender({
             sections: [{ id: 'missing', label: 'Missing section' }],
         });
         expect(
@@ -108,7 +108,7 @@ describe('StickySectionNav', () => {
         expect(
             screen.queryByRole('link', { name: 'The digest' }),
         ).not.toBeInTheDocument();
-        unmount();
+        view.unmount();
         target.remove();
     });
 

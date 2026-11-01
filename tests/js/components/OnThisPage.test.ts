@@ -24,7 +24,7 @@ it('tracks the heading above the reading line and stops on unmount', async () =>
     const twoTop = vi
         .spyOn(two, 'getBoundingClientRect')
         .mockReturnValue({ top: 900 } as DOMRect);
-    const { unmount } = render(OnThisPage, {
+    const view = render(OnThisPage, {
         props: {
             items: [
                 { id: 'one', text: 'One', level: 2 },
@@ -48,7 +48,7 @@ it('tracks the heading above the reading line and stops on unmount', async () =>
         'aria-current',
         'location',
     );
-    unmount();
+    view.unmount();
     expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function));
     one.remove();
     two.remove();

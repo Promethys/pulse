@@ -51,8 +51,8 @@ it('renders the article, opens and closes the docs sheet and copies code', async
     const writeText = vi
         .spyOn(navigator.clipboard, 'writeText')
         .mockResolvedValue();
-    const { container, unmount } = render(Show, { props });
-    expect(container.querySelector('.prose-pulse h2')).toHaveTextContent(
+    const view = render(Show, { props });
+    expect(view.container.querySelector('.prose-pulse h2')).toHaveTextContent(
         'Setup',
     );
     expect(
@@ -67,14 +67,14 @@ it('renders the article, opens and closes the docs sheet and copies code', async
     await user.click(screen.getByRole('button', { name: 'Copy code' }));
     expect(writeText).toHaveBeenCalledWith('hello');
     expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
-    unmount();
-    expect(container.querySelector('.docs-code-copy')).toBeNull();
+    view.unmount();
+    expect(view.container.querySelector('.docs-code-copy')).toBeNull();
 });
 
 it('quietly handles unavailable clipboard and rebinds copy buttons when an article changes', async () => {
     page.props = { auth: { user: null }, canRegister: false };
     const user = userEvent.setup();
-    const { rerender } = render(Show, { props });
+    const view = render(Show, { props });
     vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue(
         undefined as unknown as Clipboard,
     );
@@ -82,7 +82,7 @@ it('quietly handles unavailable clipboard and rebinds copy buttons when an artic
     expect(
         screen.queryByRole('button', { name: 'Copied' }),
     ).not.toBeInTheDocument();
-    await rerender({
+    await view.rerender({
         ...props,
         article: {
             ...article,
@@ -127,7 +127,7 @@ it('resets the copied state and clears its timer when unmounted', async () => {
     userEvent.setup();
     vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
     vi.useFakeTimers();
-    const { unmount } = render(Show, { props });
+    const view = render(Show, { props });
     screen.getByRole('button', { name: 'Copy code' }).click();
     await nextTick();
     expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
@@ -135,6 +135,6 @@ it('resets the copied state and clears its timer when unmounted', async () => {
     expect(screen.getByRole('button', { name: 'Copy code' })).toBeVisible();
     screen.getByRole('button', { name: 'Copy code' }).click();
     await nextTick();
-    unmount();
+    view.unmount();
     expect(vi.getTimerCount()).toBe(0);
 });

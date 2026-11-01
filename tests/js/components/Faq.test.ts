@@ -35,10 +35,10 @@ describe('Faq', () => {
 
     it('expands by click and supports an empty list', async () => {
         const user = userEvent.setup();
-        const { rerender, container } = render(Faq, { props: { items } });
+        const view = render(Faq, { props: { items } });
         await user.click(screen.getByText(items[0].q));
         expect(screen.getByText(items[0].a)).toBeVisible();
-        await rerender({ items: [] });
-        expect(container.querySelector('details')).not.toBeInTheDocument();
+        await view.rerender({ items: [] });
+        expect(view.container.querySelector('details')).not.toBeInTheDocument();
     });
 });
