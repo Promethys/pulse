@@ -235,6 +235,22 @@ class DeliveryActionsTest extends TestCase
         $this->assertDatabaseCount('posts', 0);
     }
 
+    public function test_delivery_tests_are_limited_through_the_hour(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $channel = DeliveryChannel::factory()->for($user)->discordWebhook()->create(['settings' => ['webhook_url' => self::WEBHOOK]]);
+        Http::fake([self::WEBHOOK.'*' => Http::response(['id' => 'message-1', 'channel_id' => 'thread-1'])]);
+        $this->actingAs($user);
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $this->travel(13)->seconds();
+            $this->postJson("/settings/delivery/{$channel->id}/test")->assertOk();
+        }
+
+        $this->travel(13)->seconds();
+        $this->postJson("/settings/delivery/{$channel->id}/test")->assertTooManyRequests();
+    }
+
     public function test_webhook_tests_send_a_new_thread_and_are_throttled_without_mutating_the_channel(): void
     {
         $this->freezeSecond();

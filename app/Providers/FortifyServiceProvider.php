@@ -8,6 +8,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -19,6 +20,8 @@ use Symfony\Component\HttpFoundation\IpUtils;
 
 class FortifyServiceProvider extends ServiceProvider
 {
+    private const int DAILY_MAIL_BUDGET = 50;
+
     /**
      * Register any application services.
      */
@@ -106,6 +109,42 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('passkeys', function (Request $request) {
             return Limit::perMinute(10)->by('passkeys:'.$this->ipKey($request));
         });
+
+        RateLimiter::for('register', fn (Request $request) => [
+            ...$this->addressLimits($request),
+            Limit::perDay(self::DAILY_MAIL_BUDGET)->by('mail')->after(fn () => Auth::check()),
+        ]);
+
+        RateLimiter::for('forgot-password', function (Request $request) {
+            $email = $request->input(Fortify::email());
+            $account = Str::transliterate(Str::lower(is_string($email) ? $email : ''));
+
+            return [
+                ...$this->addressLimits($request),
+                Limit::perHour(5)->by('account:'.$account),
+                Limit::perDay(self::DAILY_MAIL_BUDGET)->by('mail')->after(fn () => $request->session()->has('status')),
+            ];
+        });
+
+        RateLimiter::for('reset-password', fn (Request $request) => $this->addressLimits($request));
+
+        RateLimiter::for('verification', fn (Request $request) => [
+            Limit::perMinute(6)->by('minute:'.$request->user()?->id),
+            Limit::perHour(12)->by('hour:'.$request->user()?->id),
+        ]);
+    }
+
+    /**
+     * @return list<Limit>
+     */
+    private function addressLimits(Request $request): array
+    {
+        $ip = $this->ipKey($request);
+
+        return [
+            Limit::perMinute(5)->by('minute:'.$ip),
+            Limit::perHour(20)->by('hour:'.$ip),
+        ];
     }
 
     private function ipKey(Request $request): string

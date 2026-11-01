@@ -18,6 +18,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use Laravel\Fortify\Http\Controllers\NewPasswordController;
+use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
+
+// Fortify has no limiter option for these routes, so they replace its own.
+Route::middleware('guest')->group(function () {
+    if (Features::enabled(Features::registration())) {
+        Route::post('register', [RegisteredUserController::class, 'store'])->middleware('throttle:register')->name('register.store');
+    }
+
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('throttle:forgot-password')->name('password.email');
+    Route::post('reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:reset-password')->name('password.update');
+});
 
 Route::get('/', function (Request $request) {
     if ($request->user() === null) {
