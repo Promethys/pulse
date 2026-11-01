@@ -4,6 +4,8 @@ One calm daily digest of the news you actually follow. Pulse reads your sources,
 
 Free and open source. You bring your own AI key. Try it at <https://pulse.promethys.dev>.
 
+If you find Pulse useful, leave a star on GitHub. It helps other people find it.
+
 ## What it does
 
 - **Daily news**: items grouped by topic, each with a one-line summary and a link to the original. 09:00 by default, in your timezone.

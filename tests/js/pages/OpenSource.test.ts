@@ -53,4 +53,15 @@ describe('OpenSource', () => {
         );
         expect(container).not.toHaveTextContent('docker compose up -d');
     });
+
+    it('invites readers to star the project', () => {
+        page.props = { auth: { user: null }, canRegister: true };
+        render(OpenSource);
+
+        expect(
+            screen.getByText(
+                'If you find Pulse useful, leave a star. It helps other people find it.',
+            ),
+        ).toBeVisible();
+    });
 });

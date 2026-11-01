@@ -53,6 +53,10 @@ const contributions = [
                         GitHub</a
                     >
                 </Button>
+                <p class="mt-3 text-sm text-muted-foreground">
+                    If you find Pulse useful, leave a star. It helps other
+                    people find it.
+                </p>
             </header>
             <section aria-labelledby="why">
                 <h2 id="why" class="text-2xl font-semibold">Why open source</h2>
