@@ -12,7 +12,6 @@ describe('StickySectionNav', () => {
     afterEach(() => vi.unstubAllGlobals());
 
     it('provides fragment links and marks the first section without observer support', () => {
-        vi.stubGlobal('IntersectionObserver', undefined);
         render(StickySectionNav, { props: { sections } });
         expect(
             screen.getByRole('navigation', { name: 'Sections' }),
@@ -32,20 +31,13 @@ describe('StickySectionNav', () => {
         ).not.toHaveAttribute('aria-current');
     });
 
-    it('tracks visible sections, ignores exits and disconnects on unmount', async () => {
-        let callback: IntersectionObserverCallback = () => {};
-        const observe = vi.fn();
-        const disconnect = vi.fn();
-        vi.stubGlobal(
-            'IntersectionObserver',
-            class {
-                constructor(handler: IntersectionObserverCallback) {
-                    callback = handler;
-                }
-                observe = observe;
-                disconnect = disconnect;
-            },
-        );
+    it('follows the reading line in both directions and at the page bottom', async () => {
+        vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => {
+            run(0);
+
+            return 0;
+        });
+        const remove = vi.spyOn(window, 'removeEventListener');
         const { unmount } = render(
             defineComponent({
                 setup: () => () =>
@@ -55,100 +47,61 @@ describe('StickySectionNav', () => {
                     ]),
             }),
         );
-        expect(observe).toHaveBeenCalledTimes(2);
-        const target = document.getElementById('delivery')!;
-        callback(
-            [
-                { target, isIntersecting: true },
-            ] as unknown as IntersectionObserverEntry[],
-            {} as IntersectionObserver,
-        );
-        await nextTick();
-        expect(screen.getByRole('link', { name: 'Delivery' })).toHaveAttribute(
-            'aria-current',
-            'location',
-        );
-        callback(
-            [
-                { target, isIntersecting: false },
-            ] as unknown as IntersectionObserverEntry[],
-            {} as IntersectionObserver,
-        );
-        await nextTick();
-        expect(screen.getByRole('link', { name: 'Delivery' })).toHaveAttribute(
-            'aria-current',
-            'location',
-        );
-        unmount();
-        expect(disconnect).toHaveBeenCalledOnce();
-    });
-
-    it('keeps the lower section active while the one above re-enters the band', async () => {
-        let callback: IntersectionObserverCallback = () => undefined;
-        vi.stubGlobal(
-            'IntersectionObserver',
-            class {
-                constructor(handler: IntersectionObserverCallback) {
-                    callback = handler;
-                }
-                observe = vi.fn();
-                disconnect = vi.fn();
-            },
-        );
-        render(
-            defineComponent({
-                setup: () => () =>
-                    h('div', [
-                        h(StickySectionNav, { sections }),
-                        ...sections.map(({ id }) => h('section', { id })),
-                    ]),
-            }),
-        );
-        const report = (id: string, isIntersecting: boolean) =>
-            callback(
-                [
-                    { target: document.getElementById(id)!, isIntersecting },
-                ] as unknown as IntersectionObserverEntry[],
-                {} as IntersectionObserver,
+        const scrollTo = async (digest: number, delivery: number) => {
+            for (const [id, top] of [
+                ['digest', digest],
+                ['delivery', delivery],
+            ] as const) {
+                vi.spyOn(
+                    document.getElementById(id)!,
+                    'getBoundingClientRect',
+                ).mockReturnValue({ top } as DOMRect);
+            }
+            window.dispatchEvent(new Event('scroll'));
+            await nextTick();
+        };
+        const current = (name: string) =>
+            expect(screen.getByRole('link', { name })).toHaveAttribute(
+                'aria-current',
+                'location',
             );
-        const [upper, lower] = sections;
-        report(lower.id, true);
-        report(upper.id, true);
+
+        await scrollTo(-500, 100);
+        current('Delivery');
+        await scrollTo(100, 900);
+        current('The digest');
+        await scrollTo(-3000, -2000);
+        current('Delivery');
+
+        vi.spyOn(
+            document.documentElement,
+            'scrollHeight',
+            'get',
+        ).mockReturnValue(window.innerHeight + 100);
+        vi.spyOn(window, 'scrollY', 'get').mockReturnValue(100);
+        await scrollTo(100, 900);
+        current('Delivery');
+
+        window.history.replaceState(null, '', '#digest');
+        window.dispatchEvent(new Event('hashchange'));
         await nextTick();
-        expect(screen.getByRole('link', { name: lower.label })).toHaveAttribute(
-            'aria-current',
-            'location',
-        );
-        report(lower.id, false);
-        await nextTick();
-        expect(screen.getByRole('link', { name: upper.label })).toHaveAttribute(
-            'aria-current',
-            'location',
-        );
+        current('The digest');
+        window.history.replaceState(null, '', '#');
+
+        unmount();
+        expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function));
     });
 
     it('replaces observed sections when its props change and skips missing elements', async () => {
-        const observe = vi.fn();
-        const disconnect = vi.fn();
-        vi.stubGlobal(
-            'IntersectionObserver',
-            class {
-                observe = observe;
-                disconnect = disconnect;
-            },
-        );
         const target = document.createElement('section');
         target.id = 'digest';
         document.body.append(target);
         const { rerender, unmount } = render(StickySectionNav, {
             props: { sections },
         });
-        expect(observe).toHaveBeenCalledTimes(1);
-        expect(observe).toHaveBeenCalledWith(target);
         await rerender({
             sections: [{ id: 'missing', label: 'Missing section' }],
         });
-        expect(disconnect).toHaveBeenCalledOnce();
         expect(
             screen.getByRole('link', { name: 'Missing section' }),
         ).toHaveAttribute('aria-current', 'location');

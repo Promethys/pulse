@@ -9,7 +9,7 @@ defineOptions({ layout: [] });
 
 <template>
     <PublicLayout>
-        <Head title="Page not found | Docs" />
+        <Head title="Page not found - Docs" />
         <div class="mx-auto max-w-2xl px-4 py-16 text-center">
             <p class="mb-3 text-sm text-muted-foreground">Docs</p>
             <h1 class="text-3xl font-semibold">

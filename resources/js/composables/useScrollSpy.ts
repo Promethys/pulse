@@ -1,48 +1,50 @@
 import { onMounted, onUnmounted, ref, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 
+const READING_LINE = 0.3;
+
 export function useScrollSpy(ids: MaybeRefOrGetter<string[]>) {
     const active = ref(toValue(ids)[0]);
-    let observer: IntersectionObserver | undefined;
+    let frame = 0;
     let stop: (() => void) | undefined;
 
-    onMounted(() => {
-        stop = watch(
-            () => toValue(ids),
-            (sectionIds) => {
-                observer?.disconnect();
-                active.value = sectionIds[0];
-                const visible = new Set<string>();
-                if (typeof IntersectionObserver === 'undefined') return;
+    const update = () => {
+        frame = 0;
+        const sectionIds = toValue(ids);
+        const { scrollHeight } = document.documentElement;
+        const atBottom =
+            scrollHeight > window.innerHeight &&
+            window.scrollY + window.innerHeight >= scrollHeight - 2;
+        const line = window.innerHeight * READING_LINE;
+        const reached = sectionIds.findLast((id) => {
+            const element = document.getElementById(id);
 
-                observer = new IntersectionObserver(
-                    (entries) => {
-                        for (const entry of entries) {
-                            if (entry.isIntersecting) {
-                                visible.add(entry.target.id);
-                            } else {
-                                visible.delete(entry.target.id);
-                            }
-                        }
-                        const lowest = sectionIds.findLast((id) =>
-                            visible.has(id),
-                        );
-                        if (lowest) active.value = lowest;
-                    },
-                    { rootMargin: '-15% 0px -70% 0px' },
-                );
-                for (const id of sectionIds) {
-                    const element = document.getElementById(id);
-                    if (element) observer.observe(element);
-                }
-            },
-            { immediate: true, flush: 'post' },
-        );
+            return element && element.getBoundingClientRect().top <= line;
+        });
+        const linked = window.location.hash.slice(1);
+        const bottom = sectionIds.includes(linked) ? linked : sectionIds.at(-1);
+        active.value = (atBottom ? bottom : reached) ?? sectionIds[0];
+    };
+    const schedule = () => {
+        frame ||= requestAnimationFrame(update);
+    };
+
+    onMounted(() => {
+        stop = watch(() => toValue(ids), update, {
+            immediate: true,
+            flush: 'post',
+        });
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule);
+        window.addEventListener('hashchange', schedule);
     });
 
     onUnmounted(() => {
         stop?.();
-        observer?.disconnect();
+        cancelAnimationFrame(frame);
+        window.removeEventListener('scroll', schedule);
+        window.removeEventListener('resize', schedule);
+        window.removeEventListener('hashchange', schedule);
     });
 
     return active;

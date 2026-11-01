@@ -6,19 +6,24 @@ import OnThisPageCollapsible from '@/components/pulse/OnThisPageCollapsible.vue'
 
 afterEach(() => vi.unstubAllGlobals());
 
-it('tracks visible headings and disconnects on unmount', async () => {
-    let callback: IntersectionObserverCallback = () => {};
-    const disconnect = vi.fn();
-    vi.stubGlobal(
-        'IntersectionObserver',
-        class {
-            constructor(handler: IntersectionObserverCallback) {
-                callback = handler;
-            }
-            observe = vi.fn();
-            disconnect = disconnect;
-        },
-    );
+it('tracks the heading above the reading line and stops on unmount', async () => {
+    vi.stubGlobal('requestAnimationFrame', (run: FrameRequestCallback) => {
+        run(0);
+
+        return 0;
+    });
+    const remove = vi.spyOn(window, 'removeEventListener');
+    const one = document.createElement('h2');
+    one.id = 'one';
+    const two = document.createElement('h3');
+    two.id = 'two';
+    document.body.append(one, two);
+    vi.spyOn(one, 'getBoundingClientRect').mockReturnValue({
+        top: 100,
+    } as DOMRect);
+    const twoTop = vi
+        .spyOn(two, 'getBoundingClientRect')
+        .mockReturnValue({ top: 900 } as DOMRect);
     const { unmount } = render(OnThisPage, {
         props: {
             items: [
@@ -27,16 +32,13 @@ it('tracks visible headings and disconnects on unmount', async () => {
             ],
         },
     });
+    await nextTick();
     expect(screen.getByRole('link', { name: 'One' })).toHaveAttribute(
         'aria-current',
         'location',
     );
-    callback(
-        [
-            { target: { id: 'two' }, isIntersecting: true },
-        ] as unknown as IntersectionObserverEntry[],
-        {} as IntersectionObserver,
-    );
+    twoTop.mockReturnValue({ top: 50 } as DOMRect);
+    window.dispatchEvent(new Event('scroll'));
     await nextTick();
     expect(screen.getByRole('link', { name: 'Two' })).toHaveAttribute(
         'href',
@@ -47,7 +49,9 @@ it('tracks visible headings and disconnects on unmount', async () => {
         'location',
     );
     unmount();
-    expect(disconnect).toHaveBeenCalledOnce();
+    expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function));
+    one.remove();
+    two.remove();
 });
 
 it('handles an empty heading list', () => {

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue';
+import { nextTick } from 'vue';
 import { expect, it, vi } from 'vite-plus/test';
 import DocsNav from '@/components/pulse/DocsNav.vue';
 
@@ -32,4 +33,24 @@ it('links all articles, marks the current page and announces navigation', async 
     expect(email).not.toHaveAttribute('aria-current');
     await fireEvent.click(email, { ctrlKey: true });
     expect(navigate).toHaveBeenCalledOnce();
+});
+
+it('scrolls the current article into view', async () => {
+    const reveal = vi.fn();
+    Element.prototype.scrollIntoView = reveal;
+    render(DocsNav, {
+        props: {
+            sections: [
+                {
+                    slug: 'delivery',
+                    title: 'Delivery',
+                    articles: [{ slug: 'email', title: 'Email', summary: '' }],
+                },
+            ],
+            current: { section: 'delivery', article: 'email' },
+        },
+    });
+    await nextTick();
+    expect(reveal).toHaveBeenCalledWith({ block: 'nearest' });
+    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
 });

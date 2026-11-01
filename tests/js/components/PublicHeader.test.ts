@@ -27,6 +27,19 @@ describe('PublicHeader', () => {
         page.url = '/';
     });
 
+    it('keeps the current page when the URL has a hash or query', () => {
+        page.url = `${features.url()}#keys`;
+        render(PublicHeader);
+
+        expect(
+            within(screen.getByRole('navigation', { name: 'Main' })).getByRole(
+                'link',
+                { name: 'Features' },
+            ),
+        ).toHaveAttribute('aria-current', 'page');
+        page.url = '/';
+    });
+
     beforeEach(() => {
         page.props = { auth: { user: null }, canRegister: true };
     });

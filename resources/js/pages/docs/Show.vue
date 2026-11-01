@@ -34,10 +34,11 @@ onMounted(() => {
         (_, __, onCleanup) => {
             const cleanups: (() => void)[] = [];
             for (const pre of content.value?.querySelectorAll('pre') ?? []) {
-                const code =
+                const code = (
                     pre.querySelector('code')?.textContent ??
                     pre.textContent ??
-                    '';
+                    ''
+                ).replace(/\n$/, '');
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'docs-code-copy';
@@ -80,7 +81,7 @@ onUnmounted(() => stop?.());
 
 <template>
     <PublicLayout>
-        <Head :title="`${article.title} | Docs`"
+        <Head :title="`${article.title} - Docs`"
             ><meta name="description" :content="article.summary"
         /></Head>
         <div class="mx-auto max-w-6xl px-4 py-8 md:py-10">

@@ -15,8 +15,11 @@ import { features, home, login, openSource, register } from '@/routes';
 import { index as docs } from '@/routes/docs';
 
 const page = usePage<{ canRegister: boolean }>();
-const isCurrent = (url: string) =>
-    page.url === url || page.url.startsWith(`${url}/`);
+const isCurrent = (url: string) => {
+    const path = page.url.split(/[?#]/)[0];
+
+    return path === url || path.startsWith(`${url}/`);
+};
 const open = ref(false);
 const navigation = [
     { label: 'Features', href: features() },
@@ -93,9 +96,20 @@ const navigation = [
                                 :key="item.label"
                                 variant="ghost"
                                 class="justify-start"
+                                :class="{
+                                    'bg-accent/40': isCurrent(item.href.url),
+                                }"
                                 as-child
                             >
-                                <Link :href="item.href" @click="open = false">
+                                <Link
+                                    :href="item.href"
+                                    :aria-current="
+                                        isCurrent(item.href.url)
+                                            ? 'page'
+                                            : undefined
+                                    "
+                                    @click="open = false"
+                                >
                                     {{ item.label }}
                                 </Link>
                             </Button>

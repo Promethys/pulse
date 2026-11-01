@@ -278,6 +278,8 @@
             padding: 0.1rem 0.35rem;
         }
         & table {
+            display: block;
+            overflow-x: auto;
             width: 100%;
             border-collapse: collapse;
             margin: 1.25rem 0;
@@ -346,8 +348,8 @@
             font-size: 0.875rem;
         }
         & .docs-callout-tip {
-            border-color: var(--primary-strong);
-            background: color-mix(in oklch, var(--primary) 40%, transparent);
+            border-color: var(--success);
+            background: color-mix(in oklch, var(--success) 12%, transparent);
         }
         & .docs-callout-warning {
             border-color: var(--warning);
@@ -358,17 +360,11 @@
         }
         & .docs-callout > .docs-callout-title {
             margin-bottom: 0.25rem;
-            color: var(--accent-foreground);
+            color: var(--foreground);
             font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.05em;
             text-transform: uppercase;
-        }
-        & .docs-callout-tip > .docs-callout-title {
-            color: var(--primary-strong);
-        }
-        & .docs-callout-warning > .docs-callout-title {
-            color: var(--foreground);
         }
         & pre {
             position: relative;
@@ -391,6 +387,9 @@
             color: var(--foreground);
             font-family: var(--pulse-sans);
             font-size: 0.75rem;
+        }
+        & .docs-code-copy:hover {
+            background: var(--muted);
         }
         & .docs-code-copy:focus-visible {
             outline: 2px solid var(--ring);

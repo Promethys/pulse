@@ -24,16 +24,17 @@ const open = ref(false);
         </SheetTrigger>
         <SheetContent
             side="left"
-            class="w-80 overflow-y-auto p-6"
+            class="w-80 p-6"
             :aria-describedby="undefined"
         >
             <SheetTitle class="sr-only">Documentation menu</SheetTitle>
-            <DocsNav
-                class="mt-8"
-                :sections="sections"
-                :current="current"
-                @navigate="open = false"
-            />
+            <div class="mt-8 min-h-0 flex-1 overflow-y-auto">
+                <DocsNav
+                    :sections="sections"
+                    :current="current"
+                    @navigate="open = false"
+                />
+            </div>
         </SheetContent>
     </Sheet>
 </template>

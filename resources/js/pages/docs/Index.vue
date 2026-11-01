@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Search } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import type { DocsSection } from '@/components/pulse/DocsNav.vue';
 import type { DocsHeading } from '@/components/pulse/OnThisPage.vue';
 import type { DocsEntry } from '@/components/pulse/PrevNext.vue';
@@ -15,6 +15,11 @@ const props = defineProps<{
     searchIndex: (DocsEntry & { headings: DocsHeading[] })[];
 }>();
 const query = ref('');
+onMounted(() => {
+    if (window.location.hash === '#search') {
+        document.getElementById('search')?.focus();
+    }
+});
 const search = computed(() => query.value.trim().toLocaleLowerCase());
 const results = computed(() =>
     props.searchIndex.filter((entry) =>
@@ -88,7 +93,7 @@ const results = computed(() =>
                     role="status"
                     class="max-w-2xl rounded-2xl border border-border bg-card p-8 text-center"
                 >
-                    <h2 class="text-xl font-semibold">
+                    <h2 class="text-xl font-semibold wrap-anywhere">
                         No results for “{{ query.trim() }}”
                     </h2>
                     <p class="mt-2 text-muted-foreground">
