@@ -83,6 +83,50 @@ describe('StickySectionNav', () => {
         expect(disconnect).toHaveBeenCalledOnce();
     });
 
+    it('keeps the lower section active while the one above re-enters the band', async () => {
+        let callback: IntersectionObserverCallback = () => undefined;
+        vi.stubGlobal(
+            'IntersectionObserver',
+            class {
+                constructor(handler: IntersectionObserverCallback) {
+                    callback = handler;
+                }
+                observe = vi.fn();
+                disconnect = vi.fn();
+            },
+        );
+        render(
+            defineComponent({
+                setup: () => () =>
+                    h('div', [
+                        h(StickySectionNav, { sections }),
+                        ...sections.map(({ id }) => h('section', { id })),
+                    ]),
+            }),
+        );
+        const report = (id: string, isIntersecting: boolean) =>
+            callback(
+                [
+                    { target: document.getElementById(id)!, isIntersecting },
+                ] as unknown as IntersectionObserverEntry[],
+                {} as IntersectionObserver,
+            );
+        const [upper, lower] = sections;
+        report(lower.id, true);
+        report(upper.id, true);
+        await nextTick();
+        expect(screen.getByRole('link', { name: lower.label })).toHaveAttribute(
+            'aria-current',
+            'location',
+        );
+        report(lower.id, false);
+        await nextTick();
+        expect(screen.getByRole('link', { name: upper.label })).toHaveAttribute(
+            'aria-current',
+            'location',
+        );
+    });
+
     it('replaces observed sections when its props change and skips missing elements', async () => {
         const observe = vi.fn();
         const disconnect = vi.fn();

@@ -12,14 +12,22 @@ export function useScrollSpy(ids: MaybeRefOrGetter<string[]>) {
             (sectionIds) => {
                 observer?.disconnect();
                 active.value = sectionIds[0];
+                const visible = new Set<string>();
                 if (typeof IntersectionObserver === 'undefined') return;
 
                 observer = new IntersectionObserver(
                     (entries) => {
                         for (const entry of entries) {
-                            if (entry.isIntersecting)
-                                active.value = entry.target.id;
+                            if (entry.isIntersecting) {
+                                visible.add(entry.target.id);
+                            } else {
+                                visible.delete(entry.target.id);
+                            }
                         }
+                        const lowest = sectionIds.findLast((id) =>
+                            visible.has(id),
+                        );
+                        if (lowest) active.value = lowest;
                     },
                     { rootMargin: '-15% 0px -70% 0px' },
                 );

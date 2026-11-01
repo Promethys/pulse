@@ -40,8 +40,8 @@ const contributions = [
                 content="Pulse is free and open source under the MIT license. Read the code, run your own copy with Docker, report a bug or contribute."
             />
         </Head>
-        <div class="mx-auto max-w-5xl px-4 py-10 md:py-14">
-            <header class="mb-10 max-w-2xl">
+        <div class="mx-auto max-w-3xl px-4 py-10 md:py-14">
+            <header class="mb-10">
                 <h1 class="text-3xl font-semibold md:text-4xl">Open source</h1>
                 <p class="mt-2 leading-relaxed text-muted-foreground">
                     Pulse is free and open source under the MIT license. Read
@@ -54,7 +54,7 @@ const contributions = [
                     >
                 </Button>
             </header>
-            <section class="max-w-2xl" aria-labelledby="why">
+            <section aria-labelledby="why">
                 <h2 id="why" class="text-2xl font-semibold">Why open source</h2>
                 <div
                     class="mt-3 space-y-3 leading-relaxed text-muted-foreground"
@@ -70,14 +70,14 @@ const contributions = [
                     </p>
                 </div>
             </section>
-            <section class="mt-12 max-w-2xl" aria-labelledby="stack">
+            <section class="mt-12" aria-labelledby="stack">
                 <h2 id="stack" class="text-2xl font-semibold">The stack</h2>
                 <p class="mt-3 leading-relaxed text-muted-foreground">
                     Laravel, Vue 3, Inertia and PostgreSQL. AI generation uses
                     Laravel’s provider-agnostic AI SDK.
                 </p>
             </section>
-            <section class="mt-12 max-w-2xl" aria-labelledby="run">
+            <section class="mt-12" aria-labelledby="run">
                 <h2 id="run" class="text-2xl font-semibold">
                     Run your own copy
                 </h2>
@@ -98,7 +98,7 @@ const contributions = [
                     </li>
                 </ol>
                 <pre
-                    class="mt-4 overflow-x-auto rounded-xl border border-border bg-muted p-4 text-sm"
+                    class="mt-4 rounded-xl border border-border bg-muted p-4 text-sm break-all whitespace-pre-wrap"
                 ><code>git clone https://github.com/Promethys/pulse.git
 cd pulse
 cp .env.example .env</code></pre>
@@ -148,7 +148,7 @@ cp .env.example .env</code></pre>
                 </div>
             </section>
             <section
-                class="mt-12 max-w-2xl rounded-2xl border border-border bg-card p-5"
+                class="mt-12 rounded-2xl border border-border bg-card p-5"
                 aria-labelledby="license"
             >
                 <h2

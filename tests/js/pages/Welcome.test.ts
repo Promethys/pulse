@@ -22,7 +22,7 @@ describe('Welcome', () => {
                 expect(link).toHaveAttribute('href', register.url()),
             );
         const links = screen.getAllByRole('link', { name: 'Log in' });
-        expect(links).toHaveLength(2);
+        expect(links).toHaveLength(1);
         links.forEach((link) =>
             expect(link).toHaveAttribute('href', login.url()),
         );
@@ -34,7 +34,7 @@ describe('Welcome', () => {
         expect(
             screen.queryByRole('link', { name: 'Create an account' }),
         ).not.toBeInTheDocument();
-        expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2);
+        expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(1);
     });
 
     it.each([true, false])(

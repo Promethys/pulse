@@ -9,11 +9,9 @@ const active = useScrollSpy(() => props.sections.map((section) => section.id));
 <template>
     <nav
         aria-label="Sections"
-        class="mb-8 lg:sticky lg:top-24 lg:mb-0 lg:w-48 lg:shrink-0 lg:self-start"
+        class="hidden lg:sticky lg:top-24 lg:block lg:w-48 lg:shrink-0 lg:self-start"
     >
-        <ul
-            class="flex flex-wrap gap-1 border-l border-border lg:block lg:space-y-1"
-        >
+        <ul class="space-y-1 border-l border-border">
             <li v-for="section in sections" :key="section.id">
                 <a
                     :href="`#${section.id}`"

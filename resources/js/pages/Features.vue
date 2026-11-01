@@ -305,18 +305,14 @@ function toggleInterest(id: number) {
                         </ul>
                     </FeatureSection>
                     <div
-                        class="mt-4 rounded-3xl bg-primary/50 p-6 text-center md:p-10"
+                        v-if="!page.props.auth.user && page.props.canRegister"
+                        class="mt-4 rounded-3xl bg-primary/50 p-6 text-center md:p-10 dark:border dark:border-border dark:bg-card"
                     >
                         <h2 class="text-2xl font-semibold">
                             Try it tomorrow morning.
                         </h2>
                         <div class="mt-4 flex flex-wrap justify-center gap-2">
-                            <Button
-                                v-if="
-                                    !page.props.auth.user &&
-                                    page.props.canRegister
-                                "
-                                as-child
+                            <Button as-child
                                 ><Link :href="register()"
                                     >Create an account</Link
                                 ></Button

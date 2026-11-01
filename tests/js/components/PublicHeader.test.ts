@@ -13,6 +13,20 @@ import { index as docs } from '@/routes/docs';
 import { page } from '../support/inertia';
 
 describe('PublicHeader', () => {
+    it('marks the current section in the navigation', () => {
+        page.url = `${docs.url()}/delivery/email`;
+        render(PublicHeader);
+
+        const main = screen.getByRole('navigation', { name: 'Main' });
+        expect(
+            within(main).getByRole('link', { name: 'Docs' }),
+        ).toHaveAttribute('aria-current', 'page');
+        expect(
+            within(main).getByRole('link', { name: 'Features' }),
+        ).not.toHaveAttribute('aria-current');
+        page.url = '/';
+    });
+
     beforeEach(() => {
         page.props = { auth: { user: null }, canRegister: true };
     });

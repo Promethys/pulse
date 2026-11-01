@@ -15,6 +15,8 @@ import { features, home, login, openSource, register } from '@/routes';
 import { index as docs } from '@/routes/docs';
 
 const page = usePage<{ canRegister: boolean }>();
+const isCurrent = (url: string) =>
+    page.url === url || page.url.startsWith(`${url}/`);
 const open = ref(false);
 const navigation = [
     { label: 'Features', href: features() },
@@ -30,15 +32,24 @@ const navigation = [
         <div
             class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3"
         >
-            <Link :href="home()"><PulseLogo /></Link>
+            <Link :href="home()" class="inline-flex items-center"
+                ><PulseLogo
+            /></Link>
             <nav class="hidden items-center gap-1 md:flex" aria-label="Main">
                 <Button
                     v-for="item in navigation"
                     :key="item.label"
                     variant="ghost"
+                    :class="{ 'bg-accent/40': isCurrent(item.href.url) }"
                     as-child
                 >
-                    <Link :href="item.href">{{ item.label }}</Link>
+                    <Link
+                        :href="item.href"
+                        :aria-current="
+                            isCurrent(item.href.url) ? 'page' : undefined
+                        "
+                        >{{ item.label }}</Link
+                    >
                 </Button>
             </nav>
             <div class="flex items-center gap-1">
@@ -102,7 +113,7 @@ const navigation = [
                                 <template v-else>
                                     <Button
                                         variant="ghost"
-                                        class="w-full"
+                                        class="w-full justify-start"
                                         as-child
                                     >
                                         <Link

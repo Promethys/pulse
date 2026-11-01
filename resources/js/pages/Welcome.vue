@@ -6,7 +6,7 @@ import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
 import { Button } from '@/components/ui/button';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { publicFaq, publicLearning, publicNews } from '@/lib/publicSamples';
-import { features, login, register } from '@/routes';
+import { features, register } from '@/routes';
 import { index as docs, show as article } from '@/routes/docs';
 
 defineOptions({ layout: [] });
@@ -50,7 +50,7 @@ const highlights = [
 </script>
 
 <template>
-    <Head title="Pulse: your daily news digest, from the interests you follow">
+    <Head title="Your daily news digest, from the interests you follow">
         <meta
             name="description"
             content="Pick your interests, bring your own AI key, and get one calm daily digest in the app, on Discord or by email. Open source."
@@ -77,13 +77,6 @@ const highlights = [
                         ><Link :href="register()"
                             >Create an account</Link
                         ></Button
-                    >
-                    <Button
-                        v-if="!page.props.auth.user"
-                        size="lg"
-                        variant="outline"
-                        as-child
-                        ><Link :href="login()">Log in</Link></Button
                     >
                     <Button size="lg" variant="outline" as-child>
                         <Link :href="features()">Explore features</Link>
@@ -242,7 +235,7 @@ const highlights = [
                 <Faq :items="publicFaq" class="mt-4" />
             </section>
             <section
-                class="mt-14 rounded-3xl bg-primary/50 p-6 text-center md:p-12"
+                class="mt-14 rounded-3xl bg-primary/50 p-6 text-center md:p-12 dark:border dark:border-border dark:bg-card"
                 aria-label="Get started"
             >
                 <h2 class="text-2xl font-semibold md:text-3xl">
