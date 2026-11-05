@@ -1,4 +1,6 @@
-**Today** opens your daily reading view using the timezone in your digest settings.
+**Today** at `/dashboard` opens your daily reading view using the timezone in your digest settings.
+
+The Pulse logo returns to the public site at `/`, even when you are signed in. Choose **Open Pulse** there to return to Today.
 
 ![The Today page, with its previous, calendar and next buttons](/images/shots/today-desktop.webp)
 

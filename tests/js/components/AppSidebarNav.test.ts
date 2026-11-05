@@ -38,7 +38,7 @@ describe('AppSidebar', () => {
         );
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
             'href',
-            '/',
+            '/dashboard',
         );
         expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
             'href',
@@ -83,8 +83,8 @@ describe('AppSidebar', () => {
         );
     });
 
-    it.each(['/'])(
-        'highlights Today on %s and clears it after navigation to settings',
+    it.each(['/dashboard', '/dashboard?tab=news#digest'])(
+        'highlights Today on %s and clears it after navigation to the public home',
         async (path) => {
             page.url = path;
             renderSidebar();
@@ -94,7 +94,7 @@ describe('AppSidebar', () => {
                 'text-sidebar-primary-foreground',
             );
 
-            page.url = '/settings/security';
+            page.url = '/';
             await nextTick();
 
             expect(screen.getByRole('link', { name: 'Today' })).not.toHaveClass(

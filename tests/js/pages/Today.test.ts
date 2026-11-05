@@ -14,7 +14,7 @@ import { todayProps } from '../support/dayProps';
 import { page } from '../support/inertia';
 
 function renderPage(props = todayProps()) {
-    page.url = '/';
+    page.url = '/dashboard';
     page.props = { ...props, errors: {} };
     return render(Today, { props });
 }
@@ -247,7 +247,7 @@ describe('Today', () => {
         );
         const calls = [...visit.mock.calls, ...get.mock.calls];
         expect(calls).toHaveLength(1);
-        expect(calls[0][0]).toBe('/');
+        expect(calls[0][0]).toBe('/dashboard');
     });
 
     it('explains missing AI access before the first digest', () => {

@@ -71,6 +71,8 @@ composer dev
 
 Open <http://localhost:8000> and sign in as `test@example.com` with password `password`, or register your own account. The default log mailer writes verification emails to `storage/logs/laravel.log`.
 
+The public landing page stays at `/`, including when you are signed in. Today is at `/dashboard`; the Pulse logo returns to the public site, and **Open Pulse** opens your dashboard.
+
 The commands below use Docker. Without Docker, drop `docker compose exec app`.
 
 To see the app full of data, load 90 days of fictional history, then sign in as `showcase@example.com` with password `password`:

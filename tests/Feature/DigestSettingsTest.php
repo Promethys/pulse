@@ -28,7 +28,7 @@ class DigestSettingsTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertRedirect(route('home', absolute: false));
+        $response->assertRedirect(route('dashboard', absolute: false));
         $this->assertAuthenticated();
         $user = User::query()->sole();
         $settings = $user->digestSettings;
@@ -60,7 +60,7 @@ class DigestSettingsTest extends TestCase
             'uses_instance_ai' => 1,
         ]);
 
-        $response->assertRedirect(route('home', absolute: false));
+        $response->assertRedirect(route('dashboard', absolute: false));
         $user = User::query()->sole();
 
         $this->assertFalse($user->is_admin);

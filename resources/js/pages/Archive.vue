@@ -5,6 +5,7 @@ import ArchiveRow from '@/components/pulse/ArchiveRow.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
+import { dashboard } from '@/routes';
 import type { ArchiveProps } from '@/types';
 
 const props = defineProps<ArchiveProps>();
@@ -27,7 +28,7 @@ const subtitle = computed(
                 <p class="text-sm text-muted-foreground">
                     Visit
                     <Link
-                        href="/"
+                        :href="dashboard()"
                         class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Today</Link
                     >

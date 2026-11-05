@@ -4,7 +4,7 @@ import { ChevronRight } from '@lucide/vue';
 import { computed } from 'vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { dateParts } from '@/lib/dates';
-import { home } from '@/routes';
+import { dashboard } from '@/routes';
 import { show } from '@/routes/days';
 import type { ArchiveDay } from '@/types';
 
@@ -19,7 +19,7 @@ const weekday = computed(() =>
         : `${parts.value.weekday} ${parts.value.year}`,
 );
 const href = computed(() =>
-    props.day.date === props.today ? home.url() : show.url(props.day.date),
+    props.day.date === props.today ? dashboard.url() : show.url(props.day.date),
 );
 const tagNames = computed(() =>
     props.day.tags.map((tag) => tag.name).join(', '),

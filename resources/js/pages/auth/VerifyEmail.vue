@@ -54,6 +54,11 @@ defineProps<{
             Resend the email
         </Button>
 
+        <p role="note" class="text-sm text-muted-foreground">
+            This instance can only send a few emails a day. If the link doesn't
+            arrive, your account will be verified by hand.
+        </p>
+
         <TextLink :href="logout()" as="button" class="mx-auto block text-sm">
             Log out
         </TextLink>

@@ -35,7 +35,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard, home } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -146,7 +146,7 @@ const rightNavItems: NavItem[] = [
                 </div>
 
                 <Link
-                    :href="dashboard()"
+                    :href="home()"
                     class="flex items-center gap-x-2 focus-ring"
                 >
                     <AppLogo />

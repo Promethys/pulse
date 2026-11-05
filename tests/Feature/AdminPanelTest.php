@@ -74,7 +74,8 @@ class AdminPanelTest extends TestCase
         $admin = User::factory()->onboarded()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
-        $this->actingAs($admin)->get('/admin')->assertSee('Back to Pulse');
+        $this->actingAs($admin)->get('/admin')->assertSee('Back to Pulse')
+            ->assertSee('href="'.route('dashboard').'"', false);
     }
 
     public function test_the_app_only_tells_verified_admins_about_the_panel(): void
@@ -82,9 +83,9 @@ class AdminPanelTest extends TestCase
         $admin = User::factory()->onboarded()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
-        $this->actingAs($admin)->get(route('home'))
+        $this->actingAs($admin)->get(route('dashboard'))
             ->assertInertia(fn (Assert $page) => $page->where('auth.canAccessAdmin', true));
-        $this->actingAs(User::factory()->onboarded()->create())->get(route('home'))
+        $this->actingAs(User::factory()->onboarded()->create())->get(route('dashboard'))
             ->assertInertia(fn (Assert $page) => $page->where('auth.canAccessAdmin', false));
     }
 

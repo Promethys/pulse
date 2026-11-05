@@ -8,7 +8,14 @@ import {
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import PublicHeader from '@/components/pulse/PublicHeader.vue';
-import { features, home, login, openSource, register } from '@/routes';
+import {
+    dashboard,
+    features,
+    home,
+    login,
+    openSource,
+    register,
+} from '@/routes';
 import { index as docs } from '@/routes/docs';
 import { page } from '../support/inertia';
 
@@ -80,12 +87,16 @@ describe('PublicHeader', () => {
             page.props = { auth: { user: { id: 1 } }, canRegister };
             render(PublicHeader);
 
+            expect(screen.getByRole('link', { name: 'Pulse' })).toHaveAttribute(
+                'href',
+                home.url(),
+            );
             expect(
                 screen.getAllByRole('link', { name: 'Open Pulse' }),
             ).toHaveLength(1);
             expect(
                 screen.getByRole('link', { name: 'Open Pulse' }),
-            ).toHaveAttribute('href', home.url());
+            ).toHaveAttribute('href', dashboard.url());
             expect(
                 screen.queryByRole('link', { name: 'Log in' }),
             ).not.toBeInTheDocument();
@@ -131,7 +142,7 @@ describe('PublicHeader', () => {
             if (user) {
                 expect(
                     nav.getByRole('link', { name: 'Open Pulse' }),
-                ).toHaveAttribute('href', home.url());
+                ).toHaveAttribute('href', dashboard.url());
                 expect(
                     nav.queryByRole('link', { name: 'Log in' }),
                 ).not.toBeInTheDocument();

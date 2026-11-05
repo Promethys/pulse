@@ -36,14 +36,14 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 
 | GET path | Page and behavior |
 |---|---|
-| `/` | Landing page for guests; verification and onboarding gates for signed-in users, then Today |
+| `/` | Public landing page for guests and signed-in users |
 | `/features`, `/open-source` | Public pages, open to guests and signed-in users |
 | `/privacy`, `/terms` | Public legal pages. The contact address comes from `SUPPORT_EMAIL` |
 | `/docs` | Public user documentation home, with search in the browser over titles, summaries and headings |
 | `/docs/{section}/{article}` | One article; slugs not listed in `config/docs.php` show the docs 404 |
-| `/dashboard` | Permanent redirect to `/` after the app gates |
-| `/onboarding` | Interests, Sources, About you, AI key, Delivery; completed accounts redirect to `/` |
-| `/days/{date}` | Saved day for the account; real `Y-m-d` required, today redirects to `/`, missing days return 404 |
+| `/dashboard` | Today, after authentication, email verification and onboarding |
+| `/onboarding` | Interests, Sources, About you, AI key, Delivery; completed accounts redirect to `/dashboard` |
+| `/days/{date}` | Saved day for the account; real `Y-m-d` required, today redirects to `/dashboard`, missing days return 404 |
 | `/archive` | One row per saved date, newest first, 30 dates per page |
 | `/search` | News and Learning tabs, totals for both, 30 results per page on the active tab |
 | `/tags/{tag:slug}` | Personal news selections for an existing tag, total count and 12 weekly activity counts |
@@ -54,9 +54,9 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 | `/settings/profile`, `/settings/security`, `/settings/appearance` | Profile, password/passkeys/two-factor security and theme |
 | `/settings/digest`, `/settings/delivery`, `/settings/ai-keys` | Digest preferences, external destinations and personal AI chain |
 
-Settings use the onboarding gate. Profile viewing and updating require authentication; the other settings routes also require verified email. Security requires password confirmation. Fortify provides registration, login, email verification, password reset and two-factor authentication.
+Settings use the onboarding gate. Profile viewing and updating require authentication; the other settings routes also require verified email. Security requires password confirmation. Fortify provides registration, login, email verification, password reset and two-factor authentication, with `/dashboard` as its home path. The email verification page displays a muted notice about the instance's limited daily email quota and manual verification when the link does not arrive.
 
-The desktop sidebar links Today, Archive, Search, Learning and Sources; the user menu opens Settings. Mobile uses bottom tabs with Settings, whose index also links to Sources. `resources/js/lib/navigation.ts` defines navigation and active states; `settingsSections.ts` defines the settings tabs. The app supports light, dark and system appearance through `useAppearance`. Calendar popovers use reka-ui and `@internationalized/date`; digest dates remain `Y-m-d` values without browser timezone shifts.
+App logos return to the public landing page; signed-in visitors use **Open Pulse** on the public site to reach `/dashboard`. The desktop sidebar links Today, Archive, Search, Learning and Sources; the user menu opens Settings. Mobile uses bottom tabs with Settings, whose index also links to Sources. `resources/js/lib/navigation.ts` defines navigation and active states; `settingsSections.ts` defines the settings tabs. The app supports light, dark and system appearance through `useAppearance`. Calendar popovers use reka-ui and `@internationalized/date`; digest dates remain `Y-m-d` values without browser timezone shifts.
 
 Onboarding saves Interests, Sources, About you and AI key on Continue. At least one live interest is required, draft interests are disabled, and About you and AI key can be skipped. The final step offers optional email delivery alongside in-app delivery and sets `onboarded_at`. Completing onboarding without an AI key is allowed; the scheduler still requires personal keys or instance AI access.
 
