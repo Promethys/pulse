@@ -14,7 +14,7 @@ describe('AppBottomNav', () => {
         ).toEqual(['Today', 'Archive', 'Search', 'Learning', 'Settings']);
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
             'href',
-            '/',
+            '/dashboard',
         );
         expect(screen.getByRole('link', { name: 'Archive' })).toHaveAttribute(
             'href',
@@ -48,26 +48,29 @@ describe('AppBottomNav', () => {
         );
     });
 
-    it.each(['/'])('marks Today current on %s', (path) => {
-        page.url = path;
-        render(AppBottomNav);
+    it.each(['/dashboard', '/dashboard?tab=news#digest'])(
+        'marks Today current on %s',
+        (path) => {
+            page.url = path;
+            render(AppBottomNav);
 
-        expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
-            'aria-current',
-            'page',
-        );
-        expect(
-            screen.getByRole('link', { name: 'Settings' }),
-        ).not.toHaveAttribute('aria-current', 'page');
-        const today = screen.getByRole('link', { name: 'Today' });
-        expect(
-            [today, ...today.querySelectorAll('*')].some(
-                (element) =>
-                    element.classList.contains('bg-primary') &&
-                    element.classList.contains('text-primary-foreground'),
-            ),
-        ).toBe(true);
-    });
+            expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
+                'aria-current',
+                'page',
+            );
+            expect(
+                screen.getByRole('link', { name: 'Settings' }),
+            ).not.toHaveAttribute('aria-current', 'page');
+            const today = screen.getByRole('link', { name: 'Today' });
+            expect(
+                [today, ...today.querySelectorAll('*')].some(
+                    (element) =>
+                        element.classList.contains('bg-primary') &&
+                        element.classList.contains('text-primary-foreground'),
+                ),
+            ).toBe(true);
+        },
+    );
 
     it('updates the current tab after Inertia navigation to nested settings', async () => {
         render(AppBottomNav);
@@ -84,8 +87,8 @@ describe('AppBottomNav', () => {
         );
     });
 
-    it('does not mark a tab current for an unrelated path', () => {
-        page.url = '/archived';
+    it('does not mark a tab current on the public home', () => {
+        page.url = '/';
         render(AppBottomNav);
 
         expect(screen.getAllByRole('link')).toHaveLength(5);
@@ -114,7 +117,7 @@ describe('AppBottomNav mobile settings destination', () => {
             ).toHaveAttribute('aria-current', 'page');
             expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute(
                 'href',
-                '/',
+                '/dashboard',
             );
             expect(
                 screen.getByRole('link', { name: 'Today' }),

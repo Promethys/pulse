@@ -155,7 +155,7 @@ it.each([true, false])(
         }
         renderPage(props);
         for (const [name, href] of [
-            ['Today', '/'],
+            ['Today', '/dashboard'],
             ['Search', '/search'],
         ]) {
             const link = screen.queryByRole('link', { name });

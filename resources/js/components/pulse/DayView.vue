@@ -22,7 +22,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { formatDate } from '@/lib/dates';
-import { home } from '@/routes';
+import { dashboard } from '@/routes';
 import { index } from '@/routes/archive';
 import { show } from '@/routes/days';
 import type { Day } from '@/types';
@@ -46,7 +46,7 @@ const hasLearningCards = computed(() =>
 function go(date: string | null) {
     if (!date) return;
     calendarOpen.value = false;
-    router.visit(date === props.today ? home.url() : show.url(date));
+    router.visit(date === props.today ? dashboard.url() : show.url(date));
 }
 
 function isDateDisabled(date: DateValue) {

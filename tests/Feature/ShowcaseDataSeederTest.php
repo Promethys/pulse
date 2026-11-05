@@ -341,7 +341,7 @@ class ShowcaseDataSeederTest extends TestCase
         $this->seed(ShowcaseDataSeeder::class);
 
         $user = $this->showcaseUser();
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day.date', '2026-10-30')
                 ->where('day.news.status', 'generated')

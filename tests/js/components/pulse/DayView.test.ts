@@ -114,7 +114,7 @@ describe('DayView', () => {
 
     it.each([
         ['Previous day', '/days/2026-10-20'],
-        ['Next day', '/'],
+        ['Next day', '/dashboard'],
     ])('navigates with %s to %s', async (name, url) => {
         const view = renderDay();
         await view.user.click(screen.getByRole('button', { name }));
@@ -186,7 +186,7 @@ describe('DayView', () => {
 
     it.each([
         [20, '/days/2026-10-20'],
-        [30, '/'],
+        [30, '/dashboard'],
     ] as const)(
         'selects calendar day %i and navigates to %s',
         async (day, url) => {

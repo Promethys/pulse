@@ -227,7 +227,7 @@ class OnboardingStepsTest extends TestCase
 
         $this->actingAs($user)->post('/onboarding/complete', [
             'email_delivery' => true, 'email' => 'reader@example.test',
-        ])->assertRedirect('/')->assertSessionHasNoErrors();
+        ])->assertRedirect(route('dashboard'))->assertSessionHasNoErrors();
 
         $saved = $user->deliveryChannels()->where('type', DeliveryChannelType::Email)->sole();
         if ($channel !== null) {
@@ -257,7 +257,7 @@ class OnboardingStepsTest extends TestCase
         $inApp = DeliveryChannel::factory()->for($user)->inApp()->create();
 
         $this->actingAs($user)->post('/onboarding/complete', ['email_delivery' => false])
-            ->assertRedirect('/')->assertSessionHasNoErrors();
+            ->assertRedirect(route('dashboard'))->assertSessionHasNoErrors();
 
         $this->assertTrue($user->digestSettings()->sole()->onboarded_at->equalTo(now()));
         $this->assertTrue($inApp->fresh()->enabled);

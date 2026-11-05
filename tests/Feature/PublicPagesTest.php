@@ -46,7 +46,7 @@ class PublicPagesTest extends TestCase
 
         $this->get(route('features'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Features')->where('canRegister', $enabled));
-        $this->get(route('home'))->assertOk()
+        $this->actingAs(User::factory()->onboarded()->create())->get(route('home'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Welcome')->where('canRegister', $enabled));
     }
 
@@ -59,6 +59,7 @@ class PublicPagesTest extends TestCase
     public static function pages(): array
     {
         return [
+            'home' => ['/', 'Welcome'],
             'features' => ['/features', 'Features'],
             'open source' => ['/open-source', 'OpenSource'],
             'privacy' => ['/privacy', 'legal/Privacy'],

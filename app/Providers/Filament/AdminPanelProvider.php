@@ -66,7 +66,7 @@ class AdminPanelProvider extends PanelProvider
                 Action::make('backToPulse')
                     ->label(__('Back to Pulse'))
                     ->icon(Heroicon::OutlinedArrowLeft)
-                    ->url(fn (): string => route('home')),
+                    ->url(fn (): string => route('dashboard')),
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
