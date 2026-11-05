@@ -1,9 +1,39 @@
+import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/vue';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import OpenSource from '@/pages/OpenSource.vue';
 import { page } from '../support/inertia';
 
 describe('OpenSource', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('adds a Copy button to the setup commands', async () => {
+        page.props = { auth: { user: null }, canRegister: true };
+        const user = userEvent.setup();
+        const writeText = vi
+            .spyOn(navigator.clipboard, 'writeText')
+            .mockResolvedValue();
+        render(OpenSource);
+        const copy = screen.getByRole('button', { name: 'Copy code' });
+
+        expect(copy).toHaveClass('code-copy');
+        expect(
+            copy.closest('.code-block')?.querySelector(':scope > pre'),
+        ).toHaveTextContent('git clone');
+        expect(
+            screen.getAllByRole('button', { name: 'Copy code' }),
+        ).toHaveLength(1);
+
+        await user.click(copy);
+
+        expect(writeText).toHaveBeenCalledWith(
+            'git clone https://github.com/Promethys/pulse.git\ncd pulse\ncp .env.example .env',
+        );
+        expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
+    });
+
     it.each([
         [true, false],
         [false, false],

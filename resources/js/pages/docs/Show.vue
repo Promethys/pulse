@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ChevronRight, PencilLine } from '@lucide/vue';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import DocsMenuButton from '@/components/pulse/DocsMenuButton.vue';
 import DocsNav from '@/components/pulse/DocsNav.vue';
 import type { DocsSection } from '@/components/pulse/DocsNav.vue';
@@ -10,6 +10,7 @@ import type { DocsHeading } from '@/components/pulse/OnThisPage.vue';
 import OnThisPageCollapsible from '@/components/pulse/OnThisPageCollapsible.vue';
 import PrevNext from '@/components/pulse/PrevNext.vue';
 import type { DocsEntry } from '@/components/pulse/PrevNext.vue';
+import { useCodeCopy } from '@/composables/useCodeCopy';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { index } from '@/routes/docs';
 
@@ -26,57 +27,7 @@ const current = computed(() => ({
     article: props.article.slug,
 }));
 const content = ref<HTMLElement>();
-let stop: (() => void) | undefined;
-
-onMounted(() => {
-    stop = watch(
-        () => props.article.html,
-        (_, __, onCleanup) => {
-            const cleanups: (() => void)[] = [];
-            for (const pre of content.value?.querySelectorAll('pre') ?? []) {
-                const code = (
-                    pre.querySelector('code')?.textContent ??
-                    pre.textContent ??
-                    ''
-                ).replace(/\n$/, '');
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'docs-code-copy';
-                button.textContent = 'Copy';
-                button.setAttribute('aria-label', 'Copy code');
-                let timer: ReturnType<typeof setTimeout> | undefined;
-                let disposed = false;
-                const copy = async () => {
-                    try {
-                        if (!navigator.clipboard) return;
-                        await navigator.clipboard.writeText(code);
-                        if (disposed) return;
-                        button.textContent = 'Copied';
-                        button.setAttribute('aria-label', 'Copied');
-                        clearTimeout(timer);
-                        timer = setTimeout(() => {
-                            button.textContent = 'Copy';
-                            button.setAttribute('aria-label', 'Copy code');
-                        }, 1500);
-                    } catch {
-                        return;
-                    }
-                };
-                button.addEventListener('click', copy);
-                pre.append(button);
-                cleanups.push(() => {
-                    disposed = true;
-                    clearTimeout(timer);
-                    button.removeEventListener('click', copy);
-                    button.remove();
-                });
-            }
-            onCleanup(() => cleanups.forEach((cleanup) => cleanup()));
-        },
-        { immediate: true, flush: 'post' },
-    );
-});
-onUnmounted(() => stop?.());
+useCodeCopy(content, () => props.article.html);
 </script>
 
 <template>

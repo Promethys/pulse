@@ -1,5 +1,6 @@
+import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/vue';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import Show from '@/pages/learning/Show.vue';
 import { learningPostProps } from '../../support/dayProps';
 import { page } from '../../support/inertia';
@@ -15,6 +16,32 @@ function renderPage(props = showProps()) {
 }
 
 describe('Learning Show', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('adds a Copy button to the code block of the body', async () => {
+        const user = userEvent.setup();
+        const writeText = vi
+            .spyOn(navigator.clipboard, 'writeText')
+            .mockResolvedValue();
+        renderPage();
+        const copy = screen.getByRole('button', { name: 'Copy code' });
+
+        expect(copy).toHaveClass('code-copy');
+        expect(
+            copy.closest('.code-block')?.querySelector(':scope > pre'),
+        ).toHaveTextContent('SELECT 1;');
+        expect(
+            screen.getAllByRole('button', { name: 'Copy code' }),
+        ).toHaveLength(1);
+
+        await user.click(copy);
+
+        expect(writeText).toHaveBeenCalledWith('SELECT 1;');
+        expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
+    });
+
     it.each([
         ['tip', 'Tip'],
         ['topic', 'Topic'],

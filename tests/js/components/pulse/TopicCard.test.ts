@@ -16,7 +16,9 @@ describe('TopicCard', () => {
             '/learning/22',
         );
         expect(screen.getByText('Programming')).toBeVisible();
-        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Read more' }),
+        ).not.toBeInTheDocument();
     });
 
     it('renders server HTML as prose including formatting, code, lists and links', () => {
