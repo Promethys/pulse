@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
+use App\Auth\SocialProviders;
 use Filament\Facades\Filament;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -40,6 +43,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'socialProviders' => app(SocialProviders::class)->enabled(),
             'canRegister' => Features::enabled(Features::registration()),
             'supportEmail' => config('app.support_email'),
             'auth' => [

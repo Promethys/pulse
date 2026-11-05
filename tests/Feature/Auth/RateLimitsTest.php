@@ -6,6 +6,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Session\ArraySessionHandler;
@@ -234,6 +235,32 @@ class RateLimitsTest extends TestCase
         );
     }
 
+    public function test_signed_in_social_requests_share_one_limit_per_reader_across_addresses(): void
+    {
+        $reader = User::factory()->make(['id' => 1]);
+        $keys = $this->limitKeys('social', [], '198.51.100.1', user: $reader);
+        $elsewhere = $this->limitKeys('social', [], '203.0.113.9', user: $reader);
+        $otherReader = $this->limitKeys('social', [], '203.0.113.9', user: User::factory()->make(['id' => 2]));
+
+        $shared = array_values(array_intersect($keys, $elsewhere));
+
+        $this->assertNotEmpty($shared, 'One reader on two addresses shares no social limit.');
+        $this->assertEmpty(array_intersect($shared, $otherReader), 'Two readers share a per-reader social limit.');
+    }
+
+    public function test_social_requests_keep_a_minute_and_an_hourly_limit_per_address(): void
+    {
+        $limits = $this->limits('social', [], '198.51.100.1');
+        $otherAddress = array_map(fn (Limit $limit) => (string) $limit->key, $this->limits('social', [], '198.51.100.2'));
+
+        foreach ([60, 3600] as $decay) {
+            $matching = array_values(array_filter($limits, fn (Limit $limit) => $limit->decaySeconds === $decay
+                && ! in_array((string) $limit->key, $otherAddress, true)));
+
+            $this->assertNotEmpty($matching, "No per-address social limit over {$decay} seconds.");
+        }
+    }
+
     private function register(string $email, string $ip): TestResponse
     {
         return $this->withServerVariables(['REMOTE_ADDR' => $ip])->post(route('register.store'), [
@@ -250,12 +277,21 @@ class RateLimitsTest extends TestCase
      */
     private function limitKeys(string $limiter, array $input, string $ip = '198.51.100.1', string $session = 'session', ?User $user = null): array
     {
+        return array_map(fn (Limit $limit) => (string) $limit->key, $this->limits($limiter, $input, $ip, $session, $user));
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return list<Limit>
+     */
+    private function limits(string $limiter, array $input, string $ip = '198.51.100.1', string $session = 'session', ?User $user = null): array
+    {
         $request = Request::create('/', 'POST', $input, server: ['REMOTE_ADDR' => $ip]);
         $store = new Store('test', new ArraySessionHandler(60), str_pad($session, 40, 'x'));
         $request->setLaravelSession($store);
         $request->setUserResolver(fn () => $user);
         $limits = (RateLimiter::limiter($limiter))($request);
 
-        return array_map(fn ($limit) => (string) $limit->key, is_array($limits) ? $limits : [$limits]);
+        return is_array($limits) ? array_values($limits) : [$limits];
     }
 }

@@ -65,6 +65,21 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_password_login_for_a_passwordless_user_fails_with_a_validation_error(): void
+    {
+        $user = User::factory()->create(['password' => null]);
+
+        $this->from(route('login'))->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'any-password',
+        ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh()->password);
+    }
+
     public function test_users_can_logout()
     {
         $user = User::factory()->create();

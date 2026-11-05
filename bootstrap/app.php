@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\EnsureOnboarded;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RequirePasswordIfPresent;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['onboarded' => EnsureOnboarded::class]);
+        $middleware->alias([
+            'onboarded' => EnsureOnboarded::class,
+            'password.confirm' => RequirePasswordIfPresent::class,
+        ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 

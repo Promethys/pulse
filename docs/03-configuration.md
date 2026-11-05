@@ -16,9 +16,24 @@ Digest behavior is stored per account: timezone, schedule, toggles, profile, max
 
 `REGISTRATION_ENABLED` defaults to `true`. Set it to `false` at runtime to close registration for everyone: `/register` returns a 404 and the Create an account links disappear, while existing accounts can still log in. Leave it unset during the front-end build, because the Wayfinder route helpers are generated from the routes that exist at that moment.
 
+## Google and GitHub sign-in
+
+Google and GitHub are optional sign-in providers. Each appears on Login and Register only when all three of its variables are non-empty.
+
+| Variable | What it does |
+|---|---|
+| `GOOGLE_CLIENT_ID` | Google OAuth application client id. |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth application client secret. |
+| `GOOGLE_REDIRECT_URI` | Set to `<APP_URL>/auth/google/callback` and register that exact URL with Google. |
+| `GITHUB_CLIENT_ID` | GitHub OAuth application client id. |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth application client secret. |
+| `GITHUB_REDIRECT_URI` | Set to `<APP_URL>/auth/github/callback` and register that exact URL with GitHub. |
+
+GitHub requests the `user:email` scope. Pulse stores the provider account id without access or refresh tokens. A verified provider email links to an existing Pulse account case-insensitively and verifies its email if needed. Otherwise, an open registration creates an account with the usual digest settings and in-app delivery, without sending a verification email. Closing registration still allows existing links and verified email matches to sign in. Confirmed two-factor authentication still requires the challenge.
+
 ## Login limits
 
-Login allows 5 attempts per minute per account and IP, 30 per hour per account, and 30 per minute per IP. IPv6 addresses share limits within a /64 network. Passkeys allow 10 requests per minute per IP, and two-factor challenges 5 per minute per pending login, falling back to the session.
+Login allows 5 attempts per minute per account and IP, 30 per hour per account, and 30 per minute per IP. IPv6 addresses share limits within a /64 network. Google and GitHub redirect, callback and disconnect requests share a limit of 10 per minute and 30 per hour per IP, plus 10 per minute per signed-in reader. Provider HTTP requests time out after 10 seconds, 5 to connect. Passkeys allow 10 requests per minute per IP, and two-factor challenges 5 per minute per pending login, falling back to the session.
 
 ## Trusted proxies
 

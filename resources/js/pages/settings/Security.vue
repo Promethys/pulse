@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
+import ConnectedAccounts from '@/components/pulse/ConnectedAccounts.vue';
 import {
     Card,
     CardContent,
@@ -13,6 +15,7 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
+import type { ConnectedProvider } from '@/types';
 import type { Props as ManagePasskeysProps } from '@/components/ManagePasskeys.vue';
 import ManagePasskeys from '@/components/ManagePasskeys.vue';
 import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
@@ -22,10 +25,13 @@ import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 type Props = {
     passwordRules: string;
     passwordHint: string;
+    connectedProviders?: ConnectedProvider[];
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
 const props = defineProps<Props>();
+const page = usePage();
+const hasPassword = computed(() => page.props.auth.user.has_password);
 
 defineOptions({
     layout: {
@@ -44,7 +50,9 @@ defineOptions({
 
     <Card class="mb-4 shadow-none">
         <CardHeader>
-            <CardTitle class="font-display">Update password</CardTitle>
+            <CardTitle class="font-display">
+                {{ hasPassword ? 'Update password' : 'Set password' }}
+            </CardTitle>
             <CardDescription
                 >Ensure your account is using a long, random password to stay
                 secure</CardDescription
@@ -65,7 +73,7 @@ defineOptions({
                 class="space-y-6"
                 v-slot="{ errors, processing }"
             >
-                <div class="grid gap-2">
+                <div v-if="hasPassword" class="grid gap-2">
                     <Label for="current_password">Current password</Label>
                     <PasswordInput
                         id="current_password"
@@ -118,6 +126,8 @@ defineOptions({
             </Form>
         </CardContent>
     </Card>
+
+    <ConnectedAccounts :connected-providers="connectedProviders ?? []" />
 
     <div
         v-if="canManageTwoFactor"

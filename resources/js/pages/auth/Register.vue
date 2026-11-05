@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
+import SocialLoginButtons from '@/components/pulse/SocialLoginButtons.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,6 +106,8 @@ defineOptions({ layout: [] });
                 </Button>
             </div>
         </Form>
+
+        <SocialLoginButtons />
 
         <template #footer>
             Already have an account?

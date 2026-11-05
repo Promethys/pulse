@@ -11,6 +11,7 @@ use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -27,7 +28,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $name
  * @property string $email
  * @property CarbonImmutable|null $email_verified_at
- * @property string $password
+ * @property string|null $password
+ * @property-read bool $has_password
  * @property bool $is_admin
  * @property bool $uses_instance_ai
  * @property string|null $two_factor_secret
@@ -38,6 +40,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property CarbonImmutable|null $updated_at
  * @property-read DigestSettings|null $digestSettings
  * @property-read Collection<int, DeliveryChannel> $deliveryChannels
+ * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, AiKey> $aiKeys
  * @property-read Collection<int, DiscordGuild> $discordGuilds
  * @property-read Collection<int, Interest> $interests
@@ -52,6 +55,17 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /** @var list<string> */
+    protected $appends = ['has_password'];
+
+    /**
+     * @return Attribute<bool, never>
+     */
+    protected function hasPassword(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->password !== null);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -83,6 +97,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function deliveryChannels(): HasMany
     {
         return $this->hasMany(DeliveryChannel::class);
+    }
+
+    /**
+     * @return HasMany<SocialAccount, $this>
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
     }
 
     /**

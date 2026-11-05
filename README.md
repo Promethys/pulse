@@ -15,7 +15,7 @@ If you find Pulse useful, leave a star on GitHub. It helps other people find it.
 - **Your AI keys**: Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI, ordered as a fallback chain. Keys are stored encrypted.
 - **Delivery**: always in the app, plus as many Discord servers as you like (bot or webhook) and email.
 - **Reading**: Today, past days, Archive, Search, tag history and a Learning library.
-- **Accounts**: email verification, two-factor authentication and passkeys.
+- **Accounts**: email verification, optional Google and GitHub sign-in, two-factor authentication and passkeys.
 
 Built with Laravel 13, Vue 3, Inertia, PostgreSQL, Filament and `laravel/ai`.
 

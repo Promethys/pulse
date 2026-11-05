@@ -1,4 +1,4 @@
-Open **Settings → Security** to manage two-factor authentication and passkeys. You may be asked to confirm your password before entering this page.
+Open **Settings → Security** to manage two-factor authentication and passkeys. If your account has a password, you may be asked to confirm it before entering this page. Accounts without a password can open Security and manage two-factor authentication and passkeys directly.
 
 ![Security settings, with two-factor authentication](/images/shots/security-desktop.webp)
 
@@ -20,4 +20,4 @@ A passkey lets you sign in without entering your password. The page tells you if
 
 ## Keep your password
 
-Adding a passkey does not remove your password. You still need it for actions such as confirming account deletion. The **Update password** form on Security lets you change it using your current password.
+Adding a passkey does not remove an existing password. The **Update password** form on Security lets you change it using your current password. If your account has no password, use **Set password** to add one without entering a current password. Connected Google and GitHub accounts remain available for sign-in.

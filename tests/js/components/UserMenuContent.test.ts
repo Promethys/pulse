@@ -12,6 +12,7 @@ function renderMenu() {
                 id: 1,
                 name: 'Ada',
                 email: 'ada@example.com',
+                has_password: true,
                 avatar: '',
                 email_verified_at: null,
                 created_at: '',
