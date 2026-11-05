@@ -13,11 +13,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SourcesController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TodayController;
-use App\Http\Middleware\EnsureOnboarded;
-use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Http\Controllers\NewPasswordController;
 use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
@@ -33,14 +29,7 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:reset-password')->name('password.update');
 });
 
-Route::get('/', function (Request $request) {
-    if ($request->user() === null) {
-        return Inertia::render('Welcome');
-    }
-
-    return app(EnsureEmailIsVerified::class)->handle($request,
-        fn () => app(EnsureOnboarded::class)->handle($request, fn () => app(TodayController::class)($request)->toResponse($request)));
-})->name('home');
+Route::inertia('/', 'Welcome')->name('home');
 
 Route::inertia('features', 'Features')->name('features');
 Route::inertia('open-source', 'OpenSource')->name('open-source');
@@ -52,7 +41,7 @@ Route::get('docs/{section}/{article}', [DocsController::class, 'show'])
     ->name('docs.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', fn () => redirect('/', 301))->middleware('onboarded')->name('dashboard');
+    Route::get('dashboard', TodayController::class)->middleware('onboarded')->name('dashboard');
     Route::get('days/{date}', DayController::class)->middleware('onboarded')->name('days.show');
     Route::get('archive', ArchiveController::class)->middleware('onboarded')->name('archive.index');
     Route::get('search', SearchController::class)->middleware('onboarded')->name('search.index');

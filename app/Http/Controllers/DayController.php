@@ -26,7 +26,7 @@ final class DayController extends Controller
         abort_if($settings === null, 403);
 
         if ($date === CarbonImmutable::now($settings->timezone)->toDateString()) {
-            return to_route('home');
+            return to_route('dashboard');
         }
 
         $day = $this->days->for($user, $date);

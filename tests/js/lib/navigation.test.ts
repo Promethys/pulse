@@ -10,10 +10,20 @@ import { describe, expect, it } from 'vite-plus/test';
 import { isActive, navItems } from '@/lib/navigation';
 
 describe('navigation', () => {
+    it.each(['/dashboard', '/dashboard?date=today#news', '/', '/archive'])(
+        'marks the Today destination current only on the dashboard for %s',
+        (path) => {
+            const today = navItems.find((item) => item.title === 'Today')!;
+            expect(isActive(path, today.href)).toBe(
+                path.startsWith('/dashboard'),
+            );
+        },
+    );
+
     it('defines the ordered navigation, icons and availability', () => {
         expect(navItems).toHaveLength(6);
         expect(navItems).toMatchObject([
-            { title: 'Today', href: '/', icon: Sun, available: true },
+            { title: 'Today', href: '/dashboard', icon: Sun, available: true },
             {
                 title: 'Archive',
                 href: '/archive',
@@ -65,15 +75,18 @@ describe('navigation', () => {
     });
 
     it.each([
-        ['/', '/', true],
-        ['/days/2026-10-01', '/', false],
+        ['/dashboard', '/dashboard', true],
+        ['/dashboard?date=today#news', '/dashboard', true],
+        ['/', '/dashboard', false],
+        ['/dashboard-old', '/dashboard', false],
+        ['/days/2026-10-01', '/dashboard', false],
         ['/days/2026-10-01', '/archive', true],
         ['/tags/laravel', '/search', true],
         ['/tags/laravel', '/archive', false],
         ['/days/2026-10-01/items', '/archive', true],
-        ['/daydream', '/', false],
-        ['/days-old/2026-10-01', '/', false],
-        ['/archive', '/', false],
+        ['/daydream', '/dashboard', false],
+        ['/days-old/2026-10-01', '/dashboard', false],
+        ['/archive', '/dashboard', false],
         ['/settings', '/settings', true],
         ['/settings/security', '/settings', true],
         ['/settings/profile/edit', '/settings', true],

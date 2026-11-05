@@ -40,7 +40,7 @@ class OnboardingController extends Controller
         $settings = $user->digestSettings()->firstOrCreate()->refresh();
 
         if ($settings->onboarded_at !== null) {
-            return to_route('home');
+            return to_route('dashboard');
         }
 
         $selected = $user->interests()->get();
@@ -117,6 +117,6 @@ class OnboardingController extends Controller
     {
         $action->handle($request->user(), $request->boolean('email_delivery'), $request->validated('email'));
 
-        return to_route('home');
+        return to_route('dashboard');
     }
 }

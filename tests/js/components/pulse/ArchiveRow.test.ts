@@ -54,7 +54,7 @@ describe('ArchiveRow', () => {
     );
 
     it.each([
-        ['2026-10-30', '/'],
+        ['2026-10-30', '/dashboard'],
         ['2026-10-28', '/days/2026-10-28'],
     ])('links %s to %s', (date, href) => {
         const day = archiveDay();

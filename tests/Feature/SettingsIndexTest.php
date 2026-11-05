@@ -34,13 +34,9 @@ class SettingsIndexTest extends TestCase
             ->assertRedirect(route('verification.notice'));
     }
 
-    public function test_dashboard_keeps_its_permanent_redirect_and_rejects_post_requests(): void
+    public function test_dashboard_rejects_post_requests(): void
     {
         $this->actingAs(User::factory()->onboarded()->create())
-            ->get(route('dashboard'))
-            ->assertStatus(301)
-            ->assertRedirect(route('home'));
-
-        $this->post(route('dashboard'))->assertStatus(405);
+            ->post(route('dashboard'))->assertStatus(405);
     }
 }

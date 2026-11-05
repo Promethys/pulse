@@ -8,6 +8,7 @@ import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import PaginationLinks from '@/components/pulse/PaginationLinks.vue';
 import Sparkline from '@/components/pulse/Sparkline.vue';
+import { dashboard } from '@/routes';
 import type { TagProps } from '@/types';
 
 const props = defineProps<TagProps>();
@@ -45,7 +46,9 @@ const subtitle = computed(() =>
             <template #actions>
                 <p class="text-sm text-muted-foreground">
                     Browse
-                    <Link href="/" class="underline underline-offset-4"
+                    <Link
+                        :href="dashboard()"
+                        class="underline underline-offset-4"
                         >Today</Link
                     >
                     or

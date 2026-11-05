@@ -37,7 +37,7 @@ class OnboardingGateTest extends TestCase
     public static function gatedPages(): array
     {
         return array_map(fn (string $path) => [$path], [
-            '/', '/settings', '/settings/profile', '/settings/appearance', '/settings/security',
+            '/dashboard', '/settings', '/settings/profile', '/settings/appearance', '/settings/security',
         ]);
     }
 
@@ -71,10 +71,10 @@ class OnboardingGateTest extends TestCase
 
     public static function settingsEntryPoints(): array
     {
-        return [['/'], ['/settings/profile'], ['/onboarding']];
+        return [['/dashboard'], ['/settings/profile'], ['/onboarding']];
     }
 
-    public function test_onboarding_is_accessible_before_completion_and_redirects_home_afterwards(): void
+    public function test_onboarding_is_accessible_before_completion_and_redirects_to_dashboard_afterwards(): void
     {
         $user = User::factory()->create();
         $settings = DigestSettings::factory()->for($user)->create();
@@ -85,14 +85,14 @@ class OnboardingGateTest extends TestCase
 
         $settings->forceFill(['onboarded_at' => now()])->save();
 
-        $this->actingAs($user->fresh())->get('/onboarding')->assertRedirect('/');
+        $this->actingAs($user->fresh())->get('/onboarding')->assertRedirect('/dashboard');
     }
 
     public function test_a_gated_user_can_log_out(): void
     {
         $user = User::factory()->create();
         DigestSettings::factory()->for($user)->create();
-        $this->actingAs($user)->get('/')->assertRedirect('/onboarding');
+        $this->actingAs($user)->get('/dashboard')->assertRedirect('/onboarding');
 
         $this->post(route('logout'))->assertRedirect('/');
 
@@ -111,11 +111,11 @@ class OnboardingGateTest extends TestCase
         $verificationUrl = URL::temporarySignedRoute('verification.verify', now()->addMinutes(10), [
             'id' => $user->id, 'hash' => sha1($user->email),
         ]);
-        $this->get($verificationUrl)->assertRedirect('/?verified=1');
+        $this->get($verificationUrl)->assertRedirect('/dashboard?verified=1');
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
 
-        $this->get('/')->assertRedirect('/onboarding');
-        $this->get(route('verification.notice'))->assertRedirect('/');
+        $this->get('/dashboard')->assertRedirect('/onboarding');
+        $this->get(route('verification.notice'))->assertRedirect('/dashboard');
     }
 
     public function test_discord_install_and_callback_are_accessible_to_a_gated_user(): void
@@ -124,7 +124,7 @@ class OnboardingGateTest extends TestCase
         config(['services.discord.client_id' => '123']);
         $user = User::factory()->create();
         DigestSettings::factory()->for($user)->create();
-        $this->actingAs($user)->get('/')->assertRedirect('/onboarding');
+        $this->actingAs($user)->get('/dashboard')->assertRedirect('/onboarding');
 
         $response = $this->get(route('discord.install'));
         $state = session('discord_install_state');

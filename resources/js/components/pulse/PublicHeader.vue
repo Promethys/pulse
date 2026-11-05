@@ -11,7 +11,14 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { features, home, login, openSource, register } from '@/routes';
+import {
+    dashboard,
+    features,
+    home,
+    login,
+    openSource,
+    register,
+} from '@/routes';
 import { index as docs } from '@/routes/docs';
 
 const page = usePage<{ canRegister: boolean }>();
@@ -59,7 +66,7 @@ const navigation = [
                 <ThemeToggle />
                 <div class="hidden items-center gap-1 md:flex">
                     <Button v-if="page.props.auth.user" as-child>
-                        <Link :href="home()">Open Pulse</Link>
+                        <Link :href="dashboard()">Open Pulse</Link>
                     </Button>
                     <template v-else>
                         <Button variant="ghost" as-child>
@@ -120,7 +127,10 @@ const navigation = [
                                     class="w-full"
                                     as-child
                                 >
-                                    <Link :href="home()" @click="open = false">
+                                    <Link
+                                        :href="dashboard()"
+                                        @click="open = false"
+                                    >
                                         Open Pulse
                                     </Link>
                                 </Button>

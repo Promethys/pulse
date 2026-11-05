@@ -67,7 +67,7 @@ describe('Archive', () => {
         const past = screen.getByRole('link', {
             name: /Wednesday.*Quiet night/,
         });
-        expect(today).toHaveAttribute('href', '/');
+        expect(today).toHaveAttribute('href', '/dashboard');
         expect(past).toHaveAttribute('href', '/days/2026-10-28');
         expect(
             today.compareDocumentPosition(past) &
@@ -159,7 +159,7 @@ it.each([true, false])(
         renderPage(props);
         const link = screen.queryByRole('link', { name: 'Today' });
         if (empty) {
-            expect(link).toHaveAttribute('href', '/');
+            expect(link).toHaveAttribute('href', '/dashboard');
             expect(screen.getByText(/to check your next digest/)).toBeVisible();
         } else expect(link).not.toBeInTheDocument();
     },

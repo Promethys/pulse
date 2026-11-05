@@ -132,14 +132,14 @@ class DayPageTest extends TestCase
     }
 
     #[DataProvider('todayPostStates')]
-    public function test_today_redirects_home_even_without_a_post(bool $hasPost): void
+    public function test_today_redirects_to_dashboard_even_without_a_post(bool $hasPost): void
     {
         $user = User::factory()->onboarded()->create();
         if ($hasPost) {
             Post::factory()->for($user)->create(['date' => '2026-10-30']);
         }
 
-        $this->actingAs($user)->get(route('days.show', ['date' => '2026-10-30']))->assertRedirect('/');
+        $this->actingAs($user)->get(route('days.show', ['date' => '2026-10-30']))->assertRedirect(route('dashboard'));
     }
 
     public static function todayPostStates(): array
@@ -156,7 +156,7 @@ class DayPageTest extends TestCase
         $user->digestSettings->update(['timezone' => $timezone]);
         Post::factory()->for($user)->create(['date' => '2026-10-30']);
 
-        $this->actingAs($user)->get(route('days.show', ['date' => $date]))->assertRedirect('/');
+        $this->actingAs($user)->get(route('days.show', ['date' => $date]))->assertRedirect(route('dashboard'));
         $this->get(route('days.show', ['date' => '2026-10-30']))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Day', false)
                 ->where('day.date', '2026-10-30')

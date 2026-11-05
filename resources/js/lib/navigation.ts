@@ -7,6 +7,7 @@ import {
     Sun,
 } from '@lucide/vue';
 import type { Component } from 'vue';
+import { dashboard } from '@/routes';
 
 export type NavigationItem = {
     title: string;
@@ -18,7 +19,7 @@ export type NavigationItem = {
 };
 
 export const navItems: NavigationItem[] = [
-    { title: 'Today', href: '/', icon: Sun, available: true },
+    { title: 'Today', href: dashboard.url(), icon: Sun, available: true },
     { title: 'Archive', href: '/archive', icon: Archive, available: true },
     { title: 'Search', href: '/search', icon: Search, available: true },
     {
@@ -46,8 +47,8 @@ export const navItems: NavigationItem[] = [
 export function isActive(currentPath: string, href: string): boolean {
     const path = currentPath.split(/[?#]/)[0];
 
-    if (href === '/') {
-        return path === '/';
+    if (href === dashboard.url()) {
+        return path === dashboard.url();
     }
 
     if (href === '/archive' && path.startsWith('/days/')) {

@@ -43,7 +43,7 @@ class TodayPageTest extends TestCase
         AiKey::factory()->for($other)->create();
         DeliveryChannel::factory()->for($other)->email()->create();
 
-        $this->actingAs($user)->get('/')
+        $this->actingAs($user)->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', null)
@@ -64,7 +64,7 @@ class TodayPageTest extends TestCase
         Post::factory()->create(['date' => '2026-10-29']);
         $next = $status === PostStatus::Generated || ! $enabled ? null : ['time' => '07:45', 'timezone' => 'UTC'];
 
-        $this->actingAs($user)->get('/')
+        $this->actingAs($user)->get(route('dashboard'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', [
@@ -104,7 +104,7 @@ class TodayPageTest extends TestCase
         $privateLearning = Post::factory()->create(['user_id' => $private->user_id, 'date' => '2026-10-30', 'kind' => PostKind::Learning, 'status' => PostStatus::Generated]);
         LearningPost::query()->create(['post_id' => $privateLearning->id, 'kind' => LearningKind::Tip, 'title' => 'Private tip', 'body' => 'Private body', 'links' => []]);
 
-        $response = $this->actingAs($user)->get('/')->assertOk();
+        $response = $this->actingAs($user)->get(route('dashboard'))->assertOk();
         $response->assertInertia(fn (Assert $page) => $page->component('Today', false)
             ->where('day.date', '2026-10-30')
             ->where('day.previous_date', null)
@@ -136,7 +136,7 @@ class TodayPageTest extends TestCase
         Post::factory()->for($user)->create(['date' => '2026-10-28', 'kind' => PostKind::Learning, 'status' => PostStatus::Pending]);
         Post::factory()->create(['date' => '2026-10-30', 'status' => PostStatus::Generated]);
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', [
                     'date' => '2026-10-28',
@@ -159,7 +159,7 @@ class TodayPageTest extends TestCase
         $user = User::factory()->onboarded()->create();
         $user->digestSettings->update(['news_enabled' => $enabled]);
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', null)
                 ->where('is_today', false)
@@ -181,7 +181,7 @@ class TodayPageTest extends TestCase
         Post::factory()->for($user)->create(['date' => '2026-10-29', 'status' => PostStatus::Generated]);
         Post::factory()->for($user)->create(['date' => '2026-10-30', 'kind' => PostKind::Learning, 'status' => $status]);
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', [
                     'date' => '2026-10-30',
@@ -213,7 +213,7 @@ class TodayPageTest extends TestCase
         Post::factory()->for($user)->create(['date' => '2026-10-20', 'status' => PostStatus::Generated]);
         Post::factory()->for($user)->create(['date' => '2026-10-29', 'kind' => PostKind::Learning, 'status' => PostStatus::Pending]);
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day', [
                     'date' => '2026-10-29',
@@ -242,7 +242,7 @@ class TodayPageTest extends TestCase
         $dates = [$date, $utcDate];
         rsort($dates);
 
-        $this->actingAs($user)->get('/')->assertOk()
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Today', false)
                 ->where('day.date', $date)
                 ->where('day.news.status', 'pending')
@@ -291,7 +291,7 @@ class TodayPageTest extends TestCase
             DeliveryChannel::factory()->for($user)->inApp()->create();
         }
 
-        $response = $this->actingAs($user)->get('/')->assertOk();
+        $response = $this->actingAs($user)->get(route('dashboard'))->assertOk();
         $response->assertInertia(fn (Assert $page) => $page->component('Today', false)
             ->where('setup', array_combine(['interests', 'sources', 'ai_key', 'delivery'], $expected))
             ->missing('uses_instance_ai')
