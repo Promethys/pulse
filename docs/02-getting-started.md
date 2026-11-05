@@ -96,13 +96,19 @@ The scheduler calls `digest:tick`, which collects sources and queues one job per
 
 ## Admin access
 
-`pulse:adopt` makes the adopted account an admin. For another account, set `is_admin` from the command line: it is excluded from mass assignment on purpose.
+`pulse:adopt` makes the adopted account an admin. An existing administrator can grant access to another verified account from **Users** in the panel. To bootstrap access from the command line, set `is_admin`: it is excluded from mass assignment on purpose.
 
 ```bash
 docker compose exec app php artisan tinker --execute="App\Models\User::where('email', '<email>')->first()->forceFill(['is_admin' => true])->save();"
 ```
 
 Admins reach the panel from their user menu, or from the Settings page on a phone.
+
+At `/admin/users`, administrators can verify an email when verification mail has not arrived, grant or remove administrator access, and allow or stop instance AI access. Each action asks for confirmation. The last administrator cannot be removed. The table shows account facts and onboarding completion, without reader interests, profiles, AI keys, custom sources, destinations or digests. Accounts cannot be created, edited or deleted here.
+
+At `/admin/sources`, administrators can search and filter catalog sources, inspect the latest health-check result, edit names and interest assignments, and change default or enabled flags. URL and type are read-only. Disabled sources remain listed and can be enabled again, clearing their retirement timestamp. These changes preserve reader subscriptions. Custom sources stay private, and sources cannot be created or deleted here; new sources come through proposal review.
+
+At `/admin/interests`, administrators can create and edit interests, including their unique slug, category, icon, position, learning availability and draft or live status. Source and reader counts help assess coverage. Publish and Move to draft change status without changing relationships. Interests cannot be deleted. Monthly catalog checks can later recalculate status from the number of enabled default catalog sources.
 
 ## Adopting existing data
 
