@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useResizeObserver } from '@vueuse/core';
 import { onMounted, ref, useTemplateRef } from 'vue';
+import { useCodeCopy } from '@/composables/useCodeCopy';
 
-defineProps<{ html: string }>();
+const props = defineProps<{ html: string }>();
 
 const prose = useTemplateRef<HTMLElement>('prose');
 const expanded = defineModel<boolean>('expanded', { default: false });
@@ -16,6 +17,7 @@ function measure() {
 
 onMounted(measure);
 useResizeObserver(prose, measure);
+useCodeCopy(prose, () => props.html);
 </script>
 
 <template>
@@ -23,7 +25,10 @@ useResizeObserver(prose, measure);
         <div
             ref="prose"
             class="pulse-prose"
-            :class="{ 'line-clamp-6': !expanded }"
+            :class="{
+                'line-clamp-6': !expanded,
+                '[&_.code-copy]:hidden': overflowing && !expanded,
+            }"
             v-html="html"
         />
         <button

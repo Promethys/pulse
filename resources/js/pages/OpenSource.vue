@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { Bug, FolderGit2, Lightbulb, ScrollText, Terminal } from '@lucide/vue';
+import { useTemplateRef } from 'vue';
 import { Button } from '@/components/ui/button';
+import { useCodeCopy } from '@/composables/useCodeCopy';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 
 defineOptions({ layout: [] });
 
 const github = 'https://github.com/Promethys/pulse';
+const commands = useTemplateRef<HTMLElement>('commands');
+useCodeCopy(commands);
 const contributions = [
     {
         icon: Bug,
@@ -101,11 +105,13 @@ const contributions = [
                         interests, AI keys and delivery.
                     </li>
                 </ol>
-                <pre
-                    class="mt-4 rounded-xl border border-border bg-muted p-4 text-sm break-all whitespace-pre-wrap"
-                ><code>git clone https://github.com/Promethys/pulse.git
+                <div ref="commands" class="mt-4">
+                    <pre
+                        class="rounded-xl border border-border bg-muted p-4 text-sm break-all whitespace-pre-wrap"
+                    ><code>git clone https://github.com/Promethys/pulse.git
 cd pulse
 cp .env.example .env</code></pre>
+                </div>
                 <p class="mt-3 text-sm text-muted-foreground">
                     Continue with the full setup in the
                     <a

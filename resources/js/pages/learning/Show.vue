@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ChevronLeft, ExternalLink } from '@lucide/vue';
+import { useTemplateRef } from 'vue';
 import TagChip from '@/components/pulse/TagChip.vue';
 import { Card, CardContent } from '@/components/ui/card';
+import { useCodeCopy } from '@/composables/useCodeCopy';
 import { formatDate } from '@/lib/dates';
 import { index } from '@/routes/learning';
 import type { LearningShowProps } from '@/types';
 
-defineProps<LearningShowProps>();
+const props = defineProps<LearningShowProps>();
+const body = useTemplateRef<HTMLElement>('body');
+useCodeCopy(body, () => props.entry.body_html);
 </script>
 
 <template>
@@ -31,7 +35,7 @@ defineProps<LearningShowProps>();
         </h1>
         <Card class="gap-3 shadow-none">
             <CardContent class="space-y-3 text-sm leading-relaxed">
-                <div class="pulse-prose" v-html="entry.body_html" />
+                <div ref="body" class="pulse-prose" v-html="entry.body_html" />
                 <div v-if="entry.links.length">
                     <h2
                         class="mb-1 font-sans text-xs font-semibold tracking-wider text-muted-foreground uppercase"

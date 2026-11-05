@@ -64,11 +64,16 @@ it('renders the article, opens and closes the docs sheet and copies code', async
     await waitFor(() =>
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
-    await user.click(screen.getByRole('button', { name: 'Copy code' }));
+    const copy = screen.getByRole('button', { name: 'Copy code' });
+    expect(copy).toHaveClass('code-copy');
+    expect(
+        copy.closest('.code-block')?.querySelector(':scope > pre'),
+    ).toHaveTextContent('hello');
+    await user.click(copy);
     expect(writeText).toHaveBeenCalledWith('hello');
     expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
     view.unmount();
-    expect(view.container.querySelector('.docs-code-copy')).toBeNull();
+    expect(view.container.querySelector('.code-copy')).toBeNull();
 });
 
 it('quietly handles unavailable clipboard and rebinds copy buttons when an article changes', async () => {

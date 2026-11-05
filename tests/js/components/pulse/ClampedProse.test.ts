@@ -64,4 +64,70 @@ describe('ClampedProse', () => {
 
         expect(view.emitted('update:expanded')).toEqual([[true]]);
     });
+
+    it('adds a Copy button to each code block that copies its code', async () => {
+        stubHeights(100, 100);
+        const user = userEvent.setup();
+        const writeText = vi
+            .spyOn(navigator.clipboard, 'writeText')
+            .mockResolvedValue();
+        const view = render(ClampedProse, {
+            props: {
+                html: '<p>Use <code>inline</code></p><pre><code>npm test\n</code></pre>',
+            },
+        });
+        const copy = screen.getByRole('button', { name: 'Copy code' });
+
+        expect(copy).toHaveClass('code-copy');
+        expect(
+            copy
+                .closest('.pulse-prose .code-block')
+                ?.querySelector(':scope > pre'),
+        ).toHaveTextContent('npm test');
+        expect(view.container.querySelectorAll('.code-copy')).toHaveLength(1);
+
+        await user.click(copy);
+
+        expect(writeText).toHaveBeenCalledWith('npm test');
+        expect(screen.getByRole('button', { name: 'Copied' })).toBeVisible();
+    });
+
+    it('rebinds Copy buttons when the HTML changes', async () => {
+        stubHeights(100, 100);
+        const view = render(ClampedProse, {
+            props: { html: '<pre><code>one</code></pre>' },
+        });
+
+        await view.rerender({
+            html: '<pre><code>two</code></pre><pre><code>three</code></pre>',
+        });
+
+        expect(
+            screen.getAllByRole('button', { name: 'Copy code' }),
+        ).toHaveLength(2);
+        expect(view.container.querySelectorAll('.code-copy')).toHaveLength(2);
+        expect(view.container.querySelectorAll('.code-block')).toHaveLength(2);
+        expect(view.container.querySelectorAll('pre')).toHaveLength(2);
+    });
+
+    it('removes its Copy buttons when unmounted', () => {
+        stubHeights(100, 100);
+        const view = render(ClampedProse, {
+            props: { html: '<pre><code>one</code></pre>' },
+        });
+        const prose = view.container.querySelector(
+            '.pulse-prose',
+        ) as HTMLElement;
+        const pre = view.container.querySelector('pre') as HTMLElement;
+
+        expect(
+            pre.parentElement?.querySelector(':scope > .code-copy'),
+        ).not.toBeNull();
+
+        view.unmount();
+
+        expect(prose.querySelector('.code-copy')).toBeNull();
+        expect(prose.querySelector('.code-block')).toBeNull();
+        expect(pre.parentElement).toBe(prose);
+    });
 });
