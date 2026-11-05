@@ -2,6 +2,7 @@
 
 namespace App\Concerns;
 
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rules\Password;
 
@@ -22,8 +23,8 @@ trait PasswordValidationRules
      *
      * @return array<int, Password|ValidationRule|array<mixed>|string>
      */
-    protected function currentPasswordRules(): array
+    protected function currentPasswordRules(?User $user = null): array
     {
-        return ['required', 'string', 'current_password'];
+        return $user?->has_password ? ['required', 'string', 'current_password'] : ['exclude'];
     }
 }

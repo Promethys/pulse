@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
+import SocialLoginButtons from '@/components/pulse/SocialLoginButtons.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,8 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
+
+const page = usePage();
 
 defineOptions({ layout: [] });
 
@@ -59,7 +62,9 @@ defineProps<{
                         autocomplete="email"
                         placeholder="email@example.com"
                     />
-                    <InputError :message="errors.email" />
+                    <InputError
+                        :message="errors.email || page.props.errors?.email"
+                    />
                 </div>
 
                 <div class="grid gap-2">
@@ -104,6 +109,8 @@ defineProps<{
                 </Button>
             </div>
         </Form>
+
+        <SocialLoginButtons />
 
         <template v-if="canRegister" #footer>
             No account?

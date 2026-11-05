@@ -28,6 +28,20 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'guzzle' => ['timeout' => 10, 'connect_timeout' => 5],
+    ],
+
+    'github' => [
+        'client_id' => env('GITHUB_CLIENT_ID'),
+        'client_secret' => env('GITHUB_CLIENT_SECRET'),
+        'redirect' => env('GITHUB_REDIRECT_URI'),
+        'guzzle' => ['timeout' => 10, 'connect_timeout' => 5],
+    ],
+
     'discord' => [
         'token' => env('DISCORD_BOT_TOKEN'),
         'client_id' => env('DISCORD_CLIENT_ID'),

@@ -2,6 +2,7 @@ export type User = {
     id: number;
     name: string;
     email: string;
+    has_password: boolean;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
@@ -27,4 +28,10 @@ export type TwoFactorConfigContent = {
     title: string;
     description: string;
     buttonText: string;
+};
+
+export type ConnectedProvider = {
+    id: number;
+    provider: string;
+    created_at: string | null;
 };

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\DayController;
 use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\DocsController;
@@ -18,6 +19,14 @@ use Laravel\Fortify\Features;
 use Laravel\Fortify\Http\Controllers\NewPasswordController;
 use Laravel\Fortify\Http\Controllers\PasswordResetLinkController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
+
+Route::get('auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
+    ->where('provider', 'google|github')->middleware('throttle:social')->name('social.redirect');
+Route::get('auth/{provider}/callback', [SocialLoginController::class, 'callback'])
+    ->where('provider', 'google|github')->middleware('throttle:social')->name('social.callback');
+
+Route::delete('auth/{provider}/unlink', [SocialLoginController::class, 'unlink'])
+    ->where('provider', 'google|github')->middleware(['auth', 'throttle:social', 'password.confirm'])->name('social.unlink');
 
 // Fortify has no limiter option for these routes, so they replace its own.
 Route::middleware('guest')->group(function () {

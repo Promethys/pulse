@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import DeleteUser from '@/components/DeleteUser.vue';
+import { page } from '../support/inertia';
 
 type VisitOptions = {
     method?: string;
@@ -27,6 +28,7 @@ async function openDialog() {
 describe('DeleteUser', () => {
     beforeEach(() => {
         visits = [];
+        page.props.auth = { user: { has_password: true } };
         vi.spyOn(router, 'visit').mockImplementation((url, options) => {
             visits.push({
                 url:
@@ -38,6 +40,27 @@ describe('DeleteUser', () => {
                 options: (options ?? {}) as VisitOptions,
             });
         });
+    });
+
+    it('lets passwordless readers confirm deletion without a password', async () => {
+        page.props.auth = { user: { has_password: false } };
+        const user = await openDialog();
+
+        expect(screen.getByRole('dialog')).toBeVisible();
+        expect(
+            screen.queryByPlaceholderText('Password'),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/Please enter your password/),
+        ).not.toBeInTheDocument();
+        await user.click(
+            screen.getByRole('button', { name: 'Delete account' }),
+        );
+
+        expect(visits).toHaveLength(1);
+        expect(visits[0].url).toContain('/settings/profile');
+        expect(visits[0].url).toContain('_method=DELETE');
+        expect(visits[0].options.data ?? {}).not.toHaveProperty('password');
     });
 
     it('warns without opening the confirmation', () => {

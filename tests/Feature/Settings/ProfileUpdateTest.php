@@ -99,6 +99,24 @@ class ProfileUpdateTest extends TestCase
         $this->assertDatabaseHas('password_reset_tokens', ['email' => $other->email]);
     }
 
+    public function test_a_passwordless_user_can_confirm_deletion_without_a_password(): void
+    {
+        $user = User::factory()->onboarded()->create(['password' => null]);
+        $account = $user->socialAccounts()->create(['provider' => 'google', 'provider_id' => 'provider-123']);
+        DB::table('sessions')->insert(['id' => 'other-session', 'user_id' => $user->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+        DB::table('password_reset_tokens')->insert(['email' => $user->email, 'token' => 'token', 'created_at' => now()]);
+
+        $this->actingAs($user)->delete(route('profile.destroy'))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('home'));
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh());
+        $this->assertDatabaseMissing('social_accounts', ['id' => $account->id]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
+    }
+
     public function test_correct_password_must_be_provided_to_delete_account()
     {
         $user = User::factory()->onboarded()->create();

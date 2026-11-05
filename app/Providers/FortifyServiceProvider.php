@@ -110,6 +110,20 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by('passkeys:'.$this->ipKey($request));
         });
 
+        RateLimiter::for('social', function (Request $request) {
+            $ip = $this->ipKey($request);
+            $limits = [
+                Limit::perMinute(10)->by('social:'.$ip),
+                Limit::perHour(30)->by('social-hour:'.$ip),
+            ];
+
+            if ($request->user() !== null) {
+                $limits[] = Limit::perMinute(10)->by('social-user:'.$request->user()->getAuthIdentifier());
+            }
+
+            return $limits;
+        });
+
         RateLimiter::for('register', fn (Request $request) => [
             ...$this->addressLimits($request),
             Limit::perDay(self::DAILY_MAIL_BUDGET)->by('mail')->after(fn () => Auth::check()),
