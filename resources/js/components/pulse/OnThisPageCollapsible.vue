@@ -9,7 +9,9 @@ defineProps<{ items: DocsHeading[] }>();
         v-if="items.length"
         class="mb-6 rounded-xl border border-border bg-card p-4 lg:hidden"
     >
-        <summary class="cursor-pointer text-sm font-semibold">
+        <summary
+            class="cursor-pointer text-sm font-semibold focus-ring hover:underline active:underline"
+        >
             On this page
         </summary>
         <ul class="mt-2 space-y-1.5">
@@ -20,7 +22,7 @@ defineProps<{ items: DocsHeading[] }>();
             >
                 <a
                     :href="`#${item.id}`"
-                    class="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                    class="text-sm text-muted-foreground focus-ring hover:text-foreground hover:underline active:text-foreground active:underline"
                     >{{ item.text }}</a
                 >
             </li>

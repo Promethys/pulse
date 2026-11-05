@@ -19,14 +19,14 @@ const items = computed(() =>
             :key="item.href"
             :href="item.href"
             :aria-current="isActive(page.url, item.href) ? 'page' : undefined"
-            class="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium"
+            class="group flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium outline-none"
         >
             <span
-                class="flex h-7 w-12 items-center justify-center rounded-full transition-colors"
+                class="flex h-7 w-12 items-center justify-center rounded-full transition-colors group-focus-visible:ring-[3px]"
                 :class="
                     isActive(page.url, item.href)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground group-focus-visible:ring-ring dark:group-focus-visible:ring-foreground/70'
+                        : 'text-muted-foreground group-hover:bg-accent group-hover:text-accent-foreground group-focus-visible:ring-ring/50 group-active:bg-accent group-active:text-accent-foreground'
                 "
             >
                 <component
@@ -39,7 +39,7 @@ const items = computed(() =>
                 :class="
                     isActive(page.url, item.href)
                         ? 'text-foreground'
-                        : 'text-muted-foreground'
+                        : 'text-muted-foreground group-hover:text-accent-foreground group-active:text-accent-foreground'
                 "
                 >{{ item.title }}</span
             >

@@ -14,7 +14,13 @@ withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
         :aria-label="label"
         class="mt-6 flex items-center justify-between gap-4 text-sm"
     >
-        <Button v-if="pagination.prev_url" variant="outline" size="sm" as-child>
+        <Button
+            v-if="pagination.prev_url"
+            variant="outline"
+            size="sm"
+            as-child
+            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+        >
             <Link :href="pagination.prev_url">Previous</Link>
         </Button>
         <span
@@ -28,7 +34,13 @@ withDefaults(defineProps<{ pagination: Pagination; label?: string }>(), {
             >Page {{ pagination.current_page }} of
             {{ pagination.last_page }}</span
         >
-        <Button v-if="pagination.next_url" variant="outline" size="sm" as-child>
+        <Button
+            v-if="pagination.next_url"
+            variant="outline"
+            size="sm"
+            as-child
+            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+        >
             <Link :href="pagination.next_url">Next</Link>
         </Button>
         <span

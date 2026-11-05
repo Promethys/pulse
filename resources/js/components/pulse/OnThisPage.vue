@@ -30,13 +30,14 @@ const active = useScrollSpy(() => props.items.map((item) => item.id));
                     :aria-current="active === item.id ? 'location' : undefined"
                     :class="
                         cn(
-                            '-ml-px block border-l-2 py-0.5 pl-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                            '-ml-px block border-l-2 py-0.5 pl-3 text-sm transition-colors',
                             item.level === 3 && 'pl-6',
                             active === item.id
                                 ? 'border-primary-strong text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground',
+                                : 'border-transparent text-muted-foreground hover:text-foreground active:text-foreground',
                         )
                     "
+                    class="focus-ring"
                     >{{ item.text }}</a
                 >
             </li>

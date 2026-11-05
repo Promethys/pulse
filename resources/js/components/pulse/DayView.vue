@@ -77,6 +77,7 @@ function selectDate(date: DateValue | undefined) {
                     :disabled="!day.previous_date"
                     aria-label="Previous day"
                     @click="go(day.previous_date)"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                     ><ChevronLeft aria-hidden="true"
                 /></Button>
                 <Popover v-model:open="calendarOpen">
@@ -84,7 +85,7 @@ function selectDate(date: DateValue | undefined) {
                         <Button
                             variant="outline"
                             size="icon"
-                            class="data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary dark:data-[state=open]:bg-primary dark:data-[state=open]:hover:bg-primary"
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=open]:bg-primary data-[state=open]:text-primary-foreground dark:active:bg-accent dark:data-[state=open]:bg-primary"
                             aria-label="Pick a date"
                             ><CalendarDays aria-hidden="true"
                         /></Button>
@@ -117,6 +118,7 @@ function selectDate(date: DateValue | undefined) {
                     :disabled="!day.next_date"
                     aria-label="Next day"
                     @click="go(day.next_date)"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                     ><ChevronRight aria-hidden="true"
                 /></Button>
             </div>
@@ -185,7 +187,7 @@ function selectDate(date: DateValue | undefined) {
         <p v-if="backLink" class="mt-10 text-center text-sm">
             <Link
                 :href="index.url()"
-                class="inline-flex items-center gap-1 text-muted-foreground hover:underline"
+                class="inline-flex items-center gap-1 text-muted-foreground focus-ring hover:underline active:underline"
             >
                 <ArrowLeft class="size-4" aria-hidden="true" />
                 Back to archive

@@ -25,6 +25,7 @@ const tabs = [
                     ? 'bg-primary text-primary-foreground shadow-xs'
                     : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
             ]"
+            class="focus-ring"
         >
             <component :is="Icon" class="-ml-1 h-4 w-4" />
             <span class="ml-1.5 text-sm">{{ label }}</span>

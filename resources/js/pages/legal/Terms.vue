@@ -106,8 +106,8 @@ const sections = [
                 You can delete your account from profile settings at any time.
                 Copies already delivered to email or Discord remain there, and
                 shared source items follow Pulse's retention rules. Read the
-                <Link :href="privacy()">privacy page</Link> for the details of
-                account deletion.
+                <Link :href="privacy()" class="focus-ring">privacy page</Link>
+                for the details of account deletion.
             </p>
         </template>
         <template #changes>
@@ -121,9 +121,11 @@ const sections = [
         <template #contact>
             <p>
                 Email
-                <a :href="`mailto:${page.props.supportEmail}`">{{
-                    page.props.supportEmail
-                }}</a>
+                <a
+                    :href="`mailto:${page.props.supportEmail}`"
+                    class="focus-ring"
+                    >{{ page.props.supportEmail }}</a
+                >
                 with questions about these terms.
             </p>
         </template>

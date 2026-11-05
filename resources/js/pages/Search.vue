@@ -181,7 +181,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                             v-if="filters.q"
                             type="button"
                             aria-label="Clear search"
-                            class="absolute top-1/2 right-3 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                            class="absolute top-1/2 right-3 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground focus-ring hover:bg-muted hover:text-foreground"
                             @click="clearQuery"
                         >
                             <X class="size-4" aria-hidden="true" />
@@ -191,7 +191,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                         <SheetTrigger as-child>
                             <Button
                                 variant="outline"
-                                class="relative h-11 rounded-full md:hidden"
+                                class="relative h-11 rounded-full focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground md:hidden dark:active:bg-accent"
                                 aria-label="Filters"
                             >
                                 <SlidersHorizontal aria-hidden="true" />
@@ -221,12 +221,12 @@ onBeforeUnmount(() => clearTimeout(debounce));
                             <SheetFooter class="flex-row">
                                 <Button
                                     variant="outline"
-                                    class="flex-1"
+                                    class="flex-1 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                     @click="reset"
                                     >Reset</Button
                                 >
                                 <SheetClose as-child>
-                                    <Button class="flex-1"
+                                    <Button class="flex-1 focus-ring"
                                         >Show {{ count }}</Button
                                     >
                                 </SheetClose>
@@ -244,10 +244,14 @@ onBeforeUnmount(() => clearTimeout(debounce));
                     @update:model-value="switchType"
                 >
                     <TabsList class="mt-3 w-full md:w-auto">
-                        <TabsTrigger value="news"
+                        <TabsTrigger
+                            value="news"
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:hover:bg-primary data-[state=active]:hover:text-primary-foreground data-[state=active]:focus-visible:ring-ring! data-[state=active]:active:bg-primary data-[state=active]:active:text-primary-foreground"
                             >News {{ counts.news }}</TabsTrigger
                         >
-                        <TabsTrigger value="learning"
+                        <TabsTrigger
+                            value="learning"
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:hover:bg-primary data-[state=active]:hover:text-primary-foreground data-[state=active]:focus-visible:ring-ring! data-[state=active]:active:bg-primary data-[state=active]:active:text-primary-foreground"
                             >Learning {{ counts.learning }}</TabsTrigger
                         >
                     </TabsList>
@@ -257,7 +261,7 @@ onBeforeUnmount(() => clearTimeout(debounce));
                     <button
                         v-if="active > 0"
                         type="button"
-                        class="text-xs font-medium text-primary-strong underline-offset-2 hover:underline"
+                        class="text-xs font-medium text-primary-strong underline-offset-2 focus-ring hover:underline active:underline"
                         @click="reset"
                     >
                         Clear filters

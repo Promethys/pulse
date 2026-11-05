@@ -22,11 +22,15 @@ const emit = defineEmits<{ toggle: [] }>();
         :type="onToggle ? 'button' : undefined"
         :aria-pressed="onToggle ? !!active : undefined"
         class="inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors"
-        :class="
+        :class="[
+            (onToggle || href || linked) && 'focus-ring',
             active
                 ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground'
-        "
+                : 'border-border bg-secondary text-secondary-foreground',
+            !active &&
+                (onToggle || href || linked) &&
+                'hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground',
+        ]"
         @click="emit('toggle')"
         >{{ name }}</component
     >

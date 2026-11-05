@@ -52,14 +52,15 @@ watch(() => props.current, revealCurrent, { flush: 'post' });
                         "
                         :class="
                             cn(
-                                'block rounded-lg px-3 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                                'block rounded-lg px-3 py-1.5 text-sm transition-colors',
                                 current?.section === section.slug &&
                                     current.article === article.slug
                                     ? 'bg-primary font-medium text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                                    : 'text-muted-foreground hover:text-foreground active:text-foreground',
                             )
                         "
                         @click="$emit('navigate')"
+                        class="focus-ring"
                         >{{ article.title }}</Link
                     >
                 </li>

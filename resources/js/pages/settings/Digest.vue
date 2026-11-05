@@ -149,7 +149,7 @@ function save() {
                                 Choose an interest marked ‘Includes learning’ on
                                 <Link
                                     href="/sources"
-                                    class="underline underline-offset-4"
+                                    class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                                     >Sources</Link
                                 >
                                 to enable daily tips and topics.
@@ -210,7 +210,7 @@ function save() {
                     />
                     <InputError :message="errors.max_items" />
                 </div>
-                <Button :disabled="processing">Save</Button>
+                <Button :disabled="processing" class="focus-ring">Save</Button>
             </form>
         </CardContent>
     </Card>

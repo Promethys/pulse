@@ -123,8 +123,14 @@ function deleteSource() {
         </p>
         <Tabs v-model="tab">
             <TabsList class="mb-4 w-full md:w-auto">
-                <TabsTrigger value="interest">By interest</TabsTrigger>
-                <TabsTrigger value="mine"
+                <TabsTrigger
+                    value="interest"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:active:bg-accent"
+                    >By interest</TabsTrigger
+                >
+                <TabsTrigger
+                    value="mine"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:active:bg-accent"
                     >My sources
                     <span class="text-muted-foreground">{{
                         custom.length
@@ -133,12 +139,16 @@ function deleteSource() {
             </TabsList>
             <TabsContent value="interest" class="space-y-6">
                 <div class="flex flex-wrap gap-2">
-                    <Button variant="outline" @click="openInterests"
+                    <Button
+                        variant="outline"
+                        @click="openInterests"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Add or remove interests</Button
                     >
                     <Button
                         variant="outline"
                         @click="suggestInterestOpen = true"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Suggest an interest</Button
                     >
                 </div>
@@ -161,7 +171,7 @@ function deleteSource() {
                 <p class="text-sm text-muted-foreground">
                     You can save up to 30 custom sources.
                 </p>
-                <Button @click="openForm()"
+                <Button @click="openForm()" class="focus-ring"
                     ><Plus aria-hidden="true" /> Add a source</Button
                 >
                 <EmptyState
@@ -201,6 +211,7 @@ function deleteSource() {
                                     suggesting = source;
                                     suggestSourceOpen = true;
                                 "
+                                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                 ><Send aria-hidden="true" />{{
                                     source.suggested
                                         ? 'Suggested'
@@ -211,12 +222,13 @@ function deleteSource() {
                                 variant="ghost"
                                 size="sm"
                                 @click="openForm(source)"
+                                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                 ><Pencil aria-hidden="true" /> Edit</Button
                             >
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                                class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                                 @click="confirmDelete(source)"
                                 ><Trash2 aria-hidden="true" /> Delete</Button
                             >
@@ -288,11 +300,13 @@ function deleteSource() {
                         variant="outline"
                         :disabled="interestsProcessing"
                         @click="interestsOpen = false"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     >
                     <Button
                         :disabled="!selected.length || interestsProcessing"
                         @click="saveInterests"
+                        class="focus-ring"
                         >Save</Button
                     >
                 </DialogFooter>
@@ -312,12 +326,14 @@ function deleteSource() {
                         variant="outline"
                         :disabled="deleteProcessing"
                         @click="deletingOpen = false"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     >
                     <Button
                         variant="destructive"
                         :disabled="deleteProcessing"
                         @click="deleteSource"
+                        class="focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                         >Delete source</Button
                     >
                 </DialogFooter>

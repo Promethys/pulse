@@ -15,13 +15,16 @@ const { resolvedAppearance, updateAppearance } = useAppearance();
     <aside
         class="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex"
     >
-        <Link :href="home()" class="mb-8 flex items-center gap-2 px-2">
+        <Link
+            :href="home()"
+            class="mb-8 flex items-center gap-2 rounded-md px-2 focus-ring"
+        >
             <PulseLogo />
         </Link>
         <NavMain :items="navItems" />
         <button
             type="button"
-            class="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground"
+            class="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
             @click="
                 updateAppearance(
                     resolvedAppearance === 'dark' ? 'light' : 'dark',

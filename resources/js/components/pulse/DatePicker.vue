@@ -56,7 +56,7 @@ function clear() {
             <Button
                 :id="id"
                 variant="outline"
-                class="w-full justify-start font-normal data-[state=open]:bg-primary data-[state=open]:text-primary-foreground data-[state=open]:hover:bg-primary dark:aria-invalid:border-destructive dark:data-[state=open]:bg-primary dark:data-[state=open]:hover:bg-primary"
+                class="w-full justify-start font-normal focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground data-[state=open]:bg-primary data-[state=open]:text-primary-foreground dark:active:bg-accent dark:aria-invalid:border-destructive dark:data-[state=open]:bg-primary"
                 :class="{ 'text-muted-foreground': !modelValue }"
                 :aria-label="ariaLabel"
                 :aria-invalid="invalid || undefined"
@@ -82,7 +82,12 @@ function clear() {
                 @update:model-value="select"
             />
             <div v-if="modelValue" class="border-t border-border p-2">
-                <Button variant="ghost" size="sm" class="w-full" @click="clear">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    class="w-full focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                    @click="clear"
+                >
                     Clear
                 </Button>
             </div>

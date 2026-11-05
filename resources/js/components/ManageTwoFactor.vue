@@ -45,7 +45,11 @@ onUnmounted(() => clearTwoFactorAuthData());
             </p>
 
             <div>
-                <Button v-if="hasSetupData" @click="showSetupModal = true">
+                <Button
+                    v-if="hasSetupData"
+                    @click="showSetupModal = true"
+                    class="focus-ring"
+                >
                     <ShieldCheck />Continue setup
                 </Button>
                 <Form
@@ -54,7 +58,11 @@ onUnmounted(() => clearTwoFactorAuthData());
                     @success="showSetupModal = true"
                     #default="{ processing }"
                 >
-                    <Button type="submit" :disabled="processing">
+                    <Button
+                        type="submit"
+                        :disabled="processing"
+                        class="focus-ring"
+                    >
                         Enable 2FA
                     </Button>
                 </Form>
@@ -77,6 +85,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                         variant="destructive"
                         type="submit"
                         :disabled="processing"
+                        class="focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                     >
                         Disable 2FA
                     </Button>

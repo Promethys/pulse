@@ -40,7 +40,7 @@ function pinHoverOpened(event: MouseEvent) {
             <button
                 type="button"
                 :aria-label="`Help: ${label}`"
-                class="inline-flex shrink-0 items-center rounded-sm align-text-bottom text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                class="inline-flex shrink-0 items-center rounded-sm align-text-bottom text-muted-foreground focus-ring hover:text-foreground active:text-foreground"
                 @click.capture="pinHoverOpened"
                 @pointerenter="enter"
                 @pointerleave="leave"

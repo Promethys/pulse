@@ -20,12 +20,13 @@ const active = useScrollSpy(() => props.sections.map((section) => section.id));
                     "
                     :class="
                         cn(
-                            '-ml-px block border-l-2 px-4 py-1 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                            '-ml-px block border-l-2 px-4 py-1 text-sm transition-colors',
                             active === section.id
                                 ? 'border-primary-strong font-medium text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground',
+                                : 'border-transparent text-muted-foreground hover:text-foreground active:text-foreground',
                         )
                     "
+                    class="focus-ring"
                     >{{ section.label }}</a
                 >
             </li>

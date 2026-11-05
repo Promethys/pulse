@@ -129,12 +129,15 @@ const sections = [
                             Ready for your first digest?
                         </h2>
                         <div class="mt-4 flex flex-wrap justify-center gap-2">
-                            <Button as-child
+                            <Button as-child class="focus-ring"
                                 ><Link :href="register()"
                                     >Create an account</Link
                                 ></Button
                             >
-                            <Button variant="outline" as-child
+                            <Button
+                                variant="outline"
+                                as-child
+                                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                 ><Link :href="docs()"
                                     >Read the docs</Link
                                 ></Button

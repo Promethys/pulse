@@ -43,7 +43,7 @@ const retry = () => router.reload();
     <Head :title="message.title" />
     <div class="flex min-h-screen flex-col bg-background px-4 py-6">
         <header class="flex items-center justify-between">
-            <a :href="home.url()"><PulseLogo /></a>
+            <a :href="home.url()" class="focus-ring"><PulseLogo /></a>
             <ThemeToggle />
         </header>
         <main class="flex flex-1 items-center justify-center">
@@ -58,10 +58,14 @@ const retry = () => router.reload();
                     {{ message.body }}
                 </p>
                 <div class="mt-6 flex flex-wrap justify-center gap-2">
-                    <Button v-if="canRetry" variant="outline" @click="retry"
+                    <Button
+                        v-if="canRetry"
+                        variant="outline"
+                        @click="retry"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Try again</Button
                     >
-                    <Button as-child
+                    <Button as-child class="focus-ring"
                         ><a :href="home.url()">Back to Pulse</a></Button
                     >
                 </div>

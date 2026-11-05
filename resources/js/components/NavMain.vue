@@ -17,11 +17,11 @@ const page = usePage();
             :key="item.href"
             :href="item.href"
             :aria-current="isActive(page.url, item.href) ? 'page' : undefined"
-            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium focus-ring transition-colors"
             :class="
                 isActive(page.url, item.href)
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                    : 'text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground'
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground focus-visible:ring-ring!'
+                    : 'text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent'
             "
         >
             <component :is="item.icon" class="size-4" aria-hidden="true" />

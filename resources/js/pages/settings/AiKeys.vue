@@ -161,7 +161,7 @@ function remove() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            class="size-6"
+                            class="size-6 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                             :disabled="index === 0"
                             aria-label="Move up"
                             @click="move(index, -1)"
@@ -170,7 +170,7 @@ function remove() {
                         <Button
                             variant="ghost"
                             size="icon"
-                            class="size-6"
+                            class="size-6 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                             :disabled="index === keys.length - 1"
                             aria-label="Move down"
                             @click="move(index, 1)"
@@ -210,7 +210,7 @@ function remove() {
                         />
                         <Button
                             variant="ghost"
-                            class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                            class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                             @click="deleting = key.id"
                             ><Trash2 aria-hidden="true" />Delete</Button
                         >
@@ -224,7 +224,10 @@ function remove() {
             <p class="text-sm text-muted-foreground">
                 Up to five AI keys, one per provider.
             </p>
-            <Button variant="outline" @click="openAdd"
+            <Button
+                variant="outline"
+                @click="openAdd"
+                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                 ><Plus aria-hidden="true" />Add a key</Button
             >
         </CardContent>
@@ -256,7 +259,7 @@ function remove() {
                     :key="field"
                     :message="error"
                 />
-                <Button :disabled="!canAdd">{{
+                <Button :disabled="!canAdd" class="focus-ring">{{
                     replacing ? 'Replace key' : 'Add'
                 }}</Button>
             </form>
@@ -275,13 +278,15 @@ function remove() {
             }}</AlertDialogDescription>
             <div class="flex justify-end gap-2">
                 <AlertDialogCancel as-child
-                    ><Button variant="outline"
+                    ><Button
+                        variant="outline"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     ></AlertDialogCancel
                 >
                 <Button
                     variant="ghost"
-                    class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                    class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                     @click="remove"
                     >Delete</Button
                 >

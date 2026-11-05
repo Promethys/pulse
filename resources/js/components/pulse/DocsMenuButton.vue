@@ -18,7 +18,9 @@ const open = ref(false);
 <template>
     <Sheet v-model:open="open">
         <SheetTrigger as-child>
-            <Button variant="outline" class="lg:hidden"
+            <Button
+                variant="outline"
+                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground lg:hidden dark:active:bg-accent"
                 ><Menu aria-hidden="true" />Docs menu</Button
             >
         </SheetTrigger>

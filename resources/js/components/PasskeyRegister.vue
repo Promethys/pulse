@@ -64,7 +64,12 @@ const handleCancel = () => {
         Passkeys are not supported in this browser.
     </div>
 
-    <Button v-else-if="!showForm" variant="outline" @click="showForm = true">
+    <Button
+        v-else-if="!showForm"
+        variant="outline"
+        @click="showForm = true"
+        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+    >
         Add passkey
     </Button>
 
@@ -91,10 +96,19 @@ const handleCancel = () => {
         <InputError v-if="error" :message="error" />
 
         <div class="flex gap-2">
-            <Button type="submit" :disabled="isLoading || !name.trim()">
+            <Button
+                type="submit"
+                :disabled="isLoading || !name.trim()"
+                class="focus-ring"
+            >
                 {{ isLoading ? 'Registering...' : 'Register passkey' }}
             </Button>
-            <Button type="button" variant="ghost" @click="handleCancel">
+            <Button
+                type="button"
+                variant="ghost"
+                @click="handleCancel"
+                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+            >
                 Cancel
             </Button>
         </div>

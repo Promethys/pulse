@@ -113,7 +113,7 @@ async function testKey(): Promise<KeyTestResult> {
                         :href="item.key_url"
                         target="_blank"
                         rel="noreferrer"
-                        class="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
+                        class="inline-flex items-center gap-1 font-medium underline-offset-2 focus-ring hover:underline active:underline"
                     >
                         Get {{ /^[aeiou]/i.test(item.label) ? 'an' : 'a' }}
                         {{ item.label }} key

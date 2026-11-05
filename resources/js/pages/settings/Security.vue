@@ -110,6 +110,7 @@ defineOptions({
                     <Button
                         :disabled="processing"
                         data-test="update-password-button"
+                        class="focus-ring"
                     >
                         Save
                     </Button>

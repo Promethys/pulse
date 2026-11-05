@@ -134,7 +134,11 @@ function reset() {
                         >
                     </SelectContent>
                 </Select>
-                <Button variant="outline" as-child>
+                <Button
+                    variant="outline"
+                    as-child
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                >
                     <Link
                         :href="searchIndex.url({ query: { type: 'learning' } })"
                     >
@@ -168,7 +172,7 @@ function reset() {
                 <button
                     v-if="active"
                     type="button"
-                    class="text-xs font-medium text-primary-strong underline-offset-2 hover:underline"
+                    class="text-xs font-medium text-primary-strong underline-offset-2 focus-ring hover:underline active:underline"
                     @click="reset"
                 >
                     Clear filters
@@ -208,12 +212,14 @@ function reset() {
             <template #actions>
                 <p class="text-sm text-muted-foreground">
                     Choose an interest marked Includes learning on
-                    <Link href="/sources" class="underline underline-offset-4"
+                    <Link
+                        href="/sources"
+                        class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Sources</Link
                     >, then enable Learning in
                     <Link
                         href="/settings/digest"
-                        class="underline underline-offset-4"
+                        class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Digest settings</Link
                     >.
                 </p>

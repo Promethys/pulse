@@ -124,7 +124,7 @@ const deliveredAt = computed(() => {
                 />
                 <Button
                     variant="ghost"
-                    class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                    class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                     @click="confirming = true"
                     ><Trash2 aria-hidden="true" />Delete</Button
                 >
@@ -142,13 +142,15 @@ const deliveredAt = computed(() => {
                 >
                 <div class="flex justify-end gap-2">
                     <AlertDialogCancel as-child
-                        ><Button variant="outline"
+                        ><Button
+                            variant="outline"
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                             >Cancel</Button
                         ></AlertDialogCancel
                     >
                     <Button
                         variant="ghost"
-                        class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                        class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                         @click="confirmDelete"
                         >Delete</Button
                     >

@@ -13,7 +13,7 @@ const { resolvedAppearance, updateAppearance } = useAppearance();
                 ? 'Switch to light mode'
                 : 'Switch to dark mode'
         "
-        class="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        class="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground focus-ring hover:bg-muted hover:text-foreground"
         @click="
             updateAppearance(resolvedAppearance === 'dark' ? 'light' : 'dark')
         "

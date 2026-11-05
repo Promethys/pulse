@@ -227,7 +227,10 @@ function next() {
                             No interest matches “{{ search }}”.
                         </p>
                     </div>
-                    <Button variant="ghost" @click="suggestInterestOpen = true"
+                    <Button
+                        variant="ghost"
+                        @click="suggestInterestOpen = true"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Suggest an interest</Button
                     >
                 </section>
@@ -403,6 +406,7 @@ function next() {
                     variant="ghost"
                     :disabled="step === 0 || processing"
                     @click="step--"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                     >Back</Button
                 >
                 <div class="ml-auto flex items-center gap-2">
@@ -411,11 +415,15 @@ function next() {
                         variant="ghost"
                         :disabled="processing"
                         @click="step++"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Skip for now</Button
                     >
-                    <Button :disabled="!canContinue" @click="next">{{
-                        step === 4 ? 'Go to Today' : 'Continue'
-                    }}</Button>
+                    <Button
+                        :disabled="!canContinue"
+                        @click="next"
+                        class="focus-ring"
+                        >{{ step === 4 ? 'Go to Today' : 'Continue' }}</Button
+                    >
                 </div>
             </div>
             <p

@@ -94,7 +94,7 @@ defineProps<{
 
                 <Button
                     type="submit"
-                    class="w-full"
+                    class="w-full focus-ring"
                     :tabindex="4"
                     :disabled="processing"
                     data-test="login-button"
