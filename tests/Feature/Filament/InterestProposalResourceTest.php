@@ -16,6 +16,7 @@ use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Notifications\NotificationMailbox;
+use Filament\Tables\Columns\Column;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Features\SupportTesting\Testable;
@@ -252,6 +253,37 @@ class InterestProposalResourceTest extends TestCase
             ->assertMountedActionModalSee('Each interest keeps its suggested name and category. Names already taken are skipped.');
     }
 
+    #[DataProvider('sortableColumns')]
+    public function test_proposal_columns_are_sortable_both_ways(string $column): void
+    {
+        InterestProposal::factory()->count(2)->create();
+        $this->listPage()->assertTableColumnExists($column, fn (Column $c): bool => $c->isSortable())
+            ->sortTable($column)->assertSuccessful()->sortTable($column, 'desc')->assertSuccessful();
+    }
+
+    #[DataProvider('searchableColumns')]
+    public function test_column_searchability_follows_the_table_rules(string $column, bool $searchable): void
+    {
+        $this->listPage()->assertTableColumnExists($column, fn (Column $c): bool => $c->isSearchable() === $searchable);
+    }
+
+    public function test_name_sort_orders_proposals_both_ways(): void
+    {
+        $alpha = InterestProposal::factory()->create(['name' => 'Alpha topic', 'created_at' => now()->subDay()]);
+        $zulu = InterestProposal::factory()->create(['name' => 'Zulu topic']);
+        $this->listPage()->sortTable('name')->assertCanSeeTableRecords([$alpha, $zulu], inOrder: true)
+            ->sortTable('name', 'desc')->assertCanSeeTableRecords([$zulu, $alpha], inOrder: true);
+    }
+
+    #[DataProvider('iconActions')]
+    public function test_icon_actions_show_their_label_as_tooltip(string $name, string $label): void
+    {
+        $proposal = InterestProposal::factory()->create();
+        $this->listPage()->assertActionVisible(TestAction::make($name)->table($proposal))
+            ->assertActionExists(TestAction::make($name)->table($proposal), fn (Action $action): bool => $action->isIconButton()
+                && $action->getTooltip() === $label && ! array_key_exists('title', $action->getExtraAttributes()));
+    }
+
     private function listPage(): Testable
     {
         return Livewire::test(InterestProposalResource::getPages()['index']->getPage());
@@ -260,5 +292,23 @@ class InterestProposalResourceTest extends TestCase
     public static function statuses(): array
     {
         return array_map(fn ($status) => [$status], SourceProposalStatus::cases());
+    }
+
+    /** @return array<string, array{string}> */
+    public static function sortableColumns(): array
+    {
+        return ['name' => ['name'], 'category' => ['category'], 'created_at' => ['created_at']];
+    }
+
+    /** @return array<string, array{string, bool}> */
+    public static function searchableColumns(): array
+    {
+        return ['name' => ['name', true], 'category' => ['category', false]];
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function iconActions(): array
+    {
+        return ['view' => ['view', 'View'], 'approve' => ['approve', 'Approve'], 'reject' => ['reject', 'Reject']];
     }
 }

@@ -20,6 +20,7 @@ use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -304,6 +305,41 @@ class CatalogResourceTest extends TestCase
             ->assertMountedActionModalSee('Each feed keeps its own interest. Proposals without one are skipped.');
     }
 
+    #[DataProvider('sortableColumns')]
+    public function test_proposal_columns_are_sortable_both_ways(string $column): void
+    {
+        SourceProposal::factory()->for(Interest::factory())->count(2)->create();
+        $this->listPage()->assertTableColumnExists($column, fn (Column $c): bool => $c->isSortable())
+            ->sortTable($column)->assertSuccessful()->sortTable($column, 'desc')->assertSuccessful();
+    }
+
+    #[DataProvider('searchableColumns')]
+    public function test_column_searchability_follows_the_table_rules(string $column, bool $searchable): void
+    {
+        $this->listPage()->assertTableColumnExists($column, fn (Column $c): bool => $c->isSearchable() === $searchable);
+    }
+
+    public function test_interest_sort_orders_proposals_by_interest_name_both_ways(): void
+    {
+        $alpha = SourceProposal::factory()->for(Interest::factory()->state(['name' => 'Alpha interest']))->create(['created_at' => now()]);
+        $zulu = SourceProposal::factory()->for(Interest::factory()->state(['name' => 'Zulu interest']))->create(['created_at' => now()->subDay()]);
+        $this->listPage()->sortTable('interest.name')->assertCanSeeTableRecords([$alpha, $zulu], inOrder: true)
+            ->sortTable('interest.name', 'desc')->assertCanSeeTableRecords([$zulu, $alpha], inOrder: true)
+            ->assertCountTableRecords(2);
+    }
+
+    #[DataProvider('iconActions')]
+    public function test_icon_actions_show_their_label_as_tooltip(string $name, string $label, SourceProposalKind $kind): void
+    {
+        $proposal = SourceProposal::factory()->create([
+            'kind' => $kind,
+            'source_id' => $kind === SourceProposalKind::UrlChange ? Source::factory()->create()->id : null,
+        ]);
+        $this->listPage()->assertActionVisible(TestAction::make($name)->table($proposal))
+            ->assertActionExists(TestAction::make($name)->table($proposal), fn (Action $action): bool => $action->isIconButton()
+                && $action->getTooltip() === $label && ! array_key_exists('title', $action->getExtraAttributes()));
+    }
+
     private function listPage(): Testable
     {
         return Livewire::test(CatalogResource::getPages()['index']->getPage());
@@ -500,5 +536,34 @@ class CatalogResourceTest extends TestCase
 
         $page->mountAction(TestAction::make('applyUrlChange')->table($proposal))
             ->assertMountedActionModalDontSee($url);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function sortableColumns(): array
+    {
+        return [
+            'name' => ['name'], 'url' => ['url'], 'kind' => ['kind'], 'origin' => ['origin'],
+            'status' => ['status'], 'interest' => ['interest.name'], 'created_at' => ['created_at'],
+        ];
+    }
+
+    /** @return array<string, array{string, bool}> */
+    public static function searchableColumns(): array
+    {
+        return [
+            'name' => ['name', true], 'url' => ['url', true], 'interest' => ['interest.name', true],
+            'kind' => ['kind', false], 'origin' => ['origin', false], 'status' => ['status', false],
+        ];
+    }
+
+    /** @return array<string, array{string, string, SourceProposalKind}> */
+    public static function iconActions(): array
+    {
+        return [
+            'view' => ['view', 'View', SourceProposalKind::NewSource],
+            'approve' => ['approve', 'Approve', SourceProposalKind::NewSource],
+            'applyUrlChange' => ['applyUrlChange', 'Apply URL change', SourceProposalKind::UrlChange],
+            'reject' => ['reject', 'Reject', SourceProposalKind::NewSource],
+        ];
     }
 }

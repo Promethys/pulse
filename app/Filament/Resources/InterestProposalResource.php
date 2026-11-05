@@ -49,8 +49,8 @@ class InterestProposalResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->toggleable()->limit(30)->tooltip(fn (InterestProposal $record): string => Str::limit($record->name, 120)),
-                TextColumn::make('category')->formatStateUsing(fn (InterestCategory $state): string => $state->label())->toggleable(),
+                TextColumn::make('name')->searchable()->sortable()->toggleable()->limit(30)->tooltip(fn (InterestProposal $record): string => Str::limit($record->name, 120)),
+                TextColumn::make('category')->formatStateUsing(fn (InterestCategory $state): string => $state->label())->sortable()->toggleable(),
                 TextColumn::make('created_at')->date()->sortable()->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
@@ -87,6 +87,7 @@ class InterestProposalResource extends Resource
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
+                    ->tooltip(__('View'))
                     ->modalHeading(fn (InterestProposal $record): string => self::title($record))
                     ->schema([
                         TextEntry::make('name')->extraAttributes(self::WRAP)->columnSpanFull(),
@@ -97,6 +98,7 @@ class InterestProposalResource extends Resource
                     ->label(__('Approve'))
                     ->icon(Heroicon::OutlinedCheck)
                     ->iconButton()
+                    ->tooltip(__('Approve'))
                     ->color('success')
                     ->modalHeading(fn (InterestProposal $record): string => __('Approve :name', ['name' => self::title($record)]))
                     ->modalDescription(__('Approval creates a draft interest and starts finding sources. Readers can select it once enough default sources are available.'))
@@ -119,6 +121,7 @@ class InterestProposalResource extends Resource
                     ->label(__('Reject'))
                     ->icon(Heroicon::OutlinedXMark)
                     ->iconButton()
+                    ->tooltip(__('Reject'))
                     ->color('danger')
                     ->visible(fn (InterestProposal $record): bool => $record->status === SourceProposalStatus::Pending)
                     ->requiresConfirmation()

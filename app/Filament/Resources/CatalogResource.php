@@ -54,19 +54,20 @@ class CatalogResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->toggleable()->limit(20)->tooltip(fn (SourceProposal $record): ?string => $record->name)->placeholder(__('Unnamed')),
+                TextColumn::make('name')->searchable()->sortable()->toggleable()->limit(20)->tooltip(fn (SourceProposal $record): ?string => $record->name)->placeholder(__('Unnamed')),
                 TextColumn::make('url')
                     ->label(__('URL'))
                     ->searchable()
+                    ->sortable()
                     ->toggleable()
                     ->limit(26)
                     ->tooltip(fn (SourceProposal $record): string => Str::limit($record->url, 120))
                     ->copyable()
                     ->copyableState(fn (SourceProposal $record): string => $record->url),
-                TextColumn::make('kind')->badge()->toggleable(),
-                TextColumn::make('origin')->badge()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')->badge()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('interest.name')->searchable()->toggleable()->limit(18)->placeholder(__('None')),
+                TextColumn::make('kind')->badge()->sortable()->toggleable(),
+                TextColumn::make('origin')->badge()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('status')->badge()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('interest.name')->searchable()->sortable()->toggleable()->limit(18)->placeholder(__('None')),
                 TextColumn::make('created_at')->date()->sortable()->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
@@ -109,6 +110,7 @@ class CatalogResource extends Resource
             ->recordActions([
                 ViewAction::make()
                     ->iconButton()
+                    ->tooltip(__('View'))
                     ->modalHeading(fn (SourceProposal $record): string => self::title($record))
                     ->schema([
                         TextEntry::make('url')->label(__('URL'))->copyable()->extraAttributes(self::WRAP)->columnSpanFull(),
@@ -129,6 +131,7 @@ class CatalogResource extends Resource
                     ->label(__('Approve'))
                     ->icon(Heroicon::OutlinedCheck)
                     ->iconButton()
+                    ->tooltip(__('Approve'))
                     ->color('success')
                     ->modalHeading(fn (SourceProposal $record): string => __('Approve :name', ['name' => self::title($record)]))
                     ->visible(fn (SourceProposal $record): bool => $record->status === SourceProposalStatus::Pending && $record->kind === SourceProposalKind::NewSource)
@@ -157,6 +160,7 @@ class CatalogResource extends Resource
                     ->label(__('Apply URL change'))
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->iconButton()
+                    ->tooltip(__('Apply URL change'))
                     ->color('success')
                     ->visible(fn (SourceProposal $record): bool => $record->status === SourceProposalStatus::Pending && $record->kind === SourceProposalKind::UrlChange)
                     ->requiresConfirmation()
@@ -171,6 +175,7 @@ class CatalogResource extends Resource
                     ->label(__('Reject'))
                     ->icon(Heroicon::OutlinedXMark)
                     ->iconButton()
+                    ->tooltip(__('Reject'))
                     ->color('danger')
                     ->visible(fn (SourceProposal $record): bool => $record->status === SourceProposalStatus::Pending)
                     ->requiresConfirmation()
