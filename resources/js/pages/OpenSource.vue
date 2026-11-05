@@ -40,14 +40,14 @@ const contributions = [
                 content="Pulse is free and open source under the MIT license. Read the code, run your own copy with Docker, report a bug or contribute."
             />
         </Head>
-        <div class="mx-auto max-w-3xl px-4 py-10 md:py-14">
+        <div class="mx-auto max-w-5xl px-4 py-10 md:py-14">
             <header class="mb-10">
                 <h1 class="text-3xl font-semibold md:text-4xl">Open source</h1>
                 <p class="mt-2 leading-relaxed text-muted-foreground">
                     Pulse is free and open source under the MIT license. Read
                     every line, run your own copy, and help shape it.
                 </p>
-                <Button class="mt-4" as-child>
+                <Button class="mt-4 focus-ring" as-child>
                     <a :href="github" target="_blank" rel="noreferrer"
                         ><FolderGit2 aria-hidden="true" />Promethys/pulse on
                         GitHub</a
@@ -112,7 +112,7 @@ cp .env.example .env</code></pre>
                         :href="`${github}/blob/main/README.md`"
                         target="_blank"
                         rel="noreferrer"
-                        class="text-primary-strong underline underline-offset-2"
+                        class="text-primary-strong underline underline-offset-2 focus-ring hover:decoration-2 active:decoration-2"
                         >README</a
                     >, including scheduled digests and mail configuration.
                 </p>
@@ -144,7 +144,7 @@ cp .env.example .env</code></pre>
                             :href="item.href"
                             target="_blank"
                             rel="noreferrer"
-                            class="mt-3 text-sm font-medium text-primary-strong hover:underline"
+                            class="mt-3 text-sm font-medium text-primary-strong focus-ring hover:underline active:underline"
                             >{{ item.label }}
                             <span aria-hidden="true">→</span></a
                         >
@@ -172,7 +172,7 @@ cp .env.example .env</code></pre>
                         :href="`${github}/blob/main/LICENSE`"
                         target="_blank"
                         rel="noreferrer"
-                        class="text-primary-strong underline underline-offset-2"
+                        class="text-primary-strong underline underline-offset-2 focus-ring hover:decoration-2 active:decoration-2"
                         >LICENSE</a
                     >.
                 </p>
