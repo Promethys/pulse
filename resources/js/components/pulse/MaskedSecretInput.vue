@@ -36,7 +36,7 @@ const show = ref(false);
                 type="button"
                 :aria-label="show ? 'Hide' : 'Show'"
                 :aria-pressed="show"
-                class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground focus-ring hover:text-foreground active:text-foreground"
                 @click="show = !show"
             >
                 <EyeOff v-if="show" class="size-4" aria-hidden="true" />

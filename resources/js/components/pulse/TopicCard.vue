@@ -32,9 +32,11 @@ const expanded = ref(false);
                     { 'line-clamp-2': !expanded },
                 ]"
             >
-                <Link :href="show.url(topic.id)" class="hover:underline">{{
-                    topic.title
-                }}</Link>
+                <Link
+                    :href="show.url(topic.id)"
+                    class="focus-ring hover:underline active:underline"
+                    >{{ topic.title }}</Link
+                >
             </h3>
         </CardHeader>
         <CardContent class="space-y-3 text-sm leading-relaxed">

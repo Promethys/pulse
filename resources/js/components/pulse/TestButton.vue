@@ -55,6 +55,7 @@ async function run() {
             variant="outline"
             :disabled="disabled || loading"
             @click="run"
+            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
         >
             <Loader2 v-if="loading" class="animate-spin" aria-hidden="true" />
             <Check

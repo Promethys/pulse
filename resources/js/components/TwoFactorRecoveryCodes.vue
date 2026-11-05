@@ -53,7 +53,10 @@ onMounted(async () => {
             <div
                 class="flex flex-col gap-3 select-none sm:flex-row sm:items-end sm:justify-between"
             >
-                <Button @click="toggleRecoveryCodesVisibility" class="w-fit">
+                <Button
+                    @click="toggleRecoveryCodesVisibility"
+                    class="w-fit focus-ring"
+                >
                     <component
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
@@ -79,6 +82,7 @@ onMounted(async () => {
                         variant="secondary"
                         type="submit"
                         :disabled="processing"
+                        class="focus-ring"
                     >
                         <RefreshCw /> Regenerate codes
                     </Button>

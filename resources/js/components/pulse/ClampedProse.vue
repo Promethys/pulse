@@ -29,7 +29,7 @@ useResizeObserver(prose, measure);
         <button
             v-if="overflowing"
             type="button"
-            class="mt-1 text-sm font-medium text-primary-strong underline-offset-2 hover:underline"
+            class="mt-1 text-sm font-medium text-primary-strong underline-offset-2 focus-ring hover:underline active:underline"
             :aria-expanded="expanded"
             @click="expanded = !expanded"
         >

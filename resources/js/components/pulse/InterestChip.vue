@@ -132,15 +132,16 @@ const icons: Record<string, Component> = {
         :aria-pressed="interest.status === 'live' && selected"
         :class="
             cn(
-                'inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                'inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors',
                 selected && interest.status === 'live'
                     ? 'border-primary-strong bg-primary text-primary-foreground'
-                    : 'border-border bg-card hover:bg-secondary',
+                    : 'border-border bg-card',
                 interest.status !== 'live' &&
-                    'cursor-not-allowed border-dashed bg-transparent text-muted-foreground opacity-70 hover:bg-transparent',
+                    'cursor-not-allowed border-dashed bg-transparent text-muted-foreground opacity-70',
             )
         "
         @click="$emit('toggle')"
+        class="focus-ring enabled:hover:bg-accent enabled:hover:text-accent-foreground enabled:active:bg-accent enabled:active:text-accent-foreground"
     >
         <component
             :is="

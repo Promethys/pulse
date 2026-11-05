@@ -45,7 +45,11 @@ defineProps<{
         class="space-y-4 text-center"
         v-slot="{ processing }"
     >
-        <Button :disabled="processing" variant="outline" class="w-full">
+        <Button
+            :disabled="processing"
+            variant="outline"
+            class="w-full focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+        >
             <Spinner v-if="processing" />
             Resend the email
         </Button>

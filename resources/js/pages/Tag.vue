@@ -45,11 +45,15 @@ const subtitle = computed(() =>
             <template #actions>
                 <p class="text-sm text-muted-foreground">
                     Browse
-                    <Link href="/" class="underline underline-offset-4"
+                    <Link
+                        href="/"
+                        class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Today</Link
                     >
                     or
-                    <Link href="/search" class="underline underline-offset-4"
+                    <Link
+                        href="/search"
+                        class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Search</Link
                     >.
                 </p>

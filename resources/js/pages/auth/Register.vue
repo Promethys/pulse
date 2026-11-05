@@ -95,7 +95,7 @@ defineOptions({ layout: [] });
 
                 <Button
                     type="submit"
-                    class="w-full"
+                    class="w-full focus-ring"
                     tabindex="5"
                     :disabled="processing"
                     data-test="register-user-button"

@@ -11,7 +11,12 @@ const date = computed(() => dateParts(props.item.date));
 
 <template>
     <article class="group border-b border-border py-4 last:border-0">
-        <a :href="item.url" target="_blank" rel="noreferrer" class="block">
+        <a
+            :href="item.url"
+            target="_blank"
+            rel="noreferrer"
+            class="block focus-ring"
+        >
             <h3
                 :title="item.title"
                 class="line-clamp-2 font-sans text-[15px] leading-snug font-semibold group-hover:underline"
@@ -53,7 +58,7 @@ const date = computed(() => dateParts(props.item.date));
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Open source"
-                class="-mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-muted hover:text-foreground"
+                class="-mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full focus-ring hover:bg-muted hover:text-foreground"
             >
                 <ExternalLink class="size-3.5" aria-hidden="true" />
             </a>

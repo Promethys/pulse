@@ -160,8 +160,12 @@ function save() {
                         for="source-feed"
                         class="flex items-center gap-2 rounded-lg border border-border p-3 font-normal has-[[data-state=checked]]:border-primary-strong"
                     >
-                        <RadioGroupItem id="source-feed" value="feed" /> Feed
-                        URL
+                        <RadioGroupItem
+                            id="source-feed"
+                            value="feed"
+                            class="focus-ring"
+                        />
+                        Feed URL
                     </Label>
                     <Label
                         for="source-newsletter"
@@ -170,6 +174,7 @@ function save() {
                         <RadioGroupItem
                             id="source-newsletter"
                             value="resend_inbox"
+                            class="focus-ring"
                         />
                         Newsletter inbox
                     </Label>
@@ -314,11 +319,15 @@ function save() {
                         type="button"
                         variant="outline"
                         @click="emit('update:open', false)"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     >
-                    <Button type="submit" :disabled="!canSave">{{
-                        source ? 'Save' : 'Add'
-                    }}</Button>
+                    <Button
+                        type="submit"
+                        :disabled="!canSave"
+                        class="focus-ring"
+                        >{{ source ? 'Save' : 'Add' }}</Button
+                    >
                 </DialogFooter>
             </form>
         </DialogContent>

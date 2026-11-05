@@ -35,7 +35,9 @@ const navigation = [
         <div
             class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3"
         >
-            <Link :href="home()" class="inline-flex items-center"
+            <Link
+                :href="home()"
+                class="inline-flex items-center rounded-md focus-ring ring-offset-2 ring-offset-background"
                 ><PulseLogo
             /></Link>
             <nav class="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -43,8 +45,14 @@ const navigation = [
                     v-for="item in navigation"
                     :key="item.label"
                     variant="ghost"
-                    :class="{ 'bg-accent/40': isCurrent(item.href.url) }"
+                    :class="{
+                        'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus-visible:ring-ring! active:bg-primary active:text-primary-foreground dark:hover:bg-primary dark:focus-visible:ring-foreground/70! dark:active:bg-primary':
+                            isCurrent(item.href.url),
+                        'hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent':
+                            !isCurrent(item.href.url),
+                    }"
                     as-child
+                    class="focus-ring"
                 >
                     <Link
                         :href="item.href"
@@ -58,14 +66,26 @@ const navigation = [
             <div class="flex items-center gap-1">
                 <ThemeToggle />
                 <div class="hidden items-center gap-1 md:flex">
-                    <Button v-if="page.props.auth.user" as-child>
+                    <Button
+                        v-if="page.props.auth.user"
+                        as-child
+                        class="focus-ring"
+                    >
                         <Link :href="home()">Open Pulse</Link>
                     </Button>
                     <template v-else>
-                        <Button variant="ghost" as-child>
+                        <Button
+                            variant="ghost"
+                            as-child
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                        >
                             <Link :href="login()">Log in</Link>
                         </Button>
-                        <Button v-if="page.props.canRegister" as-child>
+                        <Button
+                            v-if="page.props.canRegister"
+                            as-child
+                            class="focus-ring"
+                        >
                             <Link :href="register()">Create an account</Link>
                         </Button>
                     </template>
@@ -75,7 +95,7 @@ const navigation = [
                         <Button
                             variant="ghost"
                             size="icon"
-                            class="md:hidden"
+                            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground md:hidden dark:active:bg-accent"
                             aria-label="Open menu"
                         >
                             <Menu aria-hidden="true" />
@@ -95,9 +115,12 @@ const navigation = [
                                 v-for="item in navigation"
                                 :key="item.label"
                                 variant="ghost"
-                                class="justify-start"
+                                class="justify-start focus-ring"
                                 :class="{
-                                    'bg-accent/40': isCurrent(item.href.url),
+                                    'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus-visible:ring-ring! active:bg-primary active:text-primary-foreground dark:hover:bg-primary dark:focus-visible:ring-foreground/70! dark:active:bg-primary':
+                                        isCurrent(item.href.url),
+                                    'hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent':
+                                        !isCurrent(item.href.url),
                                 }"
                                 as-child
                             >
@@ -117,7 +140,7 @@ const navigation = [
                             <div class="flex flex-col gap-2">
                                 <Button
                                     v-if="page.props.auth.user"
-                                    class="w-full"
+                                    class="w-full focus-ring"
                                     as-child
                                 >
                                     <Link :href="home()" @click="open = false">
@@ -127,7 +150,7 @@ const navigation = [
                                 <template v-else>
                                     <Button
                                         variant="ghost"
-                                        class="w-full justify-start"
+                                        class="w-full justify-start focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                         as-child
                                     >
                                         <Link
@@ -139,7 +162,7 @@ const navigation = [
                                     </Button>
                                     <Button
                                         v-if="page.props.canRegister"
-                                        class="w-full"
+                                        class="w-full focus-ring"
                                         as-child
                                     >
                                         <Link

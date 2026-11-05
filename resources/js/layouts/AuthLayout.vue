@@ -15,7 +15,7 @@ const { title = '', description = '' } = defineProps<{
     <div class="flex min-h-screen bg-background">
         <div class="flex flex-1 flex-col px-4 py-6">
             <header class="flex items-center justify-between">
-                <Link :href="home()"><PulseLogo /></Link>
+                <Link :href="home()" class="focus-ring"><PulseLogo /></Link>
                 <ThemeToggle />
             </header>
             <main class="flex flex-1 items-center justify-center py-8">

@@ -18,7 +18,7 @@ const currentSection = computed(() =>
         <div class="md:hidden">
             <Link
                 :href="index()"
-                class="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground"
+                class="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground focus-ring hover:text-foreground active:text-foreground"
             >
                 <ChevronLeft class="size-4" aria-hidden="true" />
                 Settings
@@ -40,11 +40,11 @@ const currentSection = computed(() =>
                     :aria-current="
                         currentPath === section.href ? 'page' : undefined
                     "
-                    class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-colors"
+                    class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium focus-ring transition-colors"
                     :class="
                         currentPath === section.href
-                            ? 'bg-background text-foreground shadow-sm'
-                            : 'hover:bg-accent hover:text-accent-foreground'
+                            ? 'bg-primary text-primary-foreground shadow-sm focus-visible:ring-ring!'
+                            : 'hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent'
                     "
                 >
                     {{ section.label }}

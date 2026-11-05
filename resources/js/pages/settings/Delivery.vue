@@ -225,7 +225,7 @@ function disconnect() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                        class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                         @click="disconnecting = server"
                         >Disconnect</Button
                     >
@@ -297,11 +297,12 @@ function disconnect() {
                         variant="outline"
                         :disabled="server.forums_error || !server.forums.length"
                         @click="openAdd('discord_bot', server)"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         ><Plus aria-hidden="true" />Add a forum channel</Button
                     >
                 </div>
             </div>
-            <Button v-if="install_url" as-child
+            <Button v-if="install_url" as-child class="focus-ring"
                 ><a :href="install_url"
                     ><DiscordIcon class="size-4" />Add to Discord</a
                 ></Button
@@ -369,7 +370,10 @@ function disconnect() {
                     </div>
                 </DestinationRow>
             </div>
-            <Button variant="outline" @click="openAdd('discord_webhook')"
+            <Button
+                variant="outline"
+                @click="openAdd('discord_webhook')"
+                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                 ><Plus aria-hidden="true" />Add webhook</Button
             >
         </CardContent>
@@ -414,7 +418,11 @@ function disconnect() {
                     </div>
                 </DestinationRow>
             </div>
-            <Button v-else variant="outline" @click="openAdd('email')"
+            <Button
+                v-else
+                variant="outline"
+                @click="openAdd('email')"
+                class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                 ><Plus aria-hidden="true" />Add email</Button
             >
         </CardContent>
@@ -503,7 +511,7 @@ function disconnect() {
                     :key="field"
                     :message="error"
                 />
-                <Button :disabled="!canAdd">Add</Button>
+                <Button :disabled="!canAdd" class="focus-ring">Add</Button>
             </form>
         </DialogContent>
     </Dialog>
@@ -521,13 +529,15 @@ function disconnect() {
             >
             <div class="flex justify-end gap-2">
                 <AlertDialogCancel as-child
-                    ><Button variant="outline"
+                    ><Button
+                        variant="outline"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     ></AlertDialogCancel
                 >
                 <Button
                     variant="ghost"
-                    class="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+                    class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                     @click="disconnect"
                     >Disconnect</Button
                 >

@@ -6,7 +6,7 @@ defineProps<{ items: { q: string; a: string }[] }>();
     <div class="divide-y divide-border">
         <details v-for="item in items" :key="item.q" class="group py-4">
             <summary
-                class="cursor-pointer rounded-sm text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                class="cursor-pointer rounded-sm text-base font-semibold focus-ring hover:underline active:underline"
             >
                 {{ item.q }}
             </summary>

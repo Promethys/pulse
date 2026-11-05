@@ -26,7 +26,9 @@ const subtitle = computed(
             <template #actions>
                 <p class="text-sm text-muted-foreground">
                     Visit
-                    <Link href="/" class="underline underline-offset-4"
+                    <Link
+                        href="/"
+                        class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                         >Today</Link
                     >
                     to check your next digest.
@@ -37,7 +39,11 @@ const subtitle = computed(
             <ul
                 class="divide-y divide-border rounded-2xl border border-border bg-card"
             >
-                <li v-for="day in days" :key="day.date">
+                <li
+                    v-for="day in days"
+                    :key="day.date"
+                    class="first:rounded-t-2xl last:rounded-b-2xl"
+                >
                     <ArchiveRow :day="day" :today="today" />
                 </li>
             </ul>

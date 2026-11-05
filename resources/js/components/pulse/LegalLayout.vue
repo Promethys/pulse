@@ -39,7 +39,7 @@ defineProps<{
                     <li v-for="section in sections" :key="section.id">
                         <a
                             :href="`#${section.id}`"
-                            class="text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                            class="text-muted-foreground focus-ring hover:text-foreground hover:underline active:text-foreground active:underline"
                             >{{ section.label }}</a
                         >
                     </li>

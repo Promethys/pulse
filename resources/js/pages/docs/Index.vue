@@ -76,7 +76,7 @@ const results = computed(() =>
                                     article: entry.slug,
                                 })
                             "
-                            class="block rounded-xl px-4 py-3 transition-colors hover:bg-muted"
+                            class="block rounded-xl px-4 py-3 focus-ring transition-colors hover:bg-muted"
                         >
                             <p class="text-xs text-muted-foreground">
                                 {{ entry.sectionTitle }}
@@ -121,7 +121,7 @@ const results = computed(() =>
                                         article: article.slug,
                                     })
                                 "
-                                class="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                                class="text-sm text-muted-foreground focus-ring transition-colors hover:text-foreground hover:underline active:text-foreground active:underline"
                                 >{{ article.title }}</Link
                             >
                         </li>

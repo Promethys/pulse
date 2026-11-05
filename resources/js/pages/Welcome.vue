@@ -74,14 +74,25 @@ const highlights = [
                         v-if="!page.props.auth.user && page.props.canRegister"
                         size="lg"
                         as-child
+                        class="focus-ring"
                         ><Link :href="register()"
                             >Create an account</Link
                         ></Button
                     >
-                    <Button size="lg" variant="outline" as-child>
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        as-child
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                    >
                         <Link :href="features()">Explore features</Link>
                     </Button>
-                    <Button size="lg" variant="ghost" as-child>
+                    <Button
+                        size="lg"
+                        variant="ghost"
+                        as-child
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                    >
                         <a
                             href="https://github.com/Promethys/pulse"
                             target="_blank"
@@ -139,7 +150,7 @@ const highlights = [
                     v-for="highlight in highlights"
                     :key="highlight.id"
                     :href="`${features.url()}#${highlight.id}`"
-                    class="group rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-secondary"
+                    class="group rounded-2xl border border-border bg-card p-5 focus-ring transition-colors hover:bg-secondary"
                 >
                     <h2 class="flex items-center gap-1 text-lg font-semibold">
                         {{ highlight.title }}
@@ -180,7 +191,11 @@ const highlights = [
                         provider.
                     </p>
                 </div>
-                <Button variant="outline" class="mt-5" as-child>
+                <Button
+                    variant="outline"
+                    class="mt-5 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+                    as-child
+                >
                     <Link
                         :href="
                             article({
@@ -215,10 +230,15 @@ const highlights = [
                         v-if="!page.props.auth.user && page.props.canRegister"
                         size="lg"
                         as-child
+                        class="focus-ring"
                     >
                         <Link :href="register()">Create an account</Link>
                     </Button>
-                    <Button size="lg" variant="outline" as-child
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        as-child
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         ><Link :href="docs()">Read the docs</Link></Button
                     >
                 </div>

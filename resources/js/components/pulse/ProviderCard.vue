@@ -13,12 +13,13 @@ defineProps<{ provider: OnboardingProvider; selected: boolean }>();
         :aria-label="provider.label"
         :class="
             cn(
-                'flex items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                'flex items-center gap-3 rounded-xl border p-3 text-left transition-colors',
                 selected
                     ? 'border-primary-strong bg-primary/50 ring-1 ring-primary-strong'
                     : 'border-border bg-card hover:bg-secondary',
             )
         "
+        class="focus-ring"
     >
         <span
             aria-hidden="true"

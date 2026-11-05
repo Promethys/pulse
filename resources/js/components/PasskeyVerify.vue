@@ -51,7 +51,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
             <Button
                 type="button"
                 variant="outline"
-                class="w-full"
+                class="w-full focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                 @click="verify"
                 :disabled="isLoading"
             >

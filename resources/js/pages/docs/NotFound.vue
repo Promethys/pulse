@@ -20,8 +20,13 @@ defineOptions({ layout: [] });
                 the docs or search for the guide you need.
             </p>
             <div class="mt-6 flex flex-wrap justify-center gap-2">
-                <Button as-child><Link :href="index()">Docs home</Link></Button>
-                <Button as-child variant="outline"
+                <Button as-child class="focus-ring"
+                    ><Link :href="index()">Docs home</Link></Button
+                >
+                <Button
+                    as-child
+                    variant="outline"
+                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                     ><Link :href="`${index.url()}#search`"
                         >Search the docs</Link
                     ></Button

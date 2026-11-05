@@ -64,7 +64,7 @@ const handleDelete = () => {
                 <Button
                     variant="ghost"
                     size="sm"
-                    class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    class="text-destructive focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                 >
                     <Trash2 class="h-4 w-4" />
                     <span class="sr-only">Remove</span>
@@ -79,12 +79,15 @@ const handleDelete = () => {
                 </DialogDescription>
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>
-                        <Button variant="secondary">Cancel</Button>
+                        <Button variant="secondary" class="focus-ring"
+                            >Cancel</Button
+                        >
                     </DialogClose>
                     <Button
                         variant="destructive"
                         :disabled="isDeleting"
                         @click="handleDelete"
+                        class="focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                     >
                         {{ isDeleting ? 'Removing...' : 'Remove passkey' }}
                     </Button>

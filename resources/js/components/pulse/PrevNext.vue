@@ -32,6 +32,7 @@ defineProps<{ prev: DocsEntry | null; next: DocsEntry | null }>();
                         index === 1 && 'text-right',
                     )
                 "
+                class="focus-ring"
             >
                 <p
                     :class="

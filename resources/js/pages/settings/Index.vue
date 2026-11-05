@@ -25,7 +25,7 @@ const logOut = () => {
         <li v-for="section in settingsSections" :key="section.href">
             <Link
                 :href="section.href"
-                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                class="flex items-center justify-between p-4 text-sm font-medium focus-ring ring-inset hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
             >
                 {{ section.label }}
                 <ChevronRight
@@ -37,7 +37,7 @@ const logOut = () => {
         <li>
             <Link
                 href="/sources"
-                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                class="flex items-center justify-between p-4 text-sm font-medium focus-ring ring-inset hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
             >
                 Sources
                 <ChevronRight
@@ -49,7 +49,7 @@ const logOut = () => {
         <li v-if="page.props.auth.canAccessAdmin">
             <a
                 href="/admin"
-                class="flex items-center justify-between p-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                class="flex items-center justify-between p-4 text-sm font-medium focus-ring ring-inset hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
             >
                 Admin panel
                 <ChevronRight
@@ -61,7 +61,7 @@ const logOut = () => {
         <li>
             <button
                 type="button"
-                class="flex w-full items-center p-4 text-sm font-medium text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20"
+                class="flex w-full items-center p-4 text-sm font-medium text-destructive focus-ring ring-inset hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
                 @click="logOut"
             >
                 Log out

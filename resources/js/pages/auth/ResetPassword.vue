@@ -84,7 +84,7 @@ const inputEmail = ref(props.email);
 
             <Button
                 type="submit"
-                class="w-full"
+                class="w-full focus-ring"
                 :disabled="processing"
                 data-test="reset-password-button"
             >

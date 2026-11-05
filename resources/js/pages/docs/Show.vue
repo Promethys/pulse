@@ -102,7 +102,7 @@ onUnmounted(() => stop?.());
                             <li>
                                 <Link
                                     :href="index()"
-                                    class="hover:text-foreground hover:underline"
+                                    class="focus-ring hover:text-foreground hover:underline active:text-foreground active:underline"
                                     >Docs</Link
                                 >
                             </li>
@@ -138,7 +138,7 @@ onUnmounted(() => stop?.());
                     <p class="mt-10">
                         <a
                             :href="editUrl"
-                            class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:underline"
+                            class="inline-flex items-center gap-1.5 text-sm text-muted-foreground focus-ring hover:text-foreground hover:underline active:text-foreground active:underline"
                             ><PencilLine
                                 class="size-3.5"
                                 aria-hidden="true"

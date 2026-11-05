@@ -179,9 +179,11 @@ const sections = [
         <template #contact>
             <p>
                 Email
-                <a :href="`mailto:${page.props.supportEmail}`">{{
-                    page.props.supportEmail
-                }}</a>
+                <a
+                    :href="`mailto:${page.props.supportEmail}`"
+                    class="focus-ring"
+                    >{{ page.props.supportEmail }}</a
+                >
                 with questions about privacy or a request about your data.
             </p>
         </template>

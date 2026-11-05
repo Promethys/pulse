@@ -15,7 +15,7 @@ defineProps<LearningShowProps>();
     <div>
         <Link
             :href="index.url()"
-            class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+            class="inline-flex items-center gap-1 text-sm text-muted-foreground focus-ring hover:underline active:underline"
         >
             <ChevronLeft class="size-4" aria-hidden="true" />
             Learning
@@ -44,7 +44,7 @@ defineProps<LearningShowProps>();
                                 :href="link.url"
                                 target="_blank"
                                 rel="noreferrer"
-                                class="inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                                class="inline-flex items-center gap-1 underline-offset-2 focus-ring hover:underline active:underline"
                             >
                                 {{ link.title }}
                                 <ExternalLink

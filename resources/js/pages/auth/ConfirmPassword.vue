@@ -65,7 +65,7 @@ defineOptions({
 
             <div class="flex items-center">
                 <Button
-                    class="w-full"
+                    class="w-full focus-ring"
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >

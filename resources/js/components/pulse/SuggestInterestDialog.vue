@@ -155,9 +155,13 @@ function submit() {
                         type="button"
                         variant="outline"
                         @click="emit('update:open', false)"
+                        class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Cancel</Button
                     >
-                    <Button type="submit" :disabled="!canSubmit"
+                    <Button
+                        type="submit"
+                        :disabled="!canSubmit"
+                        class="focus-ring"
                         >Send suggestion</Button
                     >
                 </DialogFooter>

@@ -66,6 +66,10 @@ const done = computed(
                                 : undefined
                         "
                         class="flex items-center gap-3 py-2.5"
+                        :class="
+                            !state[item.key] &&
+                            'focus-ring hover:underline active:underline'
+                        "
                     >
                         <span
                             :class="
@@ -110,7 +114,7 @@ const done = computed(
             <p class="mt-3 text-sm text-muted-foreground">
                 <Link
                     href="/settings/delivery"
-                    class="underline underline-offset-4"
+                    class="underline underline-offset-4 focus-ring hover:decoration-2 active:decoration-2"
                     >Optional: also receive digests by Discord or email.</Link
                 >
             </p>

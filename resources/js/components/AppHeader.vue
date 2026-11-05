@@ -50,8 +50,7 @@ const page = usePage();
 const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
-const activeItemStyles =
-    'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
+const activeItemStyles = 'bg-primary text-primary-foreground';
 
 const mainNavItems: NavItem[] = [
     {
@@ -86,7 +85,7 @@ const rightNavItems: NavItem[] = [
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                class="mr-2 h-9 w-9"
+                                class="mr-2 h-9 w-9 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                             >
                                 <Menu class="h-5 w-5" />
                             </Button>
@@ -108,7 +107,7 @@ const rightNavItems: NavItem[] = [
                                         v-for="item in mainNavItems"
                                         :key="item.title"
                                         :href="item.href"
-                                        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
+                                        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                         :class="
                                             whenCurrentUrl(
                                                 item.href,
@@ -131,7 +130,7 @@ const rightNavItems: NavItem[] = [
                                         :href="toUrl(item.href)"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="flex items-center space-x-2 text-sm font-medium"
+                                        class="flex items-center space-x-2 text-sm font-medium focus-ring hover:underline active:underline"
                                     >
                                         <component
                                             v-if="item.icon"
@@ -146,7 +145,10 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link
+                    :href="dashboard()"
+                    class="flex items-center gap-x-2 focus-ring"
+                >
                     <AppLogo />
                 </Link>
 
@@ -171,6 +173,7 @@ const rightNavItems: NavItem[] = [
                                         'h-9 cursor-pointer px-3',
                                     ]"
                                     :href="item.href"
+                                    class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                 >
                                     <component
                                         v-if="item.icon"
@@ -193,7 +196,7 @@ const rightNavItems: NavItem[] = [
                         <Button
                             variant="ghost"
                             size="icon"
-                            class="group h-9 w-9 cursor-pointer"
+                            class="group h-9 w-9 cursor-pointer focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >
                             <Search
                                 class="size-5 opacity-80 group-hover:opacity-100"
@@ -212,7 +215,7 @@ const rightNavItems: NavItem[] = [
                                                 variant="ghost"
                                                 size="icon"
                                                 as-child
-                                                class="group h-9 w-9 cursor-pointer"
+                                                class="group h-9 w-9 cursor-pointer focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                             >
                                                 <a
                                                     :href="toUrl(item.href)"
@@ -243,7 +246,7 @@ const rightNavItems: NavItem[] = [
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
+                                class="relative size-10 w-auto rounded-full p-1 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                             >
                                 <Avatar
                                     class="size-8 overflow-hidden rounded-full"

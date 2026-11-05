@@ -185,7 +185,10 @@ watch(
                         </div>
 
                         <div class="flex w-full items-center space-x-5">
-                            <Button class="w-full" @click="handleModalNextStep">
+                            <Button
+                                class="w-full focus-ring"
+                                @click="handleModalNextStep"
+                            >
                                 {{ modalConfig.buttonText }}
                             </Button>
                         </div>
@@ -222,7 +225,7 @@ watch(
                                     />
                                     <button
                                         @click="copy(manualSetupKey || '')"
-                                        class="relative block h-auto border-l border-border px-3 hover:bg-muted"
+                                        class="relative block h-auto border-l border-border px-3 focus-ring hover:bg-muted"
                                     >
                                         <Check
                                             v-if="copied"
@@ -275,7 +278,7 @@ watch(
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    class="w-auto flex-1"
+                                    class="w-auto flex-1 focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
@@ -283,7 +286,7 @@ watch(
                                 </Button>
                                 <Button
                                     type="submit"
-                                    class="w-auto flex-1"
+                                    class="w-auto flex-1 focus-ring"
                                     :disabled="processing || code.length < 6"
                                 >
                                     Confirm

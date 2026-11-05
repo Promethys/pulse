@@ -165,6 +165,14 @@
     }
 }
 
+@utility focus-ring {
+    @apply outline-none;
+
+    &:focus-visible:not(:disabled) {
+        @apply ring-[3px] ring-ring/50;
+    }
+}
+
 @utility pb-safe {
     padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
 }
@@ -211,12 +219,10 @@
             margin-top: 0.25rem;
         }
         & a {
+            @apply focus-ring hover:text-foreground active:text-foreground;
             color: var(--primary-strong);
             text-decoration: underline;
             text-underline-offset: 2px;
-        }
-        & a:hover {
-            color: var(--foreground);
         }
     }
 
@@ -262,12 +268,10 @@
             color: var(--muted-foreground);
         }
         & a {
+            @apply focus-ring hover:decoration-2 active:decoration-2;
             color: var(--primary-strong);
             text-decoration: underline;
             text-underline-offset: 2px;
-        }
-        & a:hover {
-            text-decoration-thickness: 2px;
         }
         & code:not(pre code) {
             font-family: var(--pulse-mono);
@@ -409,6 +413,7 @@
             font-size: 0.875rem;
         }
         & .docs-code-copy {
+            @apply focus-ring hover:bg-muted;
             position: absolute;
             top: 0.5rem;
             right: 0.5rem;
@@ -419,13 +424,6 @@
             color: var(--foreground);
             font-family: var(--pulse-sans);
             font-size: 0.75rem;
-        }
-        & .docs-code-copy:hover {
-            background: var(--muted);
-        }
-        & .docs-code-copy:focus-visible {
-            outline: 2px solid var(--ring);
-            outline-offset: 2px;
         }
     }
 }

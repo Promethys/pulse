@@ -33,7 +33,10 @@ defineProps<Props>();
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
-        <DropdownMenuItem :as-child="true">
+        <DropdownMenuItem
+            :as-child="true"
+            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
+        >
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
                 Settings
@@ -42,6 +45,7 @@ defineProps<Props>();
         <DropdownMenuItem
             v-if="page.props.auth.canAccessAdmin"
             :as-child="true"
+            class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
         >
             <a class="block w-full cursor-pointer" href="/admin">
                 <ShieldCheck class="mr-2 h-4 w-4" />
@@ -50,7 +54,11 @@ defineProps<Props>();
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true" variant="destructive">
+    <DropdownMenuItem
+        :as-child="true"
+        variant="destructive"
+        class="focus-ring hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10 active:text-destructive dark:hover:bg-destructive/20 dark:active:bg-destructive/20"
+    >
         <Link
             class="flex w-full cursor-pointer items-center"
             :href="logout()"

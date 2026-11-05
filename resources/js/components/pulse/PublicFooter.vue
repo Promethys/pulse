@@ -26,7 +26,7 @@ const legalLinks = [
             class="mx-auto grid max-w-5xl gap-8 px-4 py-10 sm:grid-cols-2 md:grid-cols-4"
         >
             <div>
-                <Link :href="home()"><PulseLogo /></Link>
+                <Link :href="home()" class="focus-ring"><PulseLogo /></Link>
                 <p class="mt-3 max-w-xs text-sm text-muted-foreground">
                     One calm daily digest of the news you actually follow.
                 </p>
@@ -41,7 +41,7 @@ const legalLinks = [
                     <li v-for="item in productLinks" :key="item.label">
                         <Link
                             :href="item.href"
-                            class="text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                            class="text-muted-foreground focus-ring transition-colors hover:text-foreground hover:underline active:text-foreground active:underline"
                         >
                             {{ item.label }}
                         </Link>
@@ -58,7 +58,7 @@ const legalLinks = [
                     <li>
                         <Link
                             :href="openSource()"
-                            class="text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                            class="text-muted-foreground focus-ring transition-colors hover:text-foreground hover:underline active:text-foreground active:underline"
                         >
                             Open source
                         </Link>
@@ -68,7 +68,7 @@ const legalLinks = [
                             :href="item.href"
                             target="_blank"
                             rel="noreferrer"
-                            class="text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                            class="text-muted-foreground focus-ring transition-colors hover:text-foreground hover:underline active:text-foreground active:underline"
                         >
                             {{ item.label }}
                         </a>
@@ -85,7 +85,7 @@ const legalLinks = [
                     <li v-for="item in legalLinks" :key="item.label">
                         <Link
                             :href="item.href"
-                            class="text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                            class="text-muted-foreground focus-ring transition-colors hover:text-foreground hover:underline active:text-foreground active:underline"
                         >
                             {{ item.label }}
                         </Link>
@@ -101,7 +101,7 @@ const legalLinks = [
                 :href="github"
                 target="_blank"
                 rel="noreferrer"
-                class="underline underline-offset-2 hover:text-foreground"
+                class="underline underline-offset-2 focus-ring hover:text-foreground active:text-foreground"
                 >Leave a star on GitHub</a
             >.
         </p>
