@@ -456,6 +456,27 @@ describe('SourceFormDialog', () => {
         expect(view.put).not.toHaveBeenCalled();
     });
 
+    it('wraps long unbreakable preview headlines within the dialog', async () => {
+        const headline = `https://example.test/${'newsletter'.repeat(100)}`;
+        http.submit.mockResolvedValueOnce({
+            ok: true,
+            message: 'Found one post.',
+            headlines: [headline],
+        });
+        const view = await renderForm();
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+
+        const item = await screen.findByText(headline);
+        expect(item).toHaveClass(
+            'min-w-0',
+            'break-words',
+            '[overflow-wrap:anywhere]',
+        );
+        expect(item.closest('ul')).toHaveClass('min-w-0');
+        expect(item.closest('form')).toHaveClass('min-w-0');
+    });
+
     it.each([
         { ok: true, message: 'No recent posts found.', headlines: [] },
         { ok: false, message: 'Could not read this source.', headlines: [] },

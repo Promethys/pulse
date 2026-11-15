@@ -241,7 +241,7 @@ function save() {
 
 <template>
     <Dialog :open="open" @update:open="emit('update:open', $event)">
-        <DialogContent class="max-h-[90vh] overflow-y-auto">
+        <DialogContent class="max-h-[90vh] min-w-0 overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{{
                     source ? 'Edit source' : 'Add a source'
@@ -253,7 +253,7 @@ function save() {
             <p v-if="!source" class="text-sm text-muted-foreground">
                 You can save up to 30 custom sources.
             </p>
-            <form novalidate class="space-y-4" @submit.prevent="save">
+            <form novalidate class="min-w-0 space-y-4" @submit.prevent="save">
                 <RadioGroup
                     :model-value="form.type"
                     @update:model-value="selectType"
@@ -617,12 +617,12 @@ function save() {
                 />
                 <ul
                     v-if="headlines.length"
-                    class="space-y-1 rounded-lg border border-border p-3 text-sm"
+                    class="min-w-0 space-y-1 rounded-lg border border-border p-3 text-sm"
                 >
                     <li
                         v-for="(headline, index) in headlines"
                         :key="index"
-                        class="line-clamp-1"
+                        class="line-clamp-1 min-w-0 [overflow-wrap:anywhere] break-words"
                         :title="headline"
                     >
                         {{ headline }}

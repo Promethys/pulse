@@ -4,22 +4,50 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Digest;
 
+use App\Digest\Sources\Imap\ConnectionFailedException;
 use App\Digest\Sources\Imap\FolderNotFoundException;
+use App\Digest\Sources\Imap\SignInFailedException;
 use App\Digest\Sources\Imap\WebklexMailbox;
 use Carbon\CarbonImmutable;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use Throwable;
 use Webklex\PHPIMAP\Client;
 use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Config;
 use Webklex\PHPIMAP\Connection\Protocols\ImapProtocol;
 use Webklex\PHPIMAP\Connection\Protocols\Response;
 use Webklex\PHPIMAP\Exceptions\AuthFailedException;
+use Webklex\PHPIMAP\Exceptions\ConnectionFailedException as WebklexConnectionFailedException;
+use Webklex\PHPIMAP\Exceptions\ImapBadRequestException;
+use Webklex\PHPIMAP\Exceptions\ImapServerErrorException;
 use Webklex\PHPIMAP\Folder;
 use Webklex\PHPIMAP\IMAP;
+use Webklex\PHPIMAP\Message;
 
 final class WebklexMailboxTest extends TestCase
 {
+    #[DataProvider('encodedSubjects')]
+    public function test_decodes_utf8_subjects_with_the_bound_client_configuration(string $subject, string $expected): void
+    {
+        $client = app(ClientManager::class)->make([]);
+        $raw = $this->header($subject, '13:00:00')."\r\nHello newsletter";
+
+        $message = Message::fromString($raw, $client->getConfig());
+
+        $this->assertSame($expected, $message->getSubject()->toString());
+    }
+
+    public static function encodedSubjects(): array
+    {
+        return [
+            'base64' => ['=?UTF-8?B?QWxlcnRlIGRlIHPDqWN1cml0w6k=?=', 'Alerte de sécurité'],
+            'quoted printable' => ['=?UTF-8?Q?pensez_=C3=A0_sauvegarder?=', 'pensez à sauvegarder'],
+            'adjacent words' => ['=?UTF-8?B?QWxlcnRlIGRlIHPDqWN1cml0w6k=?= =?UTF-8?Q?=20pensez_=C3=A0_sauvegarder?=', 'Alerte de sécurité pensez à sauvegarder'],
+        ];
+    }
+
     public function test_pins_tls_and_reads_only_with_peek_after_filtering_and_sorting_headers(): void
     {
         $clients = Mockery::mock(ClientManager::class);
@@ -91,15 +119,46 @@ final class WebklexMailboxTest extends TestCase
             'mail.example.test', '93.184.216.34', 'reader', 'secret', 'INBOX', CarbonImmutable::parse('2026-11-15'), 20));
     }
 
-    public function test_connection_failure_still_disconnects_and_preserves_the_error(): void
+    #[DataProvider('connectionFailures')]
+    public function test_maps_connection_errors_and_still_disconnects(Throwable $error, string $expected): void
     {
         $clients = Mockery::mock(ClientManager::class);
         $client = Mockery::mock(Client::class);
         $clients->shouldReceive('make')->once()->andReturn($client);
-        $client->shouldReceive('connect')->once()->andThrow(new AuthFailedException);
+        $client->shouldReceive('connect')->once()->andThrow($error);
         $client->shouldReceive('disconnect')->once()->andReturnSelf();
 
-        $this->expectException(AuthFailedException::class);
+        $this->expectException($expected);
+
+        (new WebklexMailbox($clients))->messagesSince('mail.example.test', '93.184.216.34', 'reader', 'secret', 'INBOX', CarbonImmutable::now(), 20);
+    }
+
+    public static function connectionFailures(): array
+    {
+        return [
+            'auth exception' => [new AuthFailedException, SignInFailedException::class],
+            'gmail response' => [new ImapServerErrorException('NO [AUTHENTICATIONFAILED] Invalid credentials (Failure)'), SignInFailedException::class],
+            'lowercase response' => [new ImapServerErrorException('NO [authenticationfailed]'), SignInFailedException::class],
+            'auth response' => [new ImapServerErrorException('NO [AUTH] Sign in rejected'), SignInFailedException::class],
+            'bad request auth response' => [new ImapBadRequestException('BAD [AUTH] Sign in rejected'), SignInFailedException::class],
+            'credentials response' => [new ImapServerErrorException('NO Invalid credentials'), SignInFailedException::class],
+            'connection' => [new WebklexConnectionFailedException('Connection refused'), ConnectionFailedException::class],
+            'tls' => [new WebklexConnectionFailedException('Failed to enable TLS'), ConnectionFailedException::class],
+            'server' => [new ImapServerErrorException('NO mailbox unavailable'), ImapServerErrorException::class],
+            'bad request' => [new ImapBadRequestException('BAD command rejected'), ImapBadRequestException::class],
+        ];
+    }
+
+    public function test_maps_authentication_responses_after_connecting_and_still_disconnects(): void
+    {
+        $clients = Mockery::mock(ClientManager::class);
+        $client = Mockery::mock(Client::class);
+        $clients->shouldReceive('make')->once()->andReturn($client);
+        $client->shouldReceive('connect')->once()->andReturnSelf();
+        $client->shouldReceive('getFolderByPath')->once()->andThrow(new ImapServerErrorException('NO [AUTH] Session expired'));
+        $client->shouldReceive('disconnect')->once()->andReturnSelf();
+
+        $this->expectException(SignInFailedException::class);
 
         (new WebklexMailbox($clients))->messagesSince('mail.example.test', '93.184.216.34', 'reader', 'secret', 'INBOX', CarbonImmutable::now(), 20);
     }

@@ -5,22 +5,38 @@ declare(strict_types=1);
 namespace Tests\Feature\Digest;
 
 use App\Digest\Sources\FetchException;
+use App\Digest\Sources\Imap\ConnectionFailedException;
 use App\Digest\Sources\Imap\FolderNotFoundException;
 use App\Digest\Sources\Imap\ImapMessage;
 use App\Digest\Sources\Imap\Mailbox;
+use App\Digest\Sources\Imap\SignInFailedException;
 use App\Digest\Sources\ImapInboxFetcher;
 use App\Digest\Support\PublicUrl;
 use App\Enums\SourceType;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
-use Webklex\PHPIMAP\Exceptions\AuthFailedException;
 
 final class ImapInboxFetcherTest extends TestCase
 {
+    public function test_preserves_decoded_utf8_subjects_as_candidate_titles(): void
+    {
+        $since = CarbonImmutable::parse('2026-11-15 12:00:00 UTC');
+        $mailbox = Mockery::mock(Mailbox::class);
+        $mailbox->shouldReceive('messagesSince')->once()->andReturn([
+            new ImapMessage('issue@example.test', 1, 'Alerte de sécurité pensez à sauvegarder', '', 'Hello newsletter', $since, '42'),
+        ]);
+
+        $candidates = (new ImapInboxFetcher($mailbox, new PublicUrl(fn () => ['93.184.216.34'])))->fetch($this->source(), $since);
+
+        $this->assertCount(1, $candidates);
+        $this->assertSame('Alerte de sécurité pensez à sauvegarder', $candidates[0]->title);
+    }
+
     public function test_filters_exact_dates_orders_and_limits_messages_and_pins_the_checked_address(): void
     {
         $since = CarbonImmutable::parse('2026-11-15 12:00:00 UTC');
@@ -97,11 +113,32 @@ final class ImapInboxFetcherTest extends TestCase
     public static function failures(): array
     {
         return [
-            'authentication' => [new AuthFailedException('reader secret'), 'Could not sign in to the mail server. Check the username and app password.'],
+            'authentication' => [new SignInFailedException('reader secret'), 'Could not sign in to the mail server. Check the username and app password.'],
             'folder' => [new FolderNotFoundException, 'Folder Newsletters was not found.'],
-            'connection' => [new RuntimeException('reader secret timeout'), 'Could not reach the mail server.'],
-            'tls' => [new RuntimeException('reader secret certificate failed'), 'Could not reach the mail server.'],
+            'connection' => [new ConnectionFailedException('reader secret timeout'), 'Could not reach the mail server.'],
+            'server' => [new RuntimeException('NO request refused for reader secret'), 'The mail server refused the request.'],
+            'tls' => [new ConnectionFailedException('reader secret certificate failed'), 'Could not reach the mail server.'],
         ];
+    }
+
+    public function test_unmapped_errors_are_logged_with_the_class_and_redacted_message(): void
+    {
+        Log::spy();
+        $mailbox = Mockery::mock(Mailbox::class);
+        $mailbox->shouldReceive('messagesSince')->once()->andThrow(new RuntimeException('NO request refused for reader secret'));
+        $fetcher = new ImapInboxFetcher($mailbox, new PublicUrl(fn () => ['93.184.216.34']));
+
+        try {
+            $fetcher->fetch($this->source(), CarbonImmutable::now());
+            $this->fail('Expected FetchException');
+        } catch (FetchException $exception) {
+            $this->assertSame('The mail server refused the request.', $exception->getMessage());
+        }
+
+        Log::shouldHaveReceived('warning')->once()->with('Mail server request failed.', [
+            'exception' => RuntimeException::class,
+            'error' => 'NO request refused for [redacted] [redacted]',
+        ]);
     }
 
     private function source(int $limit = 20): Source
