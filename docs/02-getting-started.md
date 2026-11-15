@@ -76,7 +76,7 @@ docker compose exec app php artisan digest:news --user=<email> --dry-run
 docker compose exec app php artisan digest:learning --user=<email> --dry-run
 ```
 
-Remove `--dry-run` to generate and deliver. Add `--force` to delete today's post and generate it again; it has no effect with `--dry-run`. Learning requires an interest with `has_learning = true`.
+Remove `--dry-run` to generate and deliver. Add `--force` to delete today's post and generate it again; it has no effect with `--dry-run`. Learning requires an interest with `has_learning = true`. An account-wide pause does not stop these manual commands.
 
 For automatic runs, invoke Laravel's scheduler every 15 minutes and keep a queue worker running:
 
@@ -92,7 +92,7 @@ On a host that starts cron jobs late, run `php artisan digest:tick` from the cro
 
 Each digest job may run for 300 seconds, since one AI call can take up to 120. Keep `DB_QUEUE_RETRY_AFTER` (default 360) above that timeout, or a slow job runs twice.
 
-The scheduler calls `digest:tick`, which collects sources and queues one job per due user, kind and local date. Accounts must have verified email, completed onboarding and either personal AI keys or instance AI access. Their settings control the enabled digests and times. See [Architecture](04-architecture.md#the-daily-schedule).
+The scheduler calls `digest:tick`, which collects sources and queues one job per due user, kind and local date. Accounts must have verified email, completed onboarding and either personal AI keys or instance AI access. Their settings control the enabled digests and times, and an account-wide pause from the Digest settings page skips both on paused days. See [Architecture](04-architecture.md#the-daily-schedule).
 
 ## Admin access
 

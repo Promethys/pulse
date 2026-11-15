@@ -44,7 +44,7 @@ return [
                 ['slug' => 'news', 'title' => 'News', 'summary' => 'Stories grouped by tag, with short summaries and original links.'],
                 ['slug' => 'tips-and-topics', 'title' => 'Tips and topics', 'summary' => 'The second post tech interests get.'],
                 ['slug' => 'write-a-good-profile', 'title' => 'Write a good profile', 'summary' => 'Two sentences that steer your digest.'],
-                ['slug' => 'change-times-and-limits', 'title' => 'Change times and limits', 'summary' => 'Preparation times, news item limits and pause switches.'],
+                ['slug' => 'change-times-and-limits', 'title' => 'Change times and limits', 'summary' => 'Preparation times, news item limits, switches and pauses.'],
             ],
         ],
         [

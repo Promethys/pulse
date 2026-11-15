@@ -20,4 +20,6 @@ For a list of saved days, open [Archive](/docs/reading/archive).
 
 A post being prepared asks you to refresh shortly. A failed post points you to AI keys and enabled sources. **Quiet night** means a completed news post has no selected stories.
 
+While your digests are paused, Today shows a banner with **Resume**, and paused days stay empty. See [Change times and limits](/docs/your-digest/change-times-and-limits).
+
 Before your first digest, Today shows setup guidance. Check your interests, sources and AI access, then review [When digests arrive](/docs/getting-started/when-digests-arrive).
