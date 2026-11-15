@@ -16,4 +16,4 @@ The source starts with your subscription enabled. Adding it does not regenerate 
 
 The feed must be reachable at a public HTTP or HTTPS address. Private network addresses and feeds requiring a login are not supported by this form.
 
-You can save up to 30 custom sources. Choose **Edit** to change a feed later. To switch between a feed and a newsletter inbox, create a new source.
+You can save up to 30 custom sources. Choose **Edit** to change a feed later. To switch between a feed, a newsletter inbox and an email folder, create a new source.

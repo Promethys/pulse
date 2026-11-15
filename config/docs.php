@@ -22,6 +22,7 @@ return [
                 ['slug' => 'manage-sources', 'title' => 'Manage sources', 'summary' => 'Switch sources off and watch their health.'],
                 ['slug' => 'add-your-own-feed', 'title' => 'Add your own feed', 'summary' => 'Add a publicly accessible RSS or Atom feed.'],
                 ['slug' => 'follow-newsletters', 'title' => 'Follow newsletters', 'summary' => 'Connect your own Resend receiving inbox.'],
+                ['slug' => 'read-newsletters-from-your-mailbox', 'title' => 'Read newsletters from your mailbox', 'summary' => 'Follow newsletters in a folder of your own mailbox.'],
                 ['slug' => 'suggest-a-source-or-interest', 'title' => 'Suggest a source or interest', 'summary' => 'Proposals are reviewed by a person.'],
             ],
         ],

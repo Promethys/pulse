@@ -16,13 +16,15 @@ The newsletter fetcher reads only `credentials.api_key` and the optional `creden
 
 With an address, the fetcher walks the date-filtered emails newest first and keeps only those addressed to it: `to`, `cc` or `received_for` (the delivery address Resend derives from the `Received` headers) must match, case-insensitively, with `Name <address>` forms included, so newsletters forwarded by a Gmail filter match too. It stops after `max_items` matches and retrieves at most 100 emails per fetch (`MAX_RETRIEVALS`). Without an address it keeps the newest `max_items` emails in the window.
 
+The email folder fetcher (`SourceType::ImapInbox`, `imap_inbox`) reads one folder of the reader's own mailbox over IMAP. Its credentials are `host`, `username`, `password` and `folder` (`INBOX` when empty). `ImapInboxFetcher` resolves the host through `PublicUrl::publicHostAddresses` on every fetch, then `Imap\Mailbox` (backed by `WebklexMailbox`, the `webklex/php-imap` package) connects to the resolved address with TLS on port 993 only, validates the certificate against the server name and uses a 15-second timeout. It opens the folder with `EXAMINE` and fetches bodies with `BODY.PEEK`, so emails stay unread and nothing is moved, flagged or deleted; it reads emails received since the previous run, newest first, up to `max_items` (20 for custom sources). Candidates share the newsletter parser `EmailCandidate`, and the candidate URL is `imap://message/<sha1>` keyed on the Message-ID, so the same email is never stored twice.
+
 ## Managing sources in the web app
 
 `/sources` has By interest and My sources tabs; `/sources?tab=mine` opens custom sources directly. The page shows health, last success and fetch errors. Health is `failing` when an error is stored, `ok` after a successful fetch within 48 hours, and `unknown` otherwise. Add or remove interests there to update catalog subscriptions.
 
 Catalog sources can be disabled for the account through its subscription; users cannot edit or delete catalog definitions. Users can add, edit, disable or delete their own custom sources, up to 30 per account. Deleting a custom source removes its subscriptions and source links while preserving shared items and past digests.
 
-Custom sources are either a public RSS/Atom feed or a Resend newsletter inbox. Each requires a name and at least one interest; a feed requires its URL, and a new inbox requires the user's Resend key. An inbox also takes an optional receiving address, stored as `credentials.address` next to the key; clearing it on edit removes the filter. The type cannot change after creation. Leaving the key empty on edit keeps the stored key; the resource reports `has_key` instead of the key and `address` only to the source's owner. Pulse does not provision an inbox address.
+Custom sources are a public RSS/Atom feed, a Resend newsletter inbox or an email folder (IMAP). Each requires a name and at least one interest; a feed requires its URL, a new inbox requires the user's Resend key, and a new email folder requires a mail server, a username and an app password, with an optional folder or label (`INBOX` by default). An inbox also takes an optional receiving address, stored as `credentials.address` next to the key; clearing it on edit removes the filter. The type cannot change after creation. Leaving the key or the app password empty on edit keeps the stored value; the resource reports `has_key` instead of the secret, and `address` and `imap` (host, username, folder) only to the source's owner. Pulse does not provision an inbox address.
 
 Test now reads the last 30 days without saving anything and returns up to five headlines. The endpoint allows six requests per minute and uses the same public URL checks as collection.
 
@@ -77,7 +79,7 @@ App\Models\Source::where('slug', 'my-blog')->update(['enabled' => false]);
 
 A source is collected only when a user has an enabled subscription to it. For a custom source, set `user_id` to its owner and create that user's subscription. To make a catalog source part of the initial list for fresh installs, also add it to `SourceTableSeeder` and link it to the appropriate interests.
 
-Custom feed URLs must be public HTTP(S) addresses. `PublicUrl` validates all resolved addresses before fetching and checks every redirect (up to three); private, loopback, reserved and unresolved addresses are refused. `PublicHttpUrl` is the form validation rule for these URLs.
+Custom feed URLs must be public HTTP(S) addresses. `PublicUrl` validates all resolved addresses before fetching and checks every redirect (up to three); private, loopback, reserved and unresolved addresses are refused. `PublicHttpUrl` is the form validation rule for these URLs. IMAP mail servers get the same treatment through `PublicImapHost`: the host must be a public domain name, so IP addresses and private or local names are refused on save, on test and at every fetch, and the connection goes to the checked address.
 
 ## Health check
 
@@ -125,4 +127,4 @@ Feed suggestions join the review at `/admin/catalog`, and interest suggestions a
 ## Rate limits
 
 - On a 429, the feed fetcher waits for the time announced in `Retry-After` or `x-ratelimit-reset`, plus 2 seconds, capped at 60, with up to 3 attempts.
-- Feed requests have a 10-second timeout and send the `pulse-digest/1.0` User-Agent. Catalog feeds retry up to three times; custom feeds use the public URL checks. The Resend client uses a 15-second timeout and up to two attempts.
+- Feed requests have a 10-second timeout and send the `pulse-digest/1.0` User-Agent. Catalog feeds retry up to three times; custom feeds use the public URL checks. The Resend client uses a 15-second timeout and up to two attempts. IMAP connections use TLS on port 993 with a 15-second timeout.

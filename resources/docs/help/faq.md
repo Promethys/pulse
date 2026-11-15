@@ -22,7 +22,7 @@ Choose an interest marked **Includes learning**, then enable Learning in **Setti
 
 ## Can you use your own sources?
 
-Yes. Add public RSS or Atom feeds, or connect your own Resend receiving inbox, under **Sources → My sources**. Pulse does not create an email inbox for you.
+Yes. Add public RSS or Atom feeds, connect your own Resend receiving inbox, or read a folder of your own mailbox, under **Sources → My sources**. Pulse does not create an email inbox for you.
 
 ## Can you pause just one destination?
 
