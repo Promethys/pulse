@@ -12,7 +12,9 @@ A catalog source has `user_id = null`; a custom source belongs to a user. `is_de
 
 `SourceCollector::collectFor($users)` fetches only enabled sources with an enabled subscription among those users, skipping sources fetched successfully less than 25 minutes ago. It looks back to the source's last successful fetch minus one hour, or 24 hours ago on the first fetch. `item_source` records each source where an item was seen, preserving its first sighting time. `failuresFor($user)` returns only errors from that user's enabled subscribed sources for their news footer.
 
-The newsletter fetcher reads only `credentials.api_key` on its own source, never `RESEND_API_KEY`. `pulse:adopt` can copy that environment value into the source's encrypted credentials. Without credentials the source fails with a clear message.
+The newsletter fetcher reads only `credentials.api_key` and the optional `credentials.address` on its own source, never `RESEND_API_KEY`. `pulse:adopt` can copy that environment value into the source's encrypted credentials. Without credentials the source fails with a clear message.
+
+With an address, the fetcher walks the date-filtered emails newest first and keeps only those addressed to it: `to`, `cc` or `received_for` (the delivery address Resend derives from the `Received` headers) must match, case-insensitively, with `Name <address>` forms included, so newsletters forwarded by a Gmail filter match too. It stops after `max_items` matches and retrieves at most 100 emails per fetch (`MAX_RETRIEVALS`). Without an address it keeps the newest `max_items` emails in the window.
 
 ## Managing sources in the web app
 
@@ -20,7 +22,7 @@ The newsletter fetcher reads only `credentials.api_key` on its own source, never
 
 Catalog sources can be disabled for the account through its subscription; users cannot edit or delete catalog definitions. Users can add, edit, disable or delete their own custom sources, up to 30 per account. Deleting a custom source removes its subscriptions and source links while preserving shared items and past digests.
 
-Custom sources are either a public RSS/Atom feed or a Resend newsletter inbox. Each requires a name and at least one interest; a feed requires its URL, and a new inbox requires the user's Resend key. The type cannot change after creation. Leaving the key empty on edit keeps the stored key; the resource reports only `has_key`. Pulse does not provision an inbox address.
+Custom sources are either a public RSS/Atom feed or a Resend newsletter inbox. Each requires a name and at least one interest; a feed requires its URL, and a new inbox requires the user's Resend key. An inbox also takes an optional receiving address, stored as `credentials.address` next to the key; clearing it on edit removes the filter. The type cannot change after creation. Leaving the key empty on edit keeps the stored key; the resource reports `has_key` instead of the key and `address` only to the source's owner. Pulse does not provision an inbox address.
 
 Test now reads the last 30 days without saving anything and returns up to five headlines. The endpoint allows six requests per minute and uses the same public URL checks as collection.
 

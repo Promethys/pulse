@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Digest\Support\PublicUrl;
 use App\Enums\InterestStatus;
 use App\Enums\SourceType;
+use App\Http\Resources\SourceResource;
 use App\Models\Interest;
 use App\Models\Item;
 use App\Models\Source;
@@ -154,7 +155,7 @@ class SourcesActionsTest extends TestCase
             $this->assertTrue($source->enabled);
             $this->assertSame($type === 'feed' ? $payload['url'] : null, $source->url);
             if ($type === 'resend_inbox') {
-                $this->assertSame(['api_key' => 'fake-resend-key'], $source->credentials);
+                $this->assertSame(['api_key' => 'fake-resend-key', 'address' => null], $source->credentials);
                 $this->assertStringNotContainsString('fake-resend-key', $source->getRawOriginal('credentials'));
             }
             $this->assertSame([$interest->id], $source->interests()->pluck('interests.id')->all());
@@ -370,19 +371,23 @@ class SourcesActionsTest extends TestCase
     {
         Log::spy();
         $key = 'fake-key/with-secret';
-        $raw = 'Upstream refused '.$key.' '.rawurlencode($key);
+        $address = 'news+private@example.test';
+        $raw = 'Upstream refused '.$key.' '.rawurlencode($key).' '.$address.' '.rawurlencode($address);
         Http::fake(fn () => throw new RuntimeException($raw));
-        $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', ['type' => 'resend_inbox', 'api_key' => $key])
+        $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', ['type' => 'resend_inbox', 'api_key' => $key, 'address' => $address])
             ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', []);
         $this->assertNotEmpty($response->json('message'));
         $this->assertStringNotContainsString('Upstream refused', $response->getContent());
         $this->assertStringNotContainsString($key, $response->getContent());
         $this->assertStringNotContainsString(rawurlencode($key), $response->getContent());
-        Log::shouldHaveReceived('warning')->once()->withArgs(function (string $message, array $context) use ($key): bool {
+        $this->assertStringNotContainsString($address, $response->getContent());
+        $this->assertStringNotContainsString(rawurlencode($address), $response->getContent());
+        Log::shouldHaveReceived('warning')->once()->withArgs(function (string $message, array $context) use ($key, $address): bool {
             $serialized = json_encode([$message, $context], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 
             return str_contains($serialized, 'Upstream refused')
-                && ! str_contains($serialized, $key) && ! str_contains($serialized, rawurlencode($key));
+                && ! str_contains($serialized, $key) && ! str_contains($serialized, rawurlencode($key))
+                && ! str_contains($serialized, $address) && ! str_contains($serialized, rawurlencode($address));
         });
         $this->assertDatabaseCount('sources', 0);
         $this->assertDatabaseCount('items', 0);
@@ -475,6 +480,131 @@ class SourcesActionsTest extends TestCase
     public static function failedFeeds(): array
     {
         return [['raw-upstream-error', 503], ['<html>raw-upstream-error</html>', 200]];
+    }
+
+    public function test_newsletter_address_is_stored_encrypted_and_returned_only_for_its_owner(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $payload = [...$this->payload($interest, 'resend_inbox'), 'address' => 'news@example.test'];
+
+        $this->actingAs($user)->from('/sources')->post('/sources', $payload)
+            ->assertRedirect('/sources')->assertSessionHasNoErrors();
+
+        $source = Source::query()->where('user_id', $user->id)->sole();
+        $this->assertSame(['api_key' => 'fake-resend-key', 'address' => 'news@example.test'], $source->credentials);
+        $this->assertStringNotContainsString('news@example.test', $source->getRawOriginal('credentials'));
+        $own = $this->get('/sources')->assertOk();
+        $own->assertInertia(fn ($page) => $page->where('custom.0.address', 'news@example.test')->where('custom.0.has_key', true)
+            ->missing('custom.0.api_key')->missing('custom.0.credentials'));
+        $this->assertStringNotContainsString('fake-resend-key', $own->getContent());
+        $this->actingAs(User::factory()->onboarded()->create())->get('/sources')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('custom', 0));
+        $resource = (new SourceResource($source))->resolve(request());
+        $this->assertNull($resource['address']);
+    }
+
+    #[DataProvider('newsletterAddressUpdates')]
+    public function test_newsletter_address_can_be_set_changed_or_cleared_while_retaining_the_key(?string $before, ?string $address, ?string $key): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $source = Source::factory()->for($user)->create([
+            'type' => SourceType::ResendInbox, 'url' => null,
+            'credentials' => ['api_key' => 'old-key', 'address' => $before],
+        ]);
+
+        $this->actingAs($user)->from('/sources')->put('/sources/'.$source->id, [
+            ...$this->payload($interest, 'resend_inbox'), 'api_key' => $key, 'address' => $address,
+        ])->assertRedirect('/sources')->assertSessionHasNoErrors();
+
+        $this->assertSame(['api_key' => $key ?: 'old-key', 'address' => $address ?: null], $source->fresh()->credentials);
+    }
+
+    public static function newsletterAddressUpdates(): array
+    {
+        return [
+            'set with empty key' => [null, 'news@example.test', ''],
+            'change without new key' => ['old@example.test', 'news@example.test', null],
+            'clear with empty string' => ['old@example.test', '', null],
+            'clear with null' => ['old@example.test', null, null],
+            'replace key and address' => ['old@example.test', 'news@example.test', 'new-key'],
+        ];
+    }
+
+    public function test_feed_sources_ignore_the_newsletter_address(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $this->actingAs($user)->from('/sources')->post('/sources', [...$this->payload($interest), 'address' => 'not-an-email'])
+            ->assertRedirect('/sources')->assertSessionHasNoErrors();
+
+        $source = Source::query()->where('user_id', $user->id)->sole();
+        $this->assertNull($source->credentials);
+        $this->get('/sources')->assertOk()->assertInertia(fn ($page) => $page->where('custom.0.address', null));
+    }
+
+    #[DataProvider('invalidNewsletterAddresses')]
+    public function test_invalid_newsletter_addresses_are_rejected_on_create_update_and_test(mixed $address): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $payload = [...$this->payload($interest, 'resend_inbox'), 'address' => $address];
+        $this->actingAs($user)->postJson('/sources', $payload)->assertUnprocessable()->assertJsonValidationErrors('address');
+        $this->assertDatabaseCount('sources', 0);
+        $source = Source::factory()->for($user)->create(['type' => SourceType::ResendInbox, 'credentials' => ['api_key' => 'old-key']]);
+        $before = $source->fresh()->getAttributes();
+
+        $this->putJson('/sources/'.$source->id, $payload)->assertUnprocessable()->assertJsonValidationErrors('address');
+        $this->postJson('/sources/test', $payload)->assertUnprocessable()->assertJsonValidationErrors('address');
+
+        $this->assertSame($before, $source->fresh()->getAttributes());
+        Http::assertNothingSent();
+    }
+
+    public function test_validation_messages_use_readable_field_names(): void
+    {
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $this->actingAs(User::factory()->onboarded()->create());
+
+        $this->postJson('/sources', [...$this->payload($interest, 'resend_inbox'), 'address' => 'not-an-email'])
+            ->assertUnprocessable()->assertJsonPath('errors.address.0', 'The receiving address field must be a valid email address.');
+        $this->postJson('/sources', [...$this->payload($interest, 'feed'), 'url' => 'http://127.0.0.1/feed'])
+            ->assertUnprocessable()->assertJsonPath('errors.url.0', 'The feed URL must be a public http or https URL.');
+        $this->postJson('/sources/test', [...$this->payload($interest, 'feed'), 'url' => 'http://127.0.0.1/feed'])
+            ->assertUnprocessable()->assertJsonPath('errors.url.0', 'The feed URL must be a public http or https URL.');
+        $this->postJson('/sources/test', [...$this->payload($interest, 'resend_inbox'), 'address' => 'not-an-email'])
+            ->assertUnprocessable()->assertJsonPath('errors.address.0', 'The receiving address field must be a valid email address.');
+
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('sources', 0);
+    }
+
+    public static function invalidNewsletterAddresses(): array
+    {
+        return ['invalid email' => ['not-an-email'], 'array' => [[]], 'too long' => [str_repeat('a', 64).'@'.str_repeat('b', 63).'.'.str_repeat('c', 63).'.'.str_repeat('d', 62)]];
+    }
+
+    public function test_newsletter_test_endpoint_filters_forwarded_emails_by_receiving_address(): void
+    {
+        $this->freezeSecond();
+        $api = 'https://api.resend.com/emails/receiving';
+        $date = now()->subDay()->toIso8601String();
+        Http::fake([
+            $api.'?limit=100' => Http::response(['data' => [
+                ['id' => 'other', 'created_at' => $date], ['id' => 'matching', 'created_at' => $date],
+            ], 'has_more' => false]),
+            $api.'/other' => Http::response(['received_for' => ['other@example.test']]),
+            $api.'/matching' => Http::response(['id' => 'matching', 'created_at' => $date, 'subject' => 'Matching issue', 'received_for' => ['news@example.test']]),
+        ]);
+
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', [
+            'type' => 'resend_inbox', 'api_key' => 'test-key', 'address' => 'news@example.test',
+        ])->assertOk()->assertJsonPath('ok', true)->assertJsonPath('headlines', ['Matching issue']);
+
+        Http::assertSentCount(3);
+        $this->assertDatabaseCount('sources', 0);
+        $this->assertDatabaseCount('items', 0);
     }
 
     private function payload(Interest $interest, string $type = 'feed'): array

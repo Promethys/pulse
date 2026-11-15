@@ -22,6 +22,8 @@ final class ResendInboxFetcher implements SourceFetcher
 
     private const MAX_PAGES = 10;
 
+    private const MAX_RETRIEVALS = 100;
+
     private const EXCERPT_LENGTH = 3000;
 
     private const EXCLUDED_LINK_PARTS = ['unsubscribe', '/open', 'list-manage.com/track'];
@@ -36,10 +38,57 @@ final class ResendInboxFetcher implements SourceFetcher
         );
         usort($emails, fn (array $a, array $b) => strcmp($b['created_at'], $a['created_at']));
 
+        $address = trim($source->credentials['address'] ?? '');
+
+        if ($address !== '') {
+            return $this->filteredCandidates($http, $emails, $address, $source->max_items);
+        }
+
         return array_map(
             fn (array $email) => $this->candidate($this->get($http, self::API.'/'.$email['id'])->json()),
             array_slice($emails, 0, $source->max_items),
         );
+    }
+
+    /**
+     * @param  array<array{id: string, created_at: string, to?: list<string>, cc?: list<string>}>  $emails
+     * @return list<Candidate>
+     */
+    private function filteredCandidates(PendingRequest $http, array $emails, string $address, int $maxItems): array
+    {
+        $candidates = [];
+        $retrievals = 0;
+
+        foreach ($emails as $email) {
+            if (count($candidates) >= $maxItems || $retrievals >= self::MAX_RETRIEVALS) {
+                break;
+            }
+
+            $retrieved = $this->get($http, self::API.'/'.$email['id'])->json();
+            $retrievals++;
+
+            if ($this->matchesAddress($email, $address) || $this->matchesAddress($retrieved, $address)) {
+                $candidates[] = $this->candidate($retrieved);
+            }
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * @param  array{to?: list<string>, cc?: list<string>, received_for?: list<string>}  $email
+     */
+    private function matchesAddress(array $email, string $address): bool
+    {
+        foreach ([...($email['to'] ?? []), ...($email['cc'] ?? []), ...($email['received_for'] ?? [])] as $recipient) {
+            preg_match('/<([^<>]+)>/', $recipient, $matches);
+
+            if (strcasecmp(trim($matches[1] ?? $recipient), $address) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function client(Source $source): PendingRequest
@@ -54,7 +103,7 @@ final class ResendInboxFetcher implements SourceFetcher
     }
 
     /**
-     * @return list<array{id: string, subject: string, created_at: string}>
+     * @return list<array{id: string, subject: string, created_at: string, to?: list<string>, cc?: list<string>}>
      */
     private function listEmails(PendingRequest $http): array
     {

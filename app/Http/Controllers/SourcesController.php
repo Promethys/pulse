@@ -69,7 +69,7 @@ final class SourcesController extends Controller
 
     public function store(CustomSourceRequest $request, AddCustomSource $action): RedirectResponse
     {
-        /** @var array{type: string, name: string, url?: string|null, api_key?: string|null, interests: list<string>} $data */
+        /** @var array{type: string, name: string, url?: string|null, api_key?: string|null, address?: string|null, interests: list<string>} $data */
         $data = $request->validated();
         $action->handle($request->user(), $data);
 
@@ -88,7 +88,7 @@ final class SourcesController extends Controller
     public function update(CustomSourceRequest $request, Source $source, UpdateCustomSource $action): RedirectResponse
     {
         Gate::authorize('update', $source);
-        /** @var array{name: string, url?: string|null, api_key?: string|null, interests: list<string>} $data */
+        /** @var array{name: string, url?: string|null, api_key?: string|null, address?: string|null, interests: list<string>} $data */
         $data = $request->validated();
         $action->handle($source, $data);
 
@@ -106,6 +106,7 @@ final class SourcesController extends Controller
     public function test(TestSourceRequest $request, TestSource $action): JsonResponse
     {
         return response()->json($action->handle($request->user(), SourceType::from($request->string('type')->toString()),
-            $request->string('url')->toString(), $request->string('api_key')->toString()));
+            $request->string('url')->toString(), $request->string('api_key')->toString(),
+            $request->string('type')->toString() === 'resend_inbox' ? $request->string('address')->toString() : ''));
     }
 }

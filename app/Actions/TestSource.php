@@ -22,10 +22,10 @@ final class TestSource
     /**
      * @return array{ok: bool, message: string, headlines: list<string>}
      */
-    public function handle(User $user, SourceType $type, string $url, string $apiKey): array
+    public function handle(User $user, SourceType $type, string $url, string $apiKey, string $address = ''): array
     {
         try {
-            $source = new Source(['type' => $type, 'url' => $url, 'credentials' => ['api_key' => $apiKey], 'max_items' => PHP_INT_MAX]);
+            $source = new Source(['type' => $type, 'url' => $url, 'credentials' => ['api_key' => $apiKey, 'address' => $type === SourceType::ResendInbox ? $address : null], 'max_items' => PHP_INT_MAX]);
             $source->user()->associate($user);
             $fetcher = $type === SourceType::Feed ? $this->feed : $this->inbox;
             $posts = $fetcher->fetch($source, CarbonImmutable::now()->subDays(30));
@@ -36,7 +36,7 @@ final class TestSource
                 'headlines' => array_map(fn (Candidate $post) => $post->title, array_slice($posts, 0, 5)),
             ];
         } catch (Throwable $exception) {
-            $secrets = $apiKey === '' ? [] : [$apiKey, rawurlencode($apiKey)];
+            $secrets = array_filter([$apiKey, rawurlencode($apiKey), $address, rawurlencode($address)], fn (string $value) => $value !== '');
             Log::warning('Source test failed.', [
                 'type' => $type->value,
                 'error' => Str::limit(str_replace($secrets, '[redacted]', $exception->getMessage()), 500),

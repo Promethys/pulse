@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\SourceType;
 use App\Models\Source;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,6 +29,8 @@ final class SourceResource extends JsonResource
             'enabled' => $this->enabled,
             'retired' => $this->retired_at !== null,
             'has_key' => is_string($this->credentials['api_key'] ?? null) && $this->credentials['api_key'] !== '',
+            'address' => $this->type === SourceType::ResendInbox && $this->user_id !== null && $this->user_id === $request->user()?->id
+                ? ($this->credentials['address'] ?? null) : null,
             'last_fetched_at' => $this->last_fetched_at?->toIso8601String(),
             'last_success_at' => $this->last_success_at?->toIso8601String(),
             'last_error' => $this->last_error,

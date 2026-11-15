@@ -32,8 +32,22 @@ final class CustomSourceRequest extends FormRequest
             'name' => ['required', 'string', 'min:1', 'max:100'],
             'url' => ['required_if:type,feed', 'nullable', 'string', 'max:2000', new PublicHttpUrl],
             'api_key' => [$source instanceof Source ? 'nullable' : 'required_if:type,resend_inbox', 'nullable', 'string', 'max:200'],
+            'address' => ['exclude_unless:type,resend_inbox', 'nullable', 'string', 'email', 'max:254'],
             'interests' => ['required', 'array', 'min:1'],
             'interests.*' => ['required', 'string', Rule::exists('interests', 'slug')],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'address' => 'receiving address',
+            'url' => 'feed URL',
+            'api_key' => 'Resend API key',
+            'name' => 'name',
         ];
     }
 
