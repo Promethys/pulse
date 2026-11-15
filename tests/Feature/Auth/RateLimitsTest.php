@@ -13,8 +13,10 @@ use Illuminate\Session\ArraySessionHandler;
 use Illuminate\Session\Store;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class RateLimitsTest extends TestCase
@@ -171,20 +173,24 @@ class RateLimitsTest extends TestCase
         );
     }
 
-    public function test_reset_links_from_many_addresses_stop_at_the_daily_mail_budget(): void
+    #[TestWith(['post', 302])]
+    #[TestWith(['postJson', 200])]
+    public function test_reset_links_from_many_addresses_stop_at_the_daily_mail_budget(string $method, int $status): void
     {
         Notification::fake();
         $users = User::factory()->count(51)->create();
 
         foreach ($users->take(50)->values() as $index => $user) {
             $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.'.($index + 1)])
-                ->post(route('password.email'), ['email' => $user->email])
-                ->assertRedirect();
+                ->{$method}(route('password.email'), ['email' => $user->email])
+                ->assertStatus($status);
         }
 
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.200'])
-            ->post(route('password.email'), ['email' => $users->last()?->email])
+            ->{$method}(route('password.email'), ['email' => $users->last()?->email])
             ->assertTooManyRequests();
+
+        Notification::assertCount(50);
     }
 
     public function test_unknown_emails_do_not_spend_the_reset_mail_budget(): void
@@ -195,7 +201,9 @@ class RateLimitsTest extends TestCase
         for ($attempt = 1; $attempt <= 60; $attempt++) {
             $this->withServerVariables(['REMOTE_ADDR' => "198.51.100.{$attempt}"])
                 ->post(route('password.email'), ['email' => "nobody{$attempt}@example.test"])
-                ->assertRedirect();
+                ->assertRedirect()
+                ->assertSessionHas('status', trans(Password::RESET_LINK_SENT))
+                ->assertSessionHasNoErrors();
         }
 
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.200'])
