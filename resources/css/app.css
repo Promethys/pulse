@@ -338,6 +338,10 @@
 
     .code-block {
         position: relative;
+        &:hover > .code-copy,
+        &:focus-within > .code-copy {
+            opacity: 1;
+        }
     }
 
     .code-copy {
@@ -345,22 +349,51 @@
         position: absolute;
         top: 0.5rem;
         right: 0.5rem;
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
         background: var(--background);
-        padding: 0.25rem 0.5rem;
+        padding: 0;
         color: var(--muted-foreground);
         font-family: var(--pulse-sans);
         font-size: 0.75rem;
         line-height: 1.25rem;
-        &:hover {
-            border-color: var(--muted-foreground);
-            background: color-mix(
-                in oklch,
-                var(--foreground) 8%,
-                var(--background)
-            );
-            color: var(--foreground);
+        opacity: 0;
+        transition: opacity 150ms ease-out;
+        &::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 50%;
+            right: calc(100% + 0.5rem);
+            transform: translateY(-50%);
+            border-radius: var(--radius-md);
+            background: var(--foreground);
+            padding: 0.375rem 0.75rem;
+            color: var(--background);
+            font-size: 0.75rem;
+            line-height: 1rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+        }
+        &:hover::after,
+        &:focus-visible::after {
+            opacity: 1;
+        }
+        &:hover,
+        &:active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--accent-foreground);
+        }
+        @media (hover: none) {
+            opacity: 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
         }
     }
 }

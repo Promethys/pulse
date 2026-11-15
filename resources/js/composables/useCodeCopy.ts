@@ -3,6 +3,42 @@ import type { MaybeRefOrGetter } from 'vue';
 
 const COPIED_FOR = 1500;
 
+function copyIcon(copied: boolean): SVGSVGElement {
+    const namespace = 'http://www.w3.org/2000/svg';
+    const icon = document.createElementNS(namespace, 'svg');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('width', '14');
+    icon.setAttribute('height', '14');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('aria-hidden', 'true');
+
+    if (!copied) {
+        const rect = document.createElementNS(namespace, 'rect');
+        rect.setAttribute('width', '14');
+        rect.setAttribute('height', '14');
+        rect.setAttribute('x', '8');
+        rect.setAttribute('y', '8');
+        rect.setAttribute('rx', '2');
+        rect.setAttribute('ry', '2');
+        icon.append(rect);
+    }
+
+    const path = document.createElementNS(namespace, 'path');
+    path.setAttribute(
+        'd',
+        copied
+            ? 'M20 6 9 17l-5-5'
+            : 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2',
+    );
+    icon.append(path);
+
+    return icon;
+}
+
 function addCopyButton(pre: HTMLElement): () => void {
     const code = (
         pre.querySelector('code')?.textContent ??
@@ -12,8 +48,13 @@ function addCopyButton(pre: HTMLElement): () => void {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'code-copy';
-    button.textContent = 'Copy';
-    button.setAttribute('aria-label', 'Copy code');
+    const setCopied = (copied: boolean) => {
+        const label = copied ? 'Copied' : 'Copy code';
+        button.replaceChildren(copyIcon(copied));
+        button.setAttribute('aria-label', label);
+        button.dataset.tooltip = label;
+    };
+    setCopied(false);
     let timer: ReturnType<typeof setTimeout> | undefined;
     let disposed = false;
 
@@ -22,12 +63,10 @@ function addCopyButton(pre: HTMLElement): () => void {
             if (!navigator.clipboard) return;
             await navigator.clipboard.writeText(code);
             if (disposed) return;
-            button.textContent = 'Copied';
-            button.setAttribute('aria-label', 'Copied');
+            setCopied(true);
             clearTimeout(timer);
             timer = setTimeout(() => {
-                button.textContent = 'Copy';
-                button.setAttribute('aria-label', 'Copy code');
+                setCopied(false);
             }, COPIED_FOR);
         } catch {
             return;
