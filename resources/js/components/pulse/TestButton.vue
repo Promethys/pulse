@@ -65,7 +65,20 @@ async function run() {
             />
             <X v-else-if="result" class="text-destructive" aria-hidden="true" />
             <Zap v-else aria-hidden="true" />
-            {{ loading ? 'Testing…' : label }}
+            <span class="grid justify-items-start">
+                <span
+                    class="[grid-area:1/1]"
+                    :class="{ invisible: loading }"
+                    :aria-hidden="loading"
+                    >{{ label }}</span
+                >
+                <span
+                    class="[grid-area:1/1]"
+                    :class="{ invisible: !loading }"
+                    :aria-hidden="!loading"
+                    >Testing…</span
+                >
+            </span>
         </Button>
         <TestResult v-if="!hideResult" :result="result" />
     </div>

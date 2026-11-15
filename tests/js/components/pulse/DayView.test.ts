@@ -263,7 +263,7 @@ describe('DayView', () => {
             ),
         ).toBeVisible();
         expect(
-            screen.queryByRole('link', { name: 'Open source' }),
+            screen.queryByRole('link', { name: 'Open original' }),
         ).not.toBeInTheDocument();
     });
 
@@ -284,7 +284,7 @@ describe('DayView', () => {
                 screen.queryByRole('heading', { name: 'Quiet night' }),
             ).not.toBeInTheDocument();
             expect(
-                screen.queryByRole('link', { name: 'Open source' }),
+                screen.queryByRole('link', { name: 'Open original' }),
             ).not.toBeInTheDocument();
         },
     );
@@ -322,7 +322,7 @@ describe('DayView', () => {
             ),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByRole('link', { name: 'Open source' }),
+            screen.queryByRole('link', { name: 'Open original' }),
         ).not.toBeInTheDocument();
     });
 
@@ -419,3 +419,21 @@ it('explains which calendar dates can be selected', async () => {
     await view.user.click(screen.getByRole('button', { name: 'Pick a date' }));
     expect(await screen.findByText(message)).toBeVisible();
 });
+
+it.each([true, false])(
+    'shows individual pending notices only for past days with isToday=%s',
+    (isToday) => {
+        const props = dayViewProps();
+        props.isToday = isToday;
+        props.day.news!.status = 'pending';
+        props.day.learning = { status: 'pending', tip: null, topic: null };
+        renderDay(props);
+        for (const kind of ['news', 'learning']) {
+            const notice = screen.queryByText(
+                `Your ${kind} is being prepared. Refresh this page shortly.`,
+            );
+            if (isToday) expect(notice).not.toBeInTheDocument();
+            else expect(notice).toBeVisible();
+        }
+    },
+);

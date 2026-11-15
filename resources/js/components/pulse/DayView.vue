@@ -132,7 +132,7 @@ function selectDate(date: DateValue | undefined) {
         </div>
         <template v-else-if="day.learning">
             <p
-                v-if="day.learning.status === 'pending'"
+                v-if="!isToday && day.learning.status === 'pending'"
                 class="text-sm text-muted-foreground"
             >
                 Your learning is being prepared. Refresh this page shortly.

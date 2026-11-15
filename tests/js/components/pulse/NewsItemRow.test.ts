@@ -4,7 +4,7 @@ import NewsItemRow from '@/components/pulse/NewsItemRow.vue';
 import { newsItemProps } from '../../support/dayProps';
 
 describe('NewsItemRow', () => {
-    it('links the clamped title and Open source to the original URL in a new tab', () => {
+    it('links the clamped title and Open original to the original URL in a new tab', () => {
         const item = newsItemProps();
         render(NewsItemRow, { props: { item } });
         const title = screen.getByRole('heading', { name: item.title });
@@ -12,7 +12,7 @@ describe('NewsItemRow', () => {
         expect(title).toHaveAttribute('title', item.title);
         for (const link of [
             screen.getByRole('link', { name: new RegExp(item.title) }),
-            screen.getByRole('link', { name: /^Open source$/ }),
+            screen.getByRole('link', { name: /^Open original$/ }),
         ]) {
             expect(link).toHaveAttribute('href', item.url);
             expect(link).toHaveAttribute('target', '_blank');
@@ -41,7 +41,7 @@ describe('NewsItemRow', () => {
             screen.queryByText(/unknown source|null|undefined/i),
         ).not.toBeInTheDocument();
         expect(
-            screen.getByRole('link', { name: /^Open source$/ }),
+            screen.getByRole('link', { name: /^Open original$/ }),
         ).toHaveAttribute('href', item.url);
     });
 

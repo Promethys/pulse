@@ -51,7 +51,7 @@ const guild = ref<DeliveryGuild | null>(null);
 const disconnecting = ref<DeliveryGuild | null>(null);
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
-const updateErrors = ref<Record<string, string>>({});
+const updateErrors = ref<Record<number, Record<string, string>>>({});
 const webhookUrls = ref<Record<number, string>>({});
 const input = ref({
     type: 'discord_webhook',
@@ -141,7 +141,7 @@ function update(
     },
     onSuccess?: () => void,
 ) {
-    updateErrors.value = {};
+    updateErrors.value[channel.id] = {};
     router.put(
         `/settings/delivery/${channel.id}`,
         { enabled: channel.enabled, kinds: channel.kinds, ...fields },
@@ -149,7 +149,7 @@ function update(
             preserveScroll: true,
             onSuccess,
             onError: (value) => {
-                updateErrors.value = value;
+                updateErrors.value[channel.id] = value;
             },
         },
     );
@@ -189,11 +189,6 @@ function disconnect() {
 
 <template>
     <Head title="Delivery settings" />
-    <InputError
-        v-for="(error, field) in updateErrors"
-        :key="field"
-        :message="error"
-    />
     <p class="text-sm text-muted-foreground">
         You can add up to 20 Discord destinations and one email address.
     </p>
@@ -246,40 +241,57 @@ function disconnect() {
                         @update:enabled="update(channel, { enabled: $event })"
                         @delete="remove(channel)"
                     >
-                        <div class="flex flex-wrap items-center gap-4">
-                            <Select
-                                :model-value="channel.target.channel_id ?? ''"
-                                :disabled="server.forums_error"
-                                @update:model-value="
-                                    selectForum(channel, $event)
-                                "
-                            >
-                                <SelectTrigger
-                                    :aria-label="`Forum channel for ${channel.name}`"
-                                    class="w-44 font-mono text-sm"
-                                    ><SelectValue
-                                        :placeholder="
-                                            channel.target.channel_id ??
-                                            'Forum channel'
-                                        "
-                                /></SelectTrigger>
-                                <SelectContent
-                                    ><SelectItem
-                                        v-for="forum in server.forums"
-                                        :key="forum.id"
-                                        :value="forum.id"
-                                        class="font-mono"
-                                        >{{ forum.name }}</SelectItem
-                                    ></SelectContent
+                        <InputError
+                            :message="updateErrors[channel.id]?.enabled"
+                        />
+                        <div class="flex flex-wrap items-start gap-4">
+                            <div class="space-y-1.5">
+                                <Select
+                                    :model-value="
+                                        channel.target.channel_id ?? ''
+                                    "
+                                    :disabled="server.forums_error"
+                                    @update:model-value="
+                                        selectForum(channel, $event)
+                                    "
                                 >
-                            </Select>
-                            <ReceivesPicker
-                                pause-hint
-                                :model-value="channel.kinds"
-                                @update:model-value="
-                                    update(channel, { kinds: $event })
-                                "
-                            />
+                                    <SelectTrigger
+                                        :aria-label="`Forum channel for ${channel.name}`"
+                                        class="w-44 font-mono text-sm"
+                                        ><SelectValue
+                                            :placeholder="
+                                                channel.target.channel_id ??
+                                                'Forum channel'
+                                            "
+                                    /></SelectTrigger>
+                                    <SelectContent
+                                        ><SelectItem
+                                            v-for="forum in server.forums"
+                                            :key="forum.id"
+                                            :value="forum.id"
+                                            class="font-mono"
+                                            >{{ forum.name }}</SelectItem
+                                        ></SelectContent
+                                    >
+                                </Select>
+                                <InputError
+                                    :message="
+                                        updateErrors[channel.id]?.channel_id
+                                    "
+                                />
+                            </div>
+                            <div class="space-y-1.5">
+                                <ReceivesPicker
+                                    pause-hint
+                                    :model-value="channel.kinds"
+                                    @update:model-value="
+                                        update(channel, { kinds: $event })
+                                    "
+                                />
+                                <InputError
+                                    :message="updateErrors[channel.id]?.kinds"
+                                />
+                            </div>
                         </div>
                     </DestinationRow>
                 </div>
@@ -335,8 +347,9 @@ function disconnect() {
                     @update:enabled="update(channel, { enabled: $event })"
                     @delete="remove(channel)"
                 >
+                    <InputError :message="updateErrors[channel.id]?.enabled" />
                     <div class="flex flex-wrap items-start gap-4">
-                        <div class="space-y-1.5">
+                        <div class="w-56 max-w-full min-w-0 space-y-1.5">
                             <Label :for="`webhook-name-${channel.id}`"
                                 >Name</Label
                             ><Input
@@ -345,8 +358,12 @@ function disconnect() {
                                 maxlength="100"
                                 @blur="updateText(channel, 'name', $event)"
                             />
+                            <InputError
+                                :message="updateErrors[channel.id]?.name"
+                                class="break-words"
+                            />
                         </div>
-                        <div class="space-y-1.5">
+                        <div class="w-56 max-w-full min-w-0 space-y-1.5">
                             <Label :for="`webhook-url-${channel.id}`"
                                 >Replace webhook URL</Label
                             ><Input
@@ -359,14 +376,23 @@ function disconnect() {
                                     updateText(channel, 'webhook_url', $event)
                                 "
                             />
+                            <InputError
+                                :message="updateErrors[channel.id]?.webhook_url"
+                                class="break-words"
+                            />
                         </div>
-                        <ReceivesPicker
-                            pause-hint
-                            :model-value="channel.kinds"
-                            @update:model-value="
-                                update(channel, { kinds: $event })
-                            "
-                        />
+                        <div class="space-y-1.5">
+                            <ReceivesPicker
+                                pause-hint
+                                :model-value="channel.kinds"
+                                @update:model-value="
+                                    update(channel, { kinds: $event })
+                                "
+                            />
+                            <InputError
+                                :message="updateErrors[channel.id]?.kinds"
+                            />
+                        </div>
                     </div>
                 </DestinationRow>
             </div>
@@ -398,8 +424,9 @@ function disconnect() {
                     @update:enabled="update(email, { enabled: $event })"
                     @delete="remove(email)"
                 >
+                    <InputError :message="updateErrors[email.id]?.enabled" />
                     <div class="space-y-3">
-                        <div class="space-y-1.5">
+                        <div class="w-full min-w-0 space-y-1.5">
                             <Label for="delivery-email">Email address</Label
                             ><Input
                                 id="delivery-email"
@@ -407,14 +434,23 @@ function disconnect() {
                                 :model-value="email.target.address ?? ''"
                                 @blur="updateText(email, 'address', $event)"
                             />
+                            <InputError
+                                :message="updateErrors[email.id]?.address"
+                                class="break-words"
+                            />
                         </div>
-                        <ReceivesPicker
-                            pause-hint
-                            :model-value="email.kinds"
-                            @update:model-value="
-                                update(email, { kinds: $event })
-                            "
-                        />
+                        <div class="space-y-1.5">
+                            <ReceivesPicker
+                                pause-hint
+                                :model-value="email.kinds"
+                                @update:model-value="
+                                    update(email, { kinds: $event })
+                                "
+                            />
+                            <InputError
+                                :message="updateErrors[email.id]?.kinds"
+                            />
+                        </div>
                     </div>
                 </DestinationRow>
             </div>

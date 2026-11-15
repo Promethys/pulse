@@ -53,10 +53,13 @@ defineOptions({
             <CardTitle class="font-display">
                 {{ hasPassword ? 'Update password' : 'Set password' }}
             </CardTitle>
-            <CardDescription
-                >Ensure your account is using a long, random password to stay
-                secure</CardDescription
-            >
+            <CardDescription>
+                {{
+                    hasPassword
+                        ? 'Ensure your account is using a long, random password to stay secure'
+                        : 'Add a password to sign in with your email too.'
+                }}
+            </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
             <Form

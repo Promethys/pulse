@@ -20,7 +20,9 @@ const firstDigest = computed(() => {
         : undefined;
 });
 const notice = computed(() =>
-    props.is_today && props.day?.news?.status === 'pending'
+    props.is_today &&
+    (props.day?.news?.status === 'pending' ||
+        props.day?.learning?.status === 'pending')
         ? 'Your digest is being prepared. Refresh this page shortly.'
         : null,
 );
