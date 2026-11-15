@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Digest\Sources;
 
+use App\Digest\Sources\Imap\ConnectionFailedException;
 use App\Digest\Sources\Imap\FolderNotFoundException;
 use App\Digest\Sources\Imap\ImapMessage;
 use App\Digest\Sources\Imap\Mailbox;
+use App\Digest\Sources\Imap\SignInFailedException;
 use App\Digest\Support\PublicUrl;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 use Throwable;
-use Webklex\PHPIMAP\Exceptions\AuthFailedException;
 
 final class ImapInboxFetcher implements SourceFetcher
 {
@@ -31,12 +33,19 @@ final class ImapInboxFetcher implements SourceFetcher
 
         try {
             $messages = $this->mailbox->messagesSince($host, $ips[0], $credentials['username'] ?? '', $credentials['password'] ?? '', $folder, $since, $source->max_items);
-        } catch (AuthFailedException) {
+        } catch (SignInFailedException) {
             throw new FetchException('Could not sign in to the mail server. Check the username and app password.');
         } catch (FolderNotFoundException) {
             throw new FetchException('Folder '.str_replace([$credentials['username'] ?? '', $credentials['password'] ?? ''], '[redacted]', $folder).' was not found.');
-        } catch (Throwable) {
+        } catch (ConnectionFailedException) {
             throw new FetchException('Could not reach the mail server.');
+        } catch (Throwable $exception) {
+            Log::warning('Mail server request failed.', [
+                'exception' => $exception::class,
+                'error' => str_replace([$credentials['username'] ?? '', $credentials['password'] ?? ''], '[redacted]', $exception->getMessage()),
+            ]);
+
+            throw new FetchException('The mail server refused the request.');
         }
 
         $messages = array_values(array_filter($messages, fn (ImapMessage $message) => $message->date->greaterThanOrEqualTo($since)));

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Actions\TestSource;
 use App\Digest\Sources\Imap\ImapMessage;
 use App\Digest\Sources\Imap\Mailbox;
+use App\Digest\Sources\Imap\SignInFailedException;
 use App\Digest\Support\PublicUrl;
 use App\Enums\InterestStatus;
 use App\Enums\SourceType;
@@ -377,8 +379,8 @@ class SourcesActionsTest extends TestCase
         $raw = 'Upstream refused '.$key.' '.rawurlencode($key).' '.$address.' '.rawurlencode($address);
         Http::fake(fn () => throw new RuntimeException($raw));
         $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', ['type' => 'resend_inbox', 'api_key' => $key, 'address' => $address])
-            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', []);
-        $this->assertNotEmpty($response->json('message'));
+            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', [])
+            ->assertJsonPath('message', 'Could not read this source. Check its address or key and try again.');
         $this->assertStringNotContainsString('Upstream refused', $response->getContent());
         $this->assertStringNotContainsString($key, $response->getContent());
         $this->assertStringNotContainsString(rawurlencode($key), $response->getContent());
@@ -469,8 +471,8 @@ class SourcesActionsTest extends TestCase
         $source = Source::factory()->create();
         $before = $source->fresh()->getAttributes();
         $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', ['type' => 'feed', 'url' => 'https://feeds.test/feed'])
-            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', []);
-        $this->assertNotEmpty($response->json('message'));
+            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', [])
+            ->assertJsonPath('message', 'Could not read this source. Check its address or key and try again.');
         $this->assertStringNotContainsString('raw-upstream-error', $response->getContent());
         Log::shouldHaveReceived('warning')->once();
         $this->assertSame($before, $source->fresh()->getAttributes());
@@ -720,6 +722,38 @@ class SourcesActionsTest extends TestCase
         $this->assertDatabaseCount('items', 0);
     }
 
+    public function test_imap_unexpected_errors_keep_the_generic_message_and_redact_the_log(): void
+    {
+        Log::spy();
+        $this->app->instance(PublicUrl::class, new PublicUrl(fn () => throw new RuntimeException('reader@example.test app-secret')));
+
+        $result = $this->app->make(TestSource::class)->handle(new User, SourceType::ImapInbox, '', '',
+            imapHost: 'mail.example.test', imapUsername: 'reader@example.test', imapPassword: 'app-secret');
+
+        $this->assertSame([
+            'ok' => false, 'message' => 'Could not read this source. Check its address or key and try again.', 'headlines' => [],
+        ], $result);
+        Log::shouldHaveReceived('warning')->once()->with('Source test failed.', [
+            'type' => 'imap_inbox', 'error' => '[redacted] [redacted]',
+        ]);
+    }
+
+    public function test_imap_test_endpoint_returns_the_specific_sign_in_failure(): void
+    {
+        Log::spy();
+        $this->mock(Mailbox::class)->shouldReceive('messagesSince')->once()
+            ->andThrow(new SignInFailedException('reader@example.test app-secret'));
+
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', $this->imapPayload())
+            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('headlines', [])
+            ->assertJsonPath('message', 'Could not sign in to the mail server. Check the username and app password.');
+
+        Log::shouldHaveReceived('warning')->once()->with('Source test failed.', [
+            'type' => 'imap_inbox',
+            'error' => 'Could not sign in to the mail server. Check the username and app password.',
+        ]);
+    }
+
     public function test_imap_failure_logs_do_not_expose_the_username_or_password(): void
     {
         Log::spy();
@@ -727,11 +761,15 @@ class SourcesActionsTest extends TestCase
             ->andThrow(new RuntimeException('reader@example.test app-secret'));
 
         $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', $this->imapPayload())
-            ->assertOk()->assertJsonPath('ok', false);
+            ->assertOk()->assertJsonPath('ok', false)->assertJsonPath('message', 'The mail server refused the request.');
 
         $this->assertStringNotContainsString('reader@example.test', $response->getContent());
         $this->assertStringNotContainsString('app-secret', $response->getContent());
-        Log::shouldHaveReceived('warning')->once()->with('Source test failed.', \Mockery::on(fn ($context) => ! str_contains($context['error'], 'reader@example.test') && ! str_contains($context['error'], 'app-secret')));
+        Log::shouldHaveReceived('warning')->twice()->withArgs(function (string $message, array $context): bool {
+            $serialized = json_encode([$message, $context], JSON_THROW_ON_ERROR);
+
+            return ! str_contains($serialized, 'reader@example.test') && ! str_contains($serialized, 'app-secret');
+        });
     }
 
     public function test_imap_sources_count_toward_the_custom_source_cap(): void

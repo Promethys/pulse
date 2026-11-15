@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Digest\Sources\Candidate;
 use App\Digest\Sources\FeedFetcher;
+use App\Digest\Sources\FetchException;
 use App\Digest\Sources\ImapInboxFetcher;
 use App\Digest\Sources\ResendInboxFetcher;
 use App\Enums\SourceType;
@@ -49,7 +50,9 @@ final class TestSource
                 'error' => Str::limit(str_replace($secrets, '[redacted]', $exception->getMessage()), 500),
             ]);
 
-            return ['ok' => false, 'message' => __('Could not read this source. Check its address or key and try again.'), 'headlines' => []];
+            return ['ok' => false, 'message' => $type === SourceType::ImapInbox && $exception instanceof FetchException
+                ? __($exception->getMessage())
+                : __('Could not read this source. Check its address or key and try again.'), 'headlines' => []];
         }
     }
 }

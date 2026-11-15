@@ -10,6 +10,10 @@ use RuntimeException;
 use Throwable;
 use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Connection\Protocols\ImapProtocol;
+use Webklex\PHPIMAP\Exceptions\AuthFailedException;
+use Webklex\PHPIMAP\Exceptions\ConnectionFailedException as WebklexConnectionFailedException;
+use Webklex\PHPIMAP\Exceptions\ImapBadRequestException;
+use Webklex\PHPIMAP\Exceptions\ImapServerErrorException;
 use Webklex\PHPIMAP\Header;
 use Webklex\PHPIMAP\IMAP;
 use Webklex\PHPIMAP\Message;
@@ -91,6 +95,18 @@ final class WebklexMailbox implements Mailbox
             }
 
             return $messages;
+        } catch (AuthFailedException) {
+            throw new SignInFailedException;
+        } catch (ImapBadRequestException|ImapServerErrorException $exception) {
+            $response = strtolower($exception->getMessage());
+
+            if (str_contains($response, 'authenticationfailed') || str_contains($response, '[auth]') || str_contains($response, 'invalid credentials')) {
+                throw new SignInFailedException;
+            }
+
+            throw $exception;
+        } catch (WebklexConnectionFailedException) {
+            throw new ConnectionFailedException;
         } finally {
             try {
                 $client->disconnect();
