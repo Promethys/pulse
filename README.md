@@ -10,7 +10,7 @@ If you find Pulse useful, leave a star on GitHub. It helps other people find it.
 
 - **Daily news**: items grouped by topic, each with a one-line summary and a link to the original. 09:00 by default, in your timezone.
 - **Tip and topic of the day**: a second post for tech interests, at 09:30 by default.
-- **Your interests and sources**: 50+ interests with reviewed sources. Switch sources off, or add your own feed or newsletter.
+- **Your interests and sources**: 50+ interests with reviewed sources. Switch sources off, or add your own feed, newsletter inbox or mailbox folder.
 - **Written for you**: a short profile tells the AI what you care about and what to skip.
 - **Your AI keys**: Gemini, Anthropic, OpenAI, Groq, OpenRouter or Z.AI, ordered as a fallback chain. Keys are stored encrypted.
 - **Delivery**: always in the app, plus as many Discord servers as you like (bot or webhook) and email.

@@ -6,7 +6,7 @@ Pulse turns the sources you follow into a daily news post. If your interests inc
 
 Choose your interests, review their sources and add an optional About you text. Your AI provider uses these choices to select and explain content for you.
 
-You can add your own feeds and newsletter inboxes alongside the shared source catalog.
+You can add your own feeds, newsletter inboxes and mailbox folders alongside the shared source catalog.
 
 ## Read where you like
 

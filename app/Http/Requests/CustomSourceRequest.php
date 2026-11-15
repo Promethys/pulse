@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\Source;
 use App\Rules\PublicHttpUrl;
+use App\Rules\PublicImapHost;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,10 +29,14 @@ final class CustomSourceRequest extends FormRequest
         $source = $this->route('source');
 
         return [
-            'type' => ['required', 'string', Rule::in($source instanceof Source ? [$source->type->value] : ['feed', 'resend_inbox'])],
+            'type' => ['required', 'string', Rule::in($source instanceof Source ? [$source->type->value] : ['feed', 'resend_inbox', 'imap_inbox'])],
             'name' => ['required', 'string', 'min:1', 'max:100'],
             'url' => ['required_if:type,feed', 'nullable', 'string', 'max:2000', new PublicHttpUrl],
             'api_key' => [$source instanceof Source ? 'nullable' : 'required_if:type,resend_inbox', 'nullable', 'string', 'max:200'],
+            'imap_host' => ['bail', 'exclude_unless:type,imap_inbox', 'required_if:type,imap_inbox', 'string', 'max:253', new PublicImapHost],
+            'imap_username' => ['exclude_unless:type,imap_inbox', 'required_if:type,imap_inbox', 'string', 'max:254'],
+            'imap_password' => ['exclude_unless:type,imap_inbox', $source instanceof Source ? 'nullable' : 'required_if:type,imap_inbox', 'nullable', 'string', 'max:200'],
+            'imap_folder' => ['exclude_unless:type,imap_inbox', 'nullable', 'string', 'max:200'],
             'address' => ['exclude_unless:type,resend_inbox', 'nullable', 'string', 'email', 'max:254'],
             'interests' => ['required', 'array', 'min:1'],
             'interests.*' => ['required', 'string', Rule::exists('interests', 'slug')],
@@ -44,6 +49,10 @@ final class CustomSourceRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'imap_host' => 'mail server',
+            'imap_username' => 'username',
+            'imap_password' => 'app password',
+            'imap_folder' => 'folder',
             'address' => 'receiving address',
             'url' => 'feed URL',
             'api_key' => 'Resend API key',

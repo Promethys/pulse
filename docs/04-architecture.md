@@ -6,7 +6,7 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 
 | Path | Responsibility |
 |---|---|
-| `app/Digest/Sources/` | Fetching: one fetcher per source type, URL normalization, the collector |
+| `app/Digest/Sources/` | Fetching: one fetcher per source type, the shared email parser, the IMAP client, URL normalization, the collector |
 | `app/Digest/Ai/` | The instance provider chain and per-user `AiChainResolver` |
 | `app/Digest/News/` | Per-user candidate query, selection and news pipeline |
 | `app/Digest/Learning/` | Per-user topic rotation, writing, link checks and learning pipeline |
@@ -128,13 +128,13 @@ The import is idempotent and transactional; `--dry-run` prints counts and rolls 
 
 `SourceCollector::collectFor($users)` fetches enabled sources with at least one enabled subscription among the supplied users. Sources fetched successfully less than 25 minutes ago are skipped, so multiple users share recent results.
 
-1. The source's `SourceType` resolves its fetcher: `FeedFetcher` (RSS/Atom), `GithubTrendingFetcher` (HTML) or `ResendInboxFetcher` (Resend Receiving).
+1. The source's `SourceType` resolves its fetcher: `FeedFetcher` (RSS/Atom), `GithubTrendingFetcher` (HTML), `ResendInboxFetcher` (Resend Receiving) or `ImapInboxFetcher` (email folder).
 2. The fetch window starts one hour before that source's last successful fetch, or 24 hours ago when it has never succeeded.
 3. Fetchers return `Candidate` objects: title, URL, plain-text excerpt (300 characters, 3,000 for newsletters), publication date and allowed citation `links`.
 4. Items are deduplicated by normalized URL (`UrlNormalizer`: lowercase host, no `www.`, tracking parameters, trailing slash or fragment, sorted query). `item_source` records every source in which an item was seen and preserves its `first_seen_at` for that source.
 5. Source rows record `last_fetched_at`, `last_success_at` and `last_error`. One failing source never stops collection. `failuresFor($user)` limits the news footer to that user's enabled subscribed sources with errors.
 
-Custom feeds are fetched only from public HTTP(S) addresses. `PublicUrl` checks every resolved address and each redirect (up to three); private, loopback and reserved addresses are refused. `PublicHttpUrl` provides the corresponding form validation rule. The inbox fetcher reads only the source's encrypted `credentials.api_key`.
+Custom feeds are fetched only from public HTTP(S) addresses. `PublicUrl` checks every resolved address and each redirect (up to three); private, loopback and reserved addresses are refused. `PublicHttpUrl` provides the corresponding form validation rule. The Resend inbox fetcher reads only the source's encrypted `credentials.api_key`. The IMAP fetcher reads its source's encrypted credentials and connects only after the same public-host check (`PublicImapHost`), over TLS on port 993, leaving every email unread. Both email sources share `EmailCandidate` to extract the subject, the excerpt and the allowed links.
 
 ## Selecting the news
 

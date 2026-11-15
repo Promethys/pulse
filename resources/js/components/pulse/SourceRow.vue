@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { Mail } from '@lucide/vue';
 import { computed } from 'vue';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ const typeLabels: Record<string, string> = {
     feed: 'Feed',
     github_trending: 'GitHub trending',
     resend_inbox: 'Newsletter',
+    imap_inbox: 'Email folder',
 };
 const statusClasses: Record<string, string> = {
     ok: 'bg-success',
@@ -51,9 +53,16 @@ function toggle(enabled: boolean) {
                 <span class="line-clamp-1 font-semibold" :title="source.name">{{
                     source.name
                 }}</span>
-                <span class="text-xs text-muted-foreground">{{
-                    typeLabels[source.type] ?? source.type
-                }}</span>
+                <span
+                    class="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                >
+                    <Mail
+                        v-if="source.type === 'imap_inbox'"
+                        class="size-3"
+                        aria-hidden="true"
+                    />
+                    {{ typeLabels[source.type] ?? source.type }}
+                </span>
             </div>
             <p class="text-sm text-muted-foreground">
                 {{ source.health }}
@@ -74,7 +83,9 @@ function toggle(enabled: boolean) {
             >
                 {{
                     source.is_custom
-                        ? 'Check the feed URL or Resend key in Edit, then use Test now.'
+                        ? source.type === 'imap_inbox'
+                            ? 'Check the mail server, username, app password and folder in Edit, then use Test now.'
+                            : 'Check the feed URL or Resend key in Edit, then use Test now.'
                         : 'This source is unavailable. Choose another source.'
                 }}
             </p>

@@ -37,6 +37,7 @@ describe('SourceRow', () => {
         ['feed', 'Feed'],
         ['github_trending', 'GitHub trending'],
         ['resend_inbox', 'Newsletter'],
+        ['imap_inbox', 'Email folder'],
     ])('labels %s as %s', (type, label) => {
         render(SourceRow, { props: { source: { ...sourceProps(), type } } });
         expect(screen.getByText(label)).toBeVisible();
@@ -149,4 +150,22 @@ describe('Source recovery guidance', () => {
             ).not.toBeInTheDocument();
         },
     );
+});
+
+it('guides an IMAP source owner to check the mailbox settings', () => {
+    render(SourceRow, {
+        props: {
+            source: {
+                ...sourceProps(),
+                type: 'imap_inbox',
+                is_custom: true,
+                health: 'failing',
+            },
+        },
+    });
+    expect(
+        screen.getByText(
+            'Check the mail server, username, app password and folder in Edit, then use Test now.',
+        ),
+    ).toBeVisible();
 });

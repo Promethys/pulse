@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 final class AddCustomSource
 {
     /**
-     * @param  array{type: string, name: string, url?: string|null, api_key?: string|null, address?: string|null, interests: list<string>}  $data
+     * @param  array{type: string, name: string, url?: string|null, api_key?: string|null, address?: string|null, imap_host?: string|null, imap_username?: string|null, imap_password?: string|null, imap_folder?: string|null, interests: list<string>}  $data
      */
     public function handle(User $user, array $data): Source
     {
@@ -33,9 +33,18 @@ final class AddCustomSource
                 'name' => $data['name'],
                 'type' => SourceType::from($data['type']),
                 'url' => $data['type'] === 'feed' ? ($data['url'] ?? null) : null,
-                'credentials' => $data['type'] === 'resend_inbox' ? ['api_key' => $data['api_key'] ?? '', 'address' => ($data['address'] ?? '') ?: null] : null,
+                'credentials' => match ($data['type']) {
+                    'resend_inbox' => ['api_key' => $data['api_key'] ?? '', 'address' => ($data['address'] ?? '') ?: null],
+                    'imap_inbox' => [
+                        'host' => $data['imap_host'] ?? '',
+                        'username' => $data['imap_username'] ?? '',
+                        'password' => $data['imap_password'] ?? '',
+                        'folder' => ($data['imap_folder'] ?? '') ?: 'INBOX',
+                    ],
+                    default => null,
+                },
                 'tag' => 'general',
-                'max_items' => $data['type'] === 'resend_inbox' ? 20 : 10,
+                'max_items' => $data['type'] === 'feed' ? 10 : 20,
                 'position' => ((int) Source::query()->max('position')) + 1,
                 'is_default' => false,
                 'enabled' => true,

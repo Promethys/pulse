@@ -6,6 +6,7 @@ namespace App\Enums;
 
 use App\Digest\Sources\FeedFetcher;
 use App\Digest\Sources\GithubTrendingFetcher;
+use App\Digest\Sources\ImapInboxFetcher;
 use App\Digest\Sources\ResendInboxFetcher;
 use App\Digest\Sources\SourceFetcher;
 
@@ -14,6 +15,7 @@ enum SourceType: string
     case Feed = 'feed';
     case GithubTrending = 'github_trending';
     case ResendInbox = 'resend_inbox';
+    case ImapInbox = 'imap_inbox';
 
     /**
      * @return class-string<SourceFetcher>
@@ -24,6 +26,7 @@ enum SourceType: string
             self::Feed => FeedFetcher::class,
             self::GithubTrending => GithubTrendingFetcher::class,
             self::ResendInbox => ResendInboxFetcher::class,
+            self::ImapInbox => ImapInboxFetcher::class,
         };
     }
 }

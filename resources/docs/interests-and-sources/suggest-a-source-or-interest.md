@@ -6,7 +6,7 @@ First [add the feed as your own source](/docs/interests-and-sources/add-your-own
 
 Choose an available **Interest**, write a **Reason** of 10 to 500 characters, then select **Send suggestion**.
 
-Catalog suggestions must be public, readable feeds with at least three posts in the last 30 days. Feeds already in the catalog or previously proposed cannot be proposed again. Newsletter inboxes cannot be suggested through this action.
+Catalog suggestions must be public, readable feeds with at least three posts in the last 30 days. Feeds already in the catalog or previously proposed cannot be proposed again. Newsletter inboxes and email folders cannot be suggested through this action.
 
 ## Suggest an interest
 

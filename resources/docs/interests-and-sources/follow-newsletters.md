@@ -1,4 +1,4 @@
-You can connect a Resend receiving inbox as a personal news source. Pulse reads received newsletter subjects, excerpts and links when preparing news.
+You can connect a Resend receiving inbox as a personal news source. Pulse reads received newsletter subjects, excerpts and links when preparing news. To read newsletters from a mailbox you already have, see [Read newsletters from your mailbox](/docs/interests-and-sources/read-newsletters-from-your-mailbox) instead.
 
 ## Prepare your inbox
 
@@ -7,7 +7,7 @@ Set up email receiving in your own Resend account, then subscribe newsletters to
 ## Connect it to Pulse
 
 1. Open **Sources → My sources → Add a source**.
-2. Choose **Newsletter inbox**.
+2. Choose **Resend inbox**.
 3. Enter your **Resend API key**, a **Name** and at least one interest.
 4. Optionally enter a **Receiving address** to keep only emails sent to that address. Leave it empty to read the whole inbox.
 5. Select **Test now**, then **Add** to save.

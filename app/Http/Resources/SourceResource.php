@@ -28,7 +28,15 @@ final class SourceResource extends JsonResource
             'is_default' => $this->is_default,
             'enabled' => $this->enabled,
             'retired' => $this->retired_at !== null,
-            'has_key' => is_string($this->credentials['api_key'] ?? null) && $this->credentials['api_key'] !== '',
+            'has_key' => $this->type === SourceType::ImapInbox
+                ? is_string($this->credentials['password'] ?? null) && $this->credentials['password'] !== ''
+                : is_string($this->credentials['api_key'] ?? null) && $this->credentials['api_key'] !== '',
+            'imap' => $this->type === SourceType::ImapInbox && $this->user_id !== null && $this->user_id === $request->user()?->id
+                ? [
+                    'host' => $this->credentials['host'] ?? '',
+                    'username' => $this->credentials['username'] ?? '',
+                    'folder' => ($this->credentials['folder'] ?? '') ?: 'INBOX',
+                ] : null,
             'address' => $this->type === SourceType::ResendInbox && $this->user_id !== null && $this->user_id === $request->user()?->id
                 ? ($this->credentials['address'] ?? null) : null,
             'last_fetched_at' => $this->last_fetched_at?->toIso8601String(),

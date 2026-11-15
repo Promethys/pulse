@@ -4,7 +4,7 @@ Sources supply the stories considered for your news digest. Open **Sources** to 
 
 ## Switch sources on or off
 
-**By interest** shows catalog sources for your interests. **My sources** shows the feeds and newsletter inboxes you added yourself.
+**By interest** shows catalog sources for your interests. **My sources** shows the feeds, newsletter inboxes and email folders you added yourself.
 
 Use a source's switch to include or exclude it from future digests. This changes your subscriptions only. It does not remove stories from saved digests.
 
@@ -23,4 +23,4 @@ The page also shows **Last success** and any saved fetch error. A retired source
 
 Under **My sources**, choose **Edit** to update a custom source or **Delete** to remove it. Deleting a source preserves past digests. You cannot edit or delete shared catalog definitions.
 
-For a failing custom source, check its feed URL or Resend key and use **Test now** in the edit dialog. You can save up to 30 custom sources.
+For a failing custom source, check its feed URL, Resend key or app password and use **Test now** in the edit dialog. You can save up to 30 custom sources.

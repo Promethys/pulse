@@ -20,7 +20,8 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "phiki/phiki": "^2.2",
-        "resend/resend-laravel": "^1.7"
+        "resend/resend-laravel": "^1.7",
+        "webklex/php-imap": "^6.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
