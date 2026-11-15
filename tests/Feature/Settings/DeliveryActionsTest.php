@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Sleep;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -90,6 +91,23 @@ class DeliveryActionsTest extends TestCase
         return $cases;
     }
 
+    #[TestWith(['guild_id', 'Discord server'])]
+    #[TestWith(['channel_id', 'forum channel'])]
+    public function test_missing_discord_fields_use_readable_attribute_names(string $field, string $name): void
+    {
+        $user = $this->readerWithGuild();
+        $payload = ['type' => 'discord_bot', 'guild_id' => '456', 'channel_id' => '789', 'kinds' => ['news']];
+        unset($payload[$field]);
+
+        $this->actingAs($user)->postJson('/settings/delivery', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($field)
+            ->assertJsonPath("errors.{$field}.0", "The {$name} field is required.");
+
+        $this->assertDatabaseCount('delivery_channels', 0);
+        Http::assertNothingSent();
+    }
+
     public function test_bot_cannot_use_another_readers_guild_even_if_the_forum_exists(): void
     {
         $user = User::factory()->onboarded()->create();
@@ -153,6 +171,22 @@ class DeliveryActionsTest extends TestCase
         $this->put("/settings/delivery/{$hook->id}", ['enabled' => true, 'kinds' => ['news'], 'name' => 'New hook', 'webhook_url' => $replacement])
             ->assertSessionHasNoErrors();
         $this->assertSame($replacement, $hook->fresh()->settings['webhook_url']);
+    }
+
+    public function test_invalid_webhook_update_uses_a_readable_attribute_name(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $channel = DeliveryChannel::factory()->for($user)->discordWebhook()->create(['settings' => ['webhook_url' => self::WEBHOOK]]);
+        $before = $channel->fresh()->getAttributes();
+
+        $this->actingAs($user)->putJson("/settings/delivery/{$channel->id}", [
+            'enabled' => true, 'kinds' => ['news'], 'webhook_url' => 'https://example.test/hook',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('webhook_url')
+            ->assertJsonPath('errors.webhook_url.0', 'The webhook URL must be a Discord webhook URL.');
+
+        $this->assertSame($before, $channel->fresh()->getAttributes());
+        Http::assertNothingSent();
     }
 
     public function test_invalid_updates_leave_all_fields_unchanged(): void

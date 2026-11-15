@@ -57,6 +57,16 @@ final class SaveDeliveryChannelRequest extends FormRequest
         }];
     }
 
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return [
+            'webhook_url' => 'webhook URL',
+            'channel_id' => 'forum channel',
+            'guild_id' => 'Discord server',
+        ];
+    }
+
     /** @return list<callable> */
     public function after(): array
     {
