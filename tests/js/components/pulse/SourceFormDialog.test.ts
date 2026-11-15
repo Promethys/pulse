@@ -15,6 +15,7 @@ function customSource() {
         is_default: false,
         interests: [onboarding.interests[0]],
         has_key: true,
+        address: null as string | null,
     };
 }
 
@@ -51,6 +52,12 @@ async function fillFeed(view: Awaited<ReturnType<typeof renderForm>>) {
     );
 }
 
+function failTestValidation(errors: Record<string, string>) {
+    http.submit.mockImplementationOnce(async (_route, options) => {
+        options.onError(errors);
+    });
+}
+
 describe('SourceFormDialog', () => {
     it('adds a feed with selected interest slugs', async () => {
         const view = await renderForm();
@@ -65,6 +72,7 @@ describe('SourceFormDialog', () => {
                 name: 'My feed',
                 url: 'https://example.test/feed',
                 api_key: '',
+                address: '',
                 interests: ['artificial-intelligence'],
             },
             expect.objectContaining({ preserveScroll: true }),
@@ -138,11 +146,245 @@ describe('SourceFormDialog', () => {
                 type: 'resend_inbox',
                 name: 'Renamed',
                 api_key: '',
+                address: '',
                 interests: ['artificial-intelligence'],
             }),
             expect.any(Object),
         );
         expect(view.post).not.toHaveBeenCalled();
+    });
+
+    it('shows the optional receiving address only for newsletters and sends it when saving and testing', async () => {
+        const view = await renderForm();
+        expect(
+            screen.queryByLabelText('Receiving address'),
+        ).not.toBeInTheDocument();
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+        );
+        const address = screen.getByLabelText('Receiving address');
+        expect(address).toHaveAttribute('type', 'email');
+        expect(address).not.toBeRequired();
+        expect(
+            screen.getByText(
+                'Only keep emails sent to this address. Leave empty to read the whole inbox.',
+            ),
+        ).toBeVisible();
+        await view.user.type(address, 'news@example.test');
+        await view.user.type(
+            screen.getByLabelText('Resend API key'),
+            'test-key',
+        );
+        await view.user.type(
+            screen.getByRole('textbox', { name: /^Name \(required\)$/ }),
+            'Newsletter',
+        );
+        await view.user.click(
+            screen.getByRole('checkbox', { name: 'Programming' }),
+        );
+        let testedAddress: unknown;
+        http.submit.mockImplementationOnce(async () => {
+            testedAddress = (http as typeof http & { address: string }).address;
+            return {
+                ok: true,
+                message: 'Found one post.',
+                headlines: ['Matching issue'],
+            };
+        });
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(await screen.findByText('Matching issue')).toBeVisible();
+        expect(testedAddress).toBe('news@example.test');
+        await view.user.clear(address);
+        expect(screen.queryByText('Matching issue')).not.toBeInTheDocument();
+        await view.user.type(address, 'news@example.test');
+        await view.user.click(screen.getByRole('button', { name: /^Add$/ }));
+        expect(view.post).toHaveBeenCalledWith(
+            '/sources',
+            expect.objectContaining({ address: 'news@example.test' }),
+            expect.any(Object),
+        );
+    });
+
+    it('prefills a saved newsletter address and sends an empty address to clear it', async () => {
+        const view = await renderForm({
+            ...customSource(),
+            type: 'resend_inbox',
+            address: 'news@example.test',
+        });
+        const address = screen.getByLabelText('Receiving address');
+        expect(address).toHaveValue('news@example.test');
+        await view.user.clear(address);
+        await view.user.click(screen.getByRole('button', { name: /^Save$/ }));
+        expect(view.put).toHaveBeenCalledWith(
+            '/sources/21',
+            expect.objectContaining({ address: '', api_key: '' }),
+            expect.any(Object),
+        );
+    });
+
+    it('shows receiving address validation errors', async () => {
+        const view = await renderForm(null, {
+            address: 'Use a valid email address.',
+        });
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+        );
+        expect(screen.getByLabelText('Receiving address')).toHaveAttribute(
+            'aria-invalid',
+            'true',
+        );
+        expect(screen.getByText('Use a valid email address.')).toBeVisible();
+    });
+
+    it('shows a 422 test error under the receiving address field', async () => {
+        failTestValidation({
+            address: 'The address field must be a valid email address.',
+        });
+        const view = await renderForm({
+            ...customSource(),
+            type: 'resend_inbox',
+        });
+        await view.user.type(
+            screen.getByLabelText('Resend API key'),
+            'test-key',
+        );
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        await waitFor(() =>
+            expect(screen.getByLabelText('Receiving address')).toHaveAttribute(
+                'aria-invalid',
+                'true',
+            ),
+        );
+        expect(
+            screen.getByLabelText('Receiving address'),
+        ).toHaveAccessibleDescription(
+            /The address field must be a valid email address\./,
+        );
+        expect(
+            screen.queryByText('Could not read this source. Please try again.'),
+        ).not.toBeInTheDocument();
+    });
+
+    it('shows a 422 test error under the feed URL field', async () => {
+        failTestValidation({ url: 'Use a public feed URL.' });
+        const view = await renderForm(null, { type: 'Choose a source kind.' });
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        await waitFor(() =>
+            expect(
+                screen.getByLabelText('Feed URL (required)'),
+            ).toHaveAccessibleDescription('Use a public feed URL.'),
+        );
+        expect(screen.getByText('Choose a source kind.')).toBeVisible();
+    });
+
+    it('clears a shown test error when the receiving address is edited', async () => {
+        failTestValidation({ address: 'Use a valid email address.' });
+        const view = await renderForm({
+            ...customSource(),
+            type: 'resend_inbox',
+        });
+        await view.user.type(
+            screen.getByLabelText('Resend API key'),
+            'test-key',
+        );
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(
+            await screen.findByText('Use a valid email address.'),
+        ).toBeVisible();
+        const address = screen.getByLabelText('Receiving address');
+        await view.user.type(address, 'newsletters@example.com');
+        expect(
+            screen.queryByText('Use a valid email address.'),
+        ).not.toBeInTheDocument();
+        expect(address).toHaveAttribute('aria-invalid', 'false');
+    });
+
+    it('keeps the generic message for a non-422 test failure', async () => {
+        http.submit.mockRejectedValueOnce(new Error('Server unavailable.'));
+        const view = await renderForm();
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(
+            await screen.findByText(
+                'Could not read this source. Please try again.',
+            ),
+        ).toBeVisible();
+    });
+
+    it('disables native form validation', async () => {
+        await renderForm();
+        expect(
+            screen.getByLabelText('Name (required)').closest('form'),
+        ).toHaveAttribute('novalidate');
+    });
+
+    it('suggests a newsletter receiving address placeholder', async () => {
+        await renderForm({ ...customSource(), type: 'resend_inbox' });
+        expect(screen.getByLabelText('Receiving address')).toHaveAttribute(
+            'placeholder',
+            'newsletters@example.com',
+        );
+    });
+
+    it('shows and clears a 422 test error for the newsletter API key', async () => {
+        failTestValidation({ api_key: 'Enter a valid Resend key.' });
+        const view = await renderForm({
+            ...customSource(),
+            type: 'resend_inbox',
+        });
+        const key = screen.getByLabelText('Resend API key');
+        await view.user.type(key, 'test-key');
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(
+            await screen.findByText('Enter a valid Resend key.'),
+        ).toBeVisible();
+        await view.user.type(key, '-updated');
+        expect(
+            screen.queryByText('Enter a valid Resend key.'),
+        ).not.toBeInTheDocument();
+    });
+
+    it('clears a shown test error when the feed URL is edited', async () => {
+        failTestValidation({ url: 'Use a public feed URL.' });
+        const view = await renderForm();
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(await screen.findByText('Use a public feed URL.')).toBeVisible();
+        await view.user.type(
+            screen.getByLabelText('Feed URL (required)'),
+            '/new',
+        );
+        expect(
+            screen.queryByText('Use a public feed URL.'),
+        ).not.toBeInTheDocument();
+    });
+
+    it('clears test errors on the next test', async () => {
+        failTestValidation({ url: 'Use a public feed URL.' });
+        http.submit.mockReturnValueOnce(new Promise(() => {}));
+        const view = await renderForm();
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(await screen.findByText('Use a public feed URL.')).toBeVisible();
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(screen.getByRole('button', { name: /Testing/ })).toBeDisabled();
+        expect(
+            screen.queryByText('Use a public feed URL.'),
+        ).not.toBeInTheDocument();
+    });
+
+    it('clears test errors when saving', async () => {
+        failTestValidation({ url: 'Use a public feed URL.' });
+        const view = await renderForm();
+        await fillFeed(view);
+        await view.user.click(screen.getByRole('button', { name: 'Test now' }));
+        expect(await screen.findByText('Use a public feed URL.')).toBeVisible();
+        await view.user.click(screen.getByRole('button', { name: /^Add$/ }));
+        expect(view.post).toHaveBeenCalledOnce();
+        expect(
+            screen.queryByText('Use a public feed URL.'),
+        ).not.toBeInTheDocument();
     });
 
     it('requires an interest and source address before testing or adding', async () => {

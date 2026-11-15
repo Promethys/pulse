@@ -7,6 +7,7 @@ import type {
 export type ManagedSource = Omit<OnboardingSource, 'url'> & {
     url: string | null;
     has_key: boolean;
+    address?: string | null;
     interests: Omit<OnboardingInterest, 'selected'>[];
 };
 
@@ -15,6 +16,7 @@ export type SourceInput = {
     name: string;
     url: string;
     api_key: string;
+    address: string;
     interests: string[];
 };
 
