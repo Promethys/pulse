@@ -2,7 +2,14 @@ import { onboardingProps } from './onboardingProps';
 
 export function digestProps() {
     const onboarding = onboardingProps();
-    return { settings: onboarding.settings, timezones: onboarding.timezones };
+    return {
+        settings: {
+            ...onboarding.settings,
+            paused: false,
+            paused_until: null as string | null,
+        },
+        timezones: onboarding.timezones,
+    };
 }
 
 export function aiKeysProps() {

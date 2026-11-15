@@ -35,6 +35,10 @@ final class TickScheduler
 
             $local = $nowUtc->setTimezone($settings->timezone);
 
+            if ($settings->isPausedOn($local)) {
+                continue;
+            }
+
             foreach (PostKind::cases() as $kind) {
                 $enabled = $kind === PostKind::News ? $settings->news_enabled : $settings->learning_enabled;
                 $time = $kind === PostKind::News ? $settings->news_time : $settings->learning_time;

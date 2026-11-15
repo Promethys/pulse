@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $learning_enabled
  * @property string $learning_time
  * @property int $max_items
+ * @property CarbonImmutable|null $paused_at
+ * @property CarbonImmutable|null $paused_until
  * @property CarbonImmutable|null $onboarded_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -44,7 +46,15 @@ class DigestSettings extends Model
             'learning_enabled' => 'boolean',
             'max_items' => 'integer',
             'onboarded_at' => 'datetime',
+            'paused_at' => 'datetime',
+            'paused_until' => 'date',
         ];
+    }
+
+    public function isPausedOn(CarbonImmutable $localDate): bool
+    {
+        return $this->paused_at !== null
+            && ($this->paused_until === null || $localDate->toDateString() <= $this->paused_until->toDateString());
     }
 
     /**

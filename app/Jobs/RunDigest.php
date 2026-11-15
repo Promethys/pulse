@@ -15,7 +15,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
-class RunDigest implements ShouldBeUnique, ShouldQueue
+final class RunDigest implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
@@ -38,6 +38,12 @@ class RunDigest implements ShouldBeUnique, ShouldQueue
 
     public function handle(NewsPipeline $news, LearningPipeline $learning): void
     {
+        if ($this->user->digestSettings()->first()?->isPausedOn($this->date)) {
+            Log::info('Digest skipped, account paused', ['user_id' => $this->user->id]);
+
+            return;
+        }
+
         try {
             $this->kind === PostKind::News
                 ? $news->runFor($this->user, $this->date)

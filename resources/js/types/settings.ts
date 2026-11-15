@@ -1,9 +1,12 @@
 import type { OnboardingProps } from './onboarding';
 
-export type DigestSettingsProps = Pick<
-    OnboardingProps,
-    'settings' | 'timezones'
->;
+export type DigestSettingsProps = {
+    settings: OnboardingProps['settings'] & {
+        paused: boolean;
+        paused_until: string | null;
+    };
+    timezones: OnboardingProps['timezones'];
+};
 export type AiKeysProps = {
     keys: OnboardingProps['ai_keys'];
     providers: OnboardingProps['providers'];

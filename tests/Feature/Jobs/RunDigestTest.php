@@ -9,6 +9,7 @@ use App\Digest\Learning\LearningUnavailableException;
 use App\Digest\News\NewsPipeline;
 use App\Enums\PostKind;
 use App\Jobs\RunDigest;
+use App\Models\DigestSettings;
 use App\Models\Post;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -21,9 +22,57 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\TestCase;
 
-class RunDigestTest extends TestCase
+final class RunDigestTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[DataProvider('pausedDays')]
+    public function test_skips_both_pipelines_and_logs_only_the_user_id_on_a_paused_day(PostKind $kind, ?string $pausedUntil): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-07-05', 'UTC'));
+        $user = User::factory()->create();
+        DigestSettings::factory()->create(['user_id' => $user->id, 'paused_at' => '2026-07-01 12:00:00', 'paused_until' => $pausedUntil]);
+        $date = CarbonImmutable::parse('2026-07-02', 'Asia/Tokyo');
+        $news = $this->mock(NewsPipeline::class);
+        $learning = $this->mock(LearningPipeline::class);
+        $news->shouldNotReceive('run', 'runFor');
+        $learning->shouldNotReceive('run', 'runFor');
+        Log::shouldReceive('info')->once()->with('Digest skipped, account paused', ['user_id' => $user->id]);
+
+        (new RunDigest($user, $kind, $date))->handle($news, $learning);
+    }
+
+    #[DataProvider('kinds')]
+    public function test_runs_normally_the_day_after_the_pause_ends(PostKind $kind): void
+    {
+        $user = User::factory()->create();
+        DigestSettings::factory()->create(['user_id' => $user->id, 'paused_at' => '2026-07-01 12:00:00', 'paused_until' => '2026-07-01']);
+        $date = CarbonImmutable::parse('2026-07-02', 'Asia/Tokyo');
+        $news = $this->mock(NewsPipeline::class);
+        $learning = $this->mock(LearningPipeline::class);
+        ($kind === PostKind::News ? $news : $learning)->shouldReceive('runFor')->once()->with($user, $date)->andReturn(new Post);
+        ($kind === PostKind::News ? $learning : $news)->shouldNotReceive('run', 'runFor');
+
+        (new RunDigest($user, $kind, $date))->handle($news, $learning);
+    }
+
+    #[DataProvider('kinds')]
+    public function test_respects_a_pause_saved_after_the_job_was_built_with_cached_settings(PostKind $kind): void
+    {
+        $user = User::factory()->create();
+        $settings = DigestSettings::factory()->create(['user_id' => $user->id]);
+        $user->load('digestSettings');
+        $date = CarbonImmutable::parse('2026-07-02', 'Asia/Tokyo');
+        $job = new RunDigest($user, $kind, $date);
+        $settings->forceFill(['paused_at' => '2026-07-01 12:00:00', 'paused_until' => null])->save();
+        $news = $this->mock(NewsPipeline::class);
+        $learning = $this->mock(LearningPipeline::class);
+        $news->shouldNotReceive('run', 'runFor');
+        $learning->shouldNotReceive('run', 'runFor');
+        Log::shouldReceive('info')->once()->with('Digest skipped, account paused', ['user_id' => $user->id]);
+
+        $job->handle($news, $learning);
+    }
 
     #[DataProvider('kinds')]
     public function test_calls_only_the_matching_per_user_pipeline(PostKind $kind): void
@@ -100,6 +149,19 @@ class RunDigestTest extends TestCase
         $this->expectExceptionObject($failure);
 
         $job->handle($news, $learning);
+    }
+
+    /** @return array<string, array{PostKind, string|null}> */
+    public static function pausedDays(): array
+    {
+        $days = [];
+        foreach (PostKind::cases() as $kind) {
+            foreach (['indefinite' => null, 'last paused day' => '2026-07-02', 'before last paused day' => '2026-07-03'] as $name => $pausedUntil) {
+                $days[$kind->value.' '.$name] = [$kind, $pausedUntil];
+            }
+        }
+
+        return $days;
     }
 
     /** @return array<string, array{PostKind}> */

@@ -82,6 +82,31 @@ class TodayPageTest extends TestCase
                 ->where('setup', ['interests' => false, 'sources' => false, 'ai_key' => false, 'delivery' => false]));
     }
 
+    #[DataProvider('pauseStates')]
+    public function test_pause_controls_the_banner_and_next_digest(?string $pausedAt, ?string $until, ?array $pause): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 15:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->forceFill(['timezone' => 'Asia/Tokyo', 'paused_at' => $pausedAt, 'paused_until' => $until])->save();
+        Post::factory()->for($user)->create(['date' => '2026-11-14', 'status' => PostStatus::Generated]);
+
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('today', '2026-11-16')
+            ->where('day.date', '2026-11-14')
+            ->where('pause', $pause)
+            ->where('next_digest', $pause === null ? ['time' => '09:00', 'timezone' => 'Asia/Tokyo'] : null));
+    }
+
+    public static function pauseStates(): array
+    {
+        return [
+            'unpaused' => [null, null, null],
+            'indefinite' => ['2026-11-14 12:00:00', null, ['until' => null]],
+            'last local day' => ['2026-11-14 12:00:00', '2026-11-16', ['until' => '2026-11-16']],
+            'expired locally' => ['2026-11-14 12:00:00', '2026-11-15', null],
+        ];
+    }
+
     public static function newsStates(): array
     {
         return [
