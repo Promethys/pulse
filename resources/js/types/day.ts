@@ -69,6 +69,7 @@ export type SetupState = {
 };
 
 export type TodayProps = {
+    pause: { until: string | null } | null;
     day: Day | null;
     is_today: boolean;
     today: string;

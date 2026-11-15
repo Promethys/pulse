@@ -329,7 +329,7 @@ class ReadResourcesTest extends TestCase
         $settings = DigestSettings::factory()->create(['user_id' => $user->id, 'profile' => 'Fictional reader', 'timezone' => 'Europe/Paris', 'news_enabled' => true, 'learning_enabled' => false, 'max_items' => 7, 'onboarded_at' => '2026-10-29 12:00:00']);
         $data = $this->resolved(new DigestSettingsResource($settings));
 
-        $this->assertKeys(['timezone', 'profile', 'news_enabled', 'news_time', 'learning_enabled', 'learning_time', 'max_items', 'onboarded_at', 'learning_available'], $data);
+        $this->assertKeys(['timezone', 'profile', 'news_enabled', 'news_time', 'learning_enabled', 'learning_time', 'max_items', 'onboarded_at', 'learning_available', 'paused', 'paused_until'], $data);
         $this->assertSame('Europe/Paris', $data['timezone']);
         $this->assertSame('Fictional reader', $data['profile']);
         $this->assertTrue($data['news_enabled']);
@@ -338,6 +338,8 @@ class ReadResourcesTest extends TestCase
         $this->assertSame(substr($settings->learning_time, 0, 5), substr($data['learning_time'], 0, 5));
         $this->assertSame(7, $data['max_items']);
         $this->assertSame($available, $data['learning_available']);
+        $this->assertFalse($data['paused']);
+        $this->assertNull($data['paused_until']);
         $this->assertTimestamp($settings->onboarded_at, $data['onboarded_at']);
     }
 

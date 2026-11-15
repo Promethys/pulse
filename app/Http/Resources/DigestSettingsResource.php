@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\DigestSettings;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,8 +17,12 @@ final class DigestSettingsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $paused = $this->isPausedOn(CarbonImmutable::now($this->timezone));
+
         return [
             'timezone' => $this->timezone,
+            'paused' => $paused,
+            'paused_until' => $paused ? $this->paused_until?->toDateString() : null,
             'profile' => $this->profile,
             'news_enabled' => $this->news_enabled,
             'news_time' => $this->news_time,

@@ -1,10 +1,29 @@
 import { router } from '@inertiajs/vue3';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vite-plus/test';
 import Digest from '@/pages/settings/Digest.vue';
 import { page } from '../../support/inertia';
-import { digestProps } from '../../support/settingsProps';
+import { digestProps as baseDigestProps } from '../../support/settingsProps';
+
+function digestProps() {
+    const props = baseDigestProps();
+    return {
+        ...props,
+        settings: {
+            ...props.settings,
+            paused: false,
+            paused_until: null as string | null,
+        },
+    };
+}
 
 function renderPage(props = digestProps(), errors = {}) {
     page.url = '/settings/digest';
@@ -151,3 +170,199 @@ it.each([true, false])(
         else expect(link).not.toBeInTheDocument();
     },
 );
+
+describe('Pause digests', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-10-31T00:30:00Z'));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('defaults to pausing until resumed and hides the date picker and quick picks', async () => {
+        const { user, put } = renderPage();
+        expect(
+            screen.getByRole('radio', { name: 'Until I resume' }),
+        ).toBeChecked();
+        expect(
+            screen.getByRole('radio', { name: 'Until a date' }),
+        ).not.toBeChecked();
+        expect(
+            screen.queryByRole('button', { name: 'End date' }),
+        ).not.toBeInTheDocument();
+        for (const name of ['1 week', '2 weeks']) {
+            expect(
+                screen.queryByRole('button', { name }),
+            ).not.toBeInTheDocument();
+        }
+        await user.click(screen.getByRole('button', { name: 'Pause digests' }));
+        expect(put).toHaveBeenCalledWith(
+            '/settings/digest/pause',
+            { until: null },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+        expect(
+            screen.getByRole('button', { name: 'Pause digests' }),
+        ).toBeDisabled();
+    });
+
+    it.each([
+        ['1 week', '6 Nov 2026', '2026-11-06'],
+        ['2 weeks', '13 Nov 2026', '2026-11-13'],
+    ])(
+        'sets %s from the reader local day across a daylight saving change',
+        async (pick, label, until) => {
+            const props = digestProps();
+            props.settings.timezone = 'America/New_York';
+            const { user, put } = renderPage(props);
+            await user.click(
+                screen.getByRole('radio', { name: 'Until a date' }),
+            );
+            await user.click(screen.getByRole('button', { name: pick }));
+            expect(
+                screen.getByRole('radio', { name: 'Until a date' }),
+            ).toBeChecked();
+            expect(
+                screen.getByRole('button', { name: 'End date' }),
+            ).toHaveTextContent(label);
+            await user.click(
+                screen.getByRole('button', { name: 'Pause digests' }),
+            );
+            expect(put).toHaveBeenCalledWith(
+                '/settings/digest/pause',
+                { until },
+                expect.objectContaining({ preserveScroll: true }),
+            );
+        },
+    );
+
+    it('discards a picked date when switching back to until resumed', async () => {
+        const { user, put } = renderPage();
+        await user.click(screen.getByRole('radio', { name: 'Until a date' }));
+        await user.click(screen.getByRole('button', { name: '1 week' }));
+        await user.click(screen.getByRole('radio', { name: 'Until I resume' }));
+        expect(
+            screen.queryByRole('button', { name: 'End date' }),
+        ).not.toBeInTheDocument();
+        for (const name of ['1 week', '2 weeks']) {
+            expect(
+                screen.queryByRole('button', { name }),
+            ).not.toBeInTheDocument();
+        }
+        await user.click(screen.getByRole('button', { name: 'Pause digests' }));
+        expect(put).toHaveBeenCalledWith(
+            '/settings/digest/pause',
+            { until: null },
+            expect.any(Object),
+        );
+    });
+
+    it('requires a date in date mode, including after clearing a quick pick', async () => {
+        const { user, put } = renderPage();
+        await user.click(screen.getByRole('radio', { name: 'Until a date' }));
+        const submit = screen.getByRole('button', { name: 'Pause digests' });
+        expect(submit).toBeDisabled();
+        await user.click(screen.getByRole('button', { name: '1 week' }));
+        expect(submit).toBeEnabled();
+        await user.click(screen.getByRole('button', { name: 'End date' }));
+        await user.click(await screen.findByRole('button', { name: 'Clear' }));
+        expect(submit).toBeDisabled();
+        expect(put).not.toHaveBeenCalled();
+    });
+
+    it('bounds the calendar from local today through 365 days ahead', async () => {
+        const props = digestProps();
+        props.settings.timezone = 'America/New_York';
+        const { user } = renderPage(props);
+        await user.click(screen.getByRole('radio', { name: 'Until a date' }));
+        await user.click(screen.getByRole('button', { name: 'End date' }));
+        await screen.findByRole('application');
+        const day = (number: number) =>
+            screen.getByRole('button', {
+                name: new RegExp(
+                    `\\b(?:${number} October|October ${number})\\b`,
+                ),
+            });
+        expect(day(29)).toHaveAttribute('data-disabled');
+        expect(day(30)).not.toHaveAttribute('data-disabled');
+        for (let month = 0; month < 12; month++) {
+            await user.click(screen.getByRole('button', { name: 'Next page' }));
+        }
+        expect(day(30)).not.toHaveAttribute('data-disabled');
+        expect(day(31)).toHaveAttribute('data-disabled');
+        await user.click(day(30));
+        expect(
+            screen.getByRole('button', { name: 'End date' }),
+        ).toHaveTextContent('30 Oct 2027');
+    });
+
+    it('allows selecting an end date and associates validation errors with it', async () => {
+        const { user, put } = renderPage(digestProps(), {
+            until: 'The end date must not be before today.',
+        });
+        await user.click(screen.getByRole('radio', { name: 'Until a date' }));
+        const picker = screen.getByRole('button', { name: 'End date' });
+        expect(picker).toHaveAttribute('aria-invalid', 'true');
+        expect(picker).toHaveAccessibleDescription(
+            'The end date must not be before today.',
+        );
+        await user.click(picker);
+        await user.click(
+            await screen.findByRole('button', {
+                name: /\b(?:31 October|October 31)\b/,
+            }),
+        );
+        await user.click(screen.getByRole('button', { name: 'Pause digests' }));
+        expect(put).toHaveBeenCalledWith(
+            '/settings/digest/pause',
+            { until: '2026-10-31' },
+            expect.any(Object),
+        );
+    });
+
+    it.each([
+        [null, 'Digests are paused until you resume them.'],
+        ['2026-11-30', 'Digests are paused until Monday 30 November.'],
+    ] as const)(
+        'shows the paused state ending %s and resumes without a pause form',
+        async (until, message) => {
+            const props = digestProps();
+            props.settings.paused = true;
+            props.settings.paused_until = until;
+            const remove = vi
+                .spyOn(router, 'delete')
+                .mockImplementation(() => {});
+            const { user } = renderPage(props);
+            const status = screen.getByText(message);
+            const resume = screen.getByRole('button', {
+                name: 'Resume digests',
+            });
+            expect(status).toBeVisible();
+            expect(status.parentElement).toHaveClass(
+                'rounded-xl',
+                'border',
+                'border-primary-strong/30',
+                'bg-primary/40',
+                'p-4',
+                'text-sm',
+                'text-foreground',
+                'dark:bg-primary/10',
+            );
+            expect(status.parentElement).toContainElement(resume);
+            expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole('button', { name: 'Pause digests' }),
+            ).not.toBeInTheDocument();
+            await user.click(resume);
+            expect(remove).toHaveBeenCalledWith(
+                '/settings/digest/pause',
+                expect.objectContaining({ preserveScroll: true }),
+            );
+            expect(
+                screen.getByRole('button', { name: 'Resume digests' }),
+            ).toBeDisabled();
+        },
+    );
+});

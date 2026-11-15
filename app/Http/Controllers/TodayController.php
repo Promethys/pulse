@@ -23,7 +23,9 @@ final class TodayController extends Controller
         $settings = $user->digestSettings;
         abort_if($settings === null, 403);
 
-        $today = CarbonImmutable::now($settings->timezone)->toDateString();
+        $local = CarbonImmutable::now($settings->timezone);
+        $today = $local->toDateString();
+        $paused = $settings->isPausedOn($local);
         $dates = $this->days->dates($user);
         $todayDay = $this->days->for($user, $today);
         $day = $todayDay;
@@ -38,7 +40,8 @@ final class TodayController extends Controller
             'day' => $day === null ? null : (new DayResource($day))->resolve($request),
             'is_today' => $day !== null && $day->date === $today,
             'today' => $today,
-            'next_digest' => ! $settings->news_enabled || $newsGenerated ? null : [
+            'pause' => $paused ? ['until' => $settings->paused_until?->toDateString()] : null,
+            'next_digest' => $paused || ! $settings->news_enabled || $newsGenerated ? null : [
                 'time' => $settings->news_time,
                 'timezone' => $settings->timezone,
             ],

@@ -7,6 +7,7 @@ namespace Tests\Feature\Settings;
 use App\Models\DigestSettings;
 use App\Models\Interest;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -98,6 +99,155 @@ class DigestSettingsPageTest extends TestCase
     public static function pages(): array
     {
         return [['/settings/digest'], ['/settings/ai-keys'], ['/settings/delivery']];
+    }
+
+    #[DataProvider('pauseEnds')]
+    public function test_pause_updates_only_the_reader_and_preserves_digest_flags(?string $until): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 12:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->update(['news_enabled' => false, 'learning_enabled' => true]);
+        $before = $user->digestSettings->fresh()->getAttributes();
+        $other = DigestSettings::factory()->create();
+        $otherBefore = $other->fresh()->getAttributes();
+
+        $this->actingAs($user)->from('/settings/digest')->put(route('digest.pause'), [
+            'until' => $until, 'user_id' => $other->user_id, 'news_enabled' => true, 'learning_enabled' => false,
+        ])->assertRedirect('/settings/digest')->assertSessionHasNoErrors()->assertInertiaFlash('toast.type', 'success');
+
+        $settings = $user->digestSettings->fresh();
+        $this->assertInstanceOf(CarbonImmutable::class, $settings->paused_at);
+        $this->assertSame('2026-11-15 12:00:00', $settings->paused_at->toDateTimeString());
+        $this->assertSame($until === '' ? null : $until, $settings->paused_until?->toDateString());
+        $this->assertSame(array_diff_key($before, array_flip(['paused_at', 'paused_until', 'updated_at'])),
+            array_diff_key($settings->getAttributes(), array_flip(['paused_at', 'paused_until', 'updated_at'])));
+        $this->assertSame($otherBefore, $other->fresh()->getAttributes());
+    }
+
+    public static function pauseEnds(): array
+    {
+        return ['indefinite' => [null], 'empty' => [''], 'today' => ['2026-11-15'], 'maximum' => ['2027-11-15']];
+    }
+
+    public function test_pause_without_an_end_replaces_an_existing_dated_pause(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 12:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->forceFill(['paused_at' => now()->subDay(), 'paused_until' => '2026-11-16'])->save();
+
+        $this->actingAs($user)->from('/settings/digest')->put(route('digest.pause'), [])
+            ->assertRedirect('/settings/digest')->assertSessionHasNoErrors();
+
+        $this->assertSame('2026-11-15 12:00:00', $user->digestSettings->fresh()->paused_at->toDateTimeString());
+        $this->assertNull($user->digestSettings->fresh()->paused_until);
+    }
+
+    public function test_resume_clears_only_the_readers_pause_and_is_idempotent(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 12:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->forceFill(['news_enabled' => true, 'learning_enabled' => false, 'paused_at' => now(), 'paused_until' => '2026-11-16'])->save();
+        $other = DigestSettings::factory()->create(['paused_at' => now(), 'paused_until' => null]);
+        $otherBefore = $other->fresh()->getAttributes();
+        $before = $user->digestSettings->fresh()->getAttributes();
+
+        $this->actingAs($user)->from('/settings/digest')->delete(route('digest.resume'), ['user_id' => $other->user_id])
+            ->assertRedirect('/settings/digest')->assertInertiaFlash('toast.type', 'success');
+        $this->delete(route('digest.resume'))->assertRedirect('/settings/digest');
+
+        $settings = $user->digestSettings->fresh();
+        $this->assertNull($settings->paused_at);
+        $this->assertNull($settings->paused_until);
+        $this->assertSame(array_diff_key($before, array_flip(['paused_at', 'paused_until', 'updated_at'])),
+            array_diff_key($settings->getAttributes(), array_flip(['paused_at', 'paused_until', 'updated_at'])));
+        $this->assertSame($otherBefore, $other->fresh()->getAttributes());
+    }
+
+    #[DataProvider('invalidPauseEnds')]
+    public function test_invalid_pause_end_leaves_settings_unchanged(mixed $until, string $message): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 12:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $before = $user->digestSettings->fresh()->getAttributes();
+
+        $this->actingAs($user)->putJson(route('digest.pause'), ['until' => $until])
+            ->assertUnprocessable()->assertJsonValidationErrors('until')
+            ->assertJsonPath('errors.until.0', $message);
+
+        $this->assertSame($before, $user->digestSettings->fresh()->getAttributes());
+    }
+
+    public static function invalidPauseEnds(): array
+    {
+        return [
+            'past' => ['2026-11-14', 'The end date field must be a date after or equal to 2026-11-15.'],
+            'too far' => ['2027-11-16', 'The end date field must be a date before or equal to 2027-11-15.'],
+            'invalid format' => ['11/16/2026', 'The end date field must match the format Y-m-d.'],
+            'invalid date' => ['2026-11-31', 'The end date field must match the format Y-m-d.'],
+            'array' => [[], 'The end date field must match the format Y-m-d.'],
+        ];
+    }
+
+    #[DataProvider('localPauseEnds')]
+    public function test_pause_validation_uses_the_readers_local_today(string $timezone, string $until, bool $valid): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 00:30:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->update(['timezone' => $timezone]);
+
+        $response = $this->actingAs($user)->putJson(route('digest.pause'), ['until' => $until]);
+
+        if ($valid) {
+            $response->assertRedirect()->assertSessionHasNoErrors();
+            $this->assertSame($until, $user->digestSettings->fresh()->paused_until->toDateString());
+        } else {
+            $response->assertUnprocessable()->assertJsonValidationErrors('until');
+            $this->assertNull($user->digestSettings->fresh()->paused_at);
+        }
+    }
+
+    public static function localPauseEnds(): array
+    {
+        return [
+            'Los Angeles today' => ['America/Los_Angeles', '2026-11-14', true],
+            'Los Angeles maximum' => ['America/Los_Angeles', '2027-11-14', true],
+            'Los Angeles beyond maximum' => ['America/Los_Angeles', '2027-11-15', false],
+            'Tokyo yesterday' => ['Asia/Tokyo', '2026-11-14', false],
+        ];
+    }
+
+    #[DataProvider('pauseMethods')]
+    public function test_pause_endpoints_require_authentication_verification_and_onboarding(string $method): void
+    {
+        $this->{$method}('/settings/digest/pause')->assertRedirect('/login');
+        $this->actingAs(User::factory()->unverified()->create())->{$method}('/settings/digest/pause')->assertRedirect('/email/verify');
+        $this->actingAs(User::factory()->create())->{$method}('/settings/digest/pause')->assertRedirect('/onboarding');
+    }
+
+    public static function pauseMethods(): array
+    {
+        return [['put'], ['delete']];
+    }
+
+    #[DataProvider('pauseProps')]
+    public function test_settings_exposes_pause_for_the_readers_local_today(?string $pausedAt, ?string $until, bool $paused, ?string $expectedUntil): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 15:00:00', 'UTC'));
+        $user = User::factory()->onboarded()->create();
+        $user->digestSettings->forceFill(['timezone' => 'Asia/Tokyo', 'paused_at' => $pausedAt, 'paused_until' => $until])->save();
+
+        $this->actingAs($user)->get(route('digest.edit'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('settings.paused', $paused)->where('settings.paused_until', $expectedUntil));
+    }
+
+    public static function pauseProps(): array
+    {
+        return [
+            'unpaused' => [null, null, false, null],
+            'indefinite' => ['2026-11-14 12:00:00', null, true, null],
+            'last local day' => ['2026-11-14 12:00:00', '2026-11-16', true, '2026-11-16'],
+            'expired locally' => ['2026-11-14 12:00:00', '2026-11-15', false, null],
+        ];
     }
 
     private function payload(): array

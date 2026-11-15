@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { parseDate, today } from '@internationalized/date';
 import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import DatePicker from '@/components/pulse/DatePicker.vue';
 import HelpTip from '@/components/pulse/HelpTip.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +14,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
     Select,
     SelectContent,
@@ -22,6 +25,8 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDate } from '@/lib/dates';
+import { pause, resume } from '@/routes/digest';
 import type { DigestSettingsProps } from '@/types/settings';
 
 const props = defineProps<DigestSettingsProps>();
@@ -38,6 +43,42 @@ const form = ref({
     max_items: props.settings.max_items,
 });
 const processing = ref(false);
+const pauseProcessing = ref(false);
+const pauseMode = ref('resume');
+const pauseUntil = ref<string | null>(null);
+const localToday = computed(() => today(props.settings.timezone).toString());
+const lastPauseDate = computed(() =>
+    parseDate(localToday.value).add({ days: 365 }).toString(),
+);
+
+function pickPause(days: number) {
+    pauseMode.value = 'date';
+    pauseUntil.value = parseDate(localToday.value).add({ days }).toString();
+}
+
+function pauseDigests() {
+    pauseProcessing.value = true;
+    router.put(
+        pause.url(),
+        { until: pauseMode.value === 'date' ? pauseUntil.value : null },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                pauseProcessing.value = false;
+            },
+        },
+    );
+}
+
+function resumeDigests() {
+    pauseProcessing.value = true;
+    router.delete(resume.url(), {
+        preserveScroll: true,
+        onFinish: () => {
+            pauseProcessing.value = false;
+        },
+    });
+}
 const times = Array.from(
     { length: 96 },
     (_, index) =>
@@ -211,6 +252,114 @@ function save() {
                     <InputError :message="errors.max_items" />
                 </div>
                 <Button :disabled="processing" class="focus-ring">Save</Button>
+            </form>
+        </CardContent>
+    </Card>
+    <Card class="mb-4 shadow-none">
+        <CardHeader>
+            <CardTitle class="font-display">Pause digests</CardTitle>
+            <CardDescription>
+                Take a break from both digests. Paused days get no digest and
+                stay empty in your history.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div
+                v-if="settings.paused"
+                class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary-strong/30 bg-primary/40 p-4 text-sm text-foreground dark:bg-primary/10"
+            >
+                <p>
+                    {{
+                        settings.paused_until
+                            ? `Digests are paused until ${formatDate(settings.paused_until)}.`
+                            : 'Digests are paused until you resume them.'
+                    }}
+                </p>
+                <Button
+                    :disabled="pauseProcessing"
+                    size="sm"
+                    class="focus-ring"
+                    @click="resumeDigests"
+                >
+                    Resume digests
+                </Button>
+            </div>
+            <form v-else class="space-y-4" @submit.prevent="pauseDigests">
+                <RadioGroup
+                    v-model="pauseMode"
+                    aria-label="Pause duration"
+                    class="grid gap-2 sm:grid-cols-2"
+                >
+                    <Label
+                        for="pause-resume"
+                        class="flex items-center gap-2 rounded-lg border border-border p-3 font-normal has-[[data-state=checked]]:border-primary-strong"
+                    >
+                        <RadioGroupItem
+                            id="pause-resume"
+                            value="resume"
+                            class="focus-ring"
+                        />
+                        Until I resume
+                    </Label>
+                    <Label
+                        for="pause-date"
+                        class="flex items-center gap-2 rounded-lg border border-border p-3 font-normal has-[[data-state=checked]]:border-primary-strong"
+                    >
+                        <RadioGroupItem
+                            id="pause-date"
+                            value="date"
+                            class="focus-ring"
+                        />
+                        Until a date
+                    </Label>
+                </RadioGroup>
+                <div v-if="pauseMode === 'date'" class="space-y-1.5">
+                    <Label for="pause-until">End date</Label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="w-full sm:w-auto">
+                            <DatePicker
+                                id="pause-until"
+                                v-model="pauseUntil"
+                                aria-label="End date"
+                                :min="localToday"
+                                :max="lastPauseDate"
+                                :invalid="!!errors.until"
+                                :described-by="
+                                    errors.until
+                                        ? 'pause-until-error'
+                                        : undefined
+                                "
+                            />
+                        </div>
+                        <Button
+                            v-for="pick in [
+                                { days: 7, label: '1 week' },
+                                { days: 14, label: '2 weeks' },
+                            ]"
+                            :key="pick.days"
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            class="focus-ring"
+                            @click="pickPause(pick.days)"
+                        >
+                            {{ pick.label }}
+                        </Button>
+                    </div>
+                    <InputError
+                        id="pause-until-error"
+                        :message="errors.until"
+                    />
+                </div>
+                <InputError v-else :message="errors.until" />
+                <Button
+                    :disabled="
+                        pauseProcessing || (pauseMode === 'date' && !pauseUntil)
+                    "
+                    class="focus-ring"
+                >
+                    Pause digests
+                </Button>
             </form>
         </CardContent>
     </Card>

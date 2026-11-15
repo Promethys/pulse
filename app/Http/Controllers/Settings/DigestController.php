@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\PauseDigests;
+use App\Actions\ResumeDigests;
 use App\Actions\UpdateDigestSettings;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\PauseDigestsRequest;
 use App\Http\Requests\Settings\UpdateDigestSettingsRequest;
 use App\Http\Resources\DigestSettingsResource;
 use DateTimeZone;
@@ -30,6 +33,24 @@ final class DigestController extends Controller
         $data = $request->validated();
         $action->handle($request->user(), $data);
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Digest settings saved.')]);
+
+        return back();
+    }
+
+    public function pause(PauseDigestsRequest $request, PauseDigests $action): RedirectResponse
+    {
+        /** @var array{until?: string|null} $data */
+        $data = $request->validated();
+        $action->handle($request->user(), $data['until'] ?? null);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Digests paused.')]);
+
+        return back();
+    }
+
+    public function resume(Request $request, ResumeDigests $action): RedirectResponse
+    {
+        $action->handle($request->user());
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Digests resumed.')]);
 
         return back();
     }

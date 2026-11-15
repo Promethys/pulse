@@ -28,6 +28,10 @@ Yes. Add public RSS or Atom feeds, connect your own Resend receiving inbox, or r
 
 Yes. Turn off its switch in **Settings → Delivery**. Your generated digests remain available in the app.
 
+## Can you stop your digests for a while?
+
+Yes. Use **Pause digests** in **Settings → Digest**: until you resume, or until a date up to one year ahead. Paused days prepare and send nothing and stay empty in your history. See [Change times and limits](/docs/your-digest/change-times-and-limits).
+
 ## Can you export your data?
 
 There is no data export feature. You can [delete your account](/docs/account/delete-your-account) from Profile settings.

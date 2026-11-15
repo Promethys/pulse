@@ -57,7 +57,7 @@ Login allows 5 attempts per minute per account and IP, 30 per hour per account, 
 | `DB_QUEUE_RETRY_AFTER` | Seconds before the database queue retries a reserved job; keep it above the 300-second digest job timeout. | `360` |
 | `DIGEST_MAX_ATTEMPTS` | Maximum failed generation attempts per post and failed delivery attempts per destination. | `4` |
 
-New accounts default to `UTC`, 09:00 news, 09:30 learning and 20 items. `/settings/digest` edits the profile (up to 2,000 characters), timezone, toggles, times and item limit; learning cannot be enabled without a learning interest. Settings validation accepts times in 15-minute steps and an item limit from 1 to 20. The scheduler and a queue worker are both required; see [Getting started](02-getting-started.md#running-digests).
+New accounts default to `UTC`, 09:00 news, 09:30 learning and 20 items. `/settings/digest` edits the profile (up to 2,000 characters), timezone, toggles, times, item limit and the account-wide pause (until resumed or until a date at most one year ahead); learning cannot be enabled without a learning interest. Settings validation accepts times in 15-minute steps and an item limit from 1 to 20. The scheduler and a queue worker are both required; see [Getting started](02-getting-started.md#running-digests).
 
 ## AI providers
 

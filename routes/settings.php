@@ -18,6 +18,8 @@ Route::middleware(['auth', 'onboarded'])->group(function () {
 Route::middleware(['auth', 'verified', 'onboarded'])->group(function () {
     Route::get('settings/digest', [DigestController::class, 'edit'])->name('digest.edit');
     Route::put('settings/digest', [DigestController::class, 'update'])->name('digest.update');
+    Route::put('settings/digest/pause', [DigestController::class, 'pause'])->name('digest.pause');
+    Route::delete('settings/digest/pause', [DigestController::class, 'resume'])->name('digest.resume');
 
     Route::get('settings/ai-keys', [AiKeysController::class, 'index'])->name('ai-keys.index');
     Route::post('settings/ai-keys', [AiKeysController::class, 'store'])->name('ai-keys.store');

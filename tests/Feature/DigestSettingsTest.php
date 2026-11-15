@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Concerns\DigestSettingsValidationRules;
 use App\Models\DigestSettings;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Features;
@@ -16,6 +17,35 @@ use Tests\TestCase;
 class DigestSettingsTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[DataProvider('pauseDates')]
+    public function test_pause_is_inclusive_of_the_last_local_day(?string $pausedAt, ?string $until, string $localDate, bool $expected): void
+    {
+        $settings = DigestSettings::factory()->make(['paused_at' => $pausedAt, 'paused_until' => $until]);
+
+        $this->assertSame($expected, $settings->isPausedOn(CarbonImmutable::parse($localDate, 'Asia/Tokyo')));
+    }
+
+    public static function pauseDates(): array
+    {
+        return [
+            'not paused' => [null, null, '2026-11-15 12:00:00', false],
+            'end without pause' => [null, '2026-11-16', '2026-11-15 12:00:00', false],
+            'indefinite' => ['2026-11-14 12:00:00', null, '2027-11-15 12:00:00', true],
+            'before end' => ['2026-11-14 12:00:00', '2026-11-16', '2026-11-15 12:00:00', true],
+            'on end' => ['2026-11-14 12:00:00', '2026-11-16', '2026-11-16 23:59:59', true],
+            'after end' => ['2026-11-14 12:00:00', '2026-11-16', '2026-11-17 00:00:00', false],
+        ];
+    }
+
+    public function test_pause_fields_cannot_be_mass_assigned(): void
+    {
+        $settings = DigestSettings::factory()->create();
+        $settings->update(['paused_at' => now(), 'paused_until' => '2026-11-16']);
+
+        $this->assertNull($settings->fresh()->paused_at);
+        $this->assertNull($settings->fresh()->paused_until);
+    }
 
     public function test_registration_creates_default_digest_settings(): void
     {

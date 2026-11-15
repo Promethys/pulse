@@ -10,8 +10,15 @@ import {
     vi,
 } from 'vite-plus/test';
 import Today from '@/pages/Today.vue';
-import { todayProps } from '../support/dayProps';
+import { todayProps as baseTodayProps } from '../support/dayProps';
 import { page } from '../support/inertia';
+
+function todayProps() {
+    return {
+        ...baseTodayProps(),
+        pause: null as { until: string | null } | null,
+    };
+}
 
 function renderPage(props = todayProps()) {
     page.url = '/dashboard';
@@ -311,3 +318,62 @@ it.each(['news', 'learning', 'both'] as const)(
         ).not.toBeInTheDocument();
     },
 );
+
+describe('Paused digests on Today', () => {
+    it.each([
+        [null, 'Your digests are paused.'],
+        ['2026-11-30', 'Your digests are paused until Monday 30 November.'],
+    ] as const)(
+        'shows a pause ending %s above the digest and resumes it',
+        async (until, message) => {
+            const props = todayProps();
+            props.pause = { until };
+            props.is_today = true;
+            props.day!.news!.status = 'pending';
+            const remove = vi
+                .spyOn(router, 'delete')
+                .mockImplementation(() => {});
+            renderPage(props);
+            const banner = screen.getByText(message);
+            expect(banner).toBeVisible();
+            expect(
+                banner.compareDocumentPosition(
+                    screen.getByRole('heading', { level: 1 }),
+                ) & Node.DOCUMENT_POSITION_FOLLOWING,
+            ).toBeTruthy();
+            expect(
+                screen.queryByText(/Your digest is being prepared/),
+            ).not.toBeInTheDocument();
+            await userEvent
+                .setup()
+                .click(screen.getByRole('button', { name: 'Resume' }));
+            expect(remove).toHaveBeenCalledWith(
+                '/settings/digest/pause',
+                expect.objectContaining({ preserveScroll: true }),
+            );
+            expect(
+                screen.getByRole('button', { name: 'Resume' }),
+            ).toBeDisabled();
+        },
+    );
+
+    it.each([true, false])(
+        'does not promise a first digest or schedule while paused with AI access %s',
+        (aiKey) => {
+            const props = todayProps();
+            props.pause = { until: null };
+            props.day = null;
+            props.setup.ai_key = aiKey;
+            renderPage(props);
+            expect(screen.getByText('Your digests are paused.')).toBeVisible();
+            expect(
+                screen.getByRole('heading', { name: 'Digests paused' }),
+            ).toBeVisible();
+            expect(
+                screen.queryByText(
+                    /Pulse prepares your digest every day|Your first digest is on its way|Add an AI key in Settings to start receiving digests/,
+                ),
+            ).not.toBeInTheDocument();
+        },
+    );
+});

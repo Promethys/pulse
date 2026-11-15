@@ -138,6 +138,50 @@ class TickSchedulerTest extends TestCase
         $this->assertSame(PostKind::News, $due[0]->kind);
     }
 
+    public function test_indefinite_pause_skips_both_kinds_without_affecting_other_readers(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-15 12:00:00', 'UTC'));
+        $paused = $this->eligibleUser(['paused_at' => now(), 'paused_until' => null]);
+        $eligible = $this->eligibleUser();
+
+        $due = (new TickScheduler)->due(CarbonImmutable::now('UTC'));
+
+        $this->assertCount(2, $due);
+        $this->assertSame([PostKind::News, PostKind::Learning], array_map(fn (DueDigest $digest) => $digest->kind, $due));
+        foreach ($due as $digest) {
+            $this->assertTrue($digest->user->is($eligible));
+        }
+        $this->assertTrue($paused->digestSettings->news_enabled);
+        $this->assertTrue($paused->digestSettings->learning_enabled);
+    }
+
+    #[DataProvider('pauseMidnights')]
+    public function test_pause_expires_after_the_last_day_in_the_readers_timezone(string $timezone, string $now, bool $paused): void
+    {
+        $this->travelTo(CarbonImmutable::parse($now, 'UTC'));
+        $user = $this->eligibleUser(['timezone' => $timezone, 'news_time' => '00:00', 'learning_time' => '00:00',
+            'paused_at' => '2026-11-14 12:00:00', 'paused_until' => '2026-11-15']);
+
+        $due = (new TickScheduler)->due(CarbonImmutable::now('UTC'));
+
+        $this->assertCount($paused ? 0 : 2, $due);
+        foreach ($due as $digest) {
+            $this->assertTrue($digest->user->is($user));
+            $this->assertSame('2026-11-16', $digest->date->toDateString());
+        }
+        $this->assertNotNull($user->digestSettings->fresh()->paused_at);
+    }
+
+    public static function pauseMidnights(): array
+    {
+        return [
+            'Tokyo last second' => ['Asia/Tokyo', '2026-11-15 14:59:59', true],
+            'Tokyo next day' => ['Asia/Tokyo', '2026-11-15 15:00:00', false],
+            'Los Angeles last second' => ['America/Los_Angeles', '2026-11-16 07:59:59', true],
+            'Los Angeles next day' => ['America/Los_Angeles', '2026-11-16 08:00:00', false],
+        ];
+    }
+
     /** @return array<string, array{string, list<PostKind>}> */
     public static function ticks(): array
     {
