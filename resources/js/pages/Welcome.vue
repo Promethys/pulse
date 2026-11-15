@@ -215,7 +215,7 @@ const highlights = [
                 <Faq :items="publicFaq" class="mt-4" />
             </section>
             <section
-                class="mt-14 rounded-3xl bg-primary/25 p-6 text-center md:p-12 dark:border dark:border-border dark:bg-card"
+                class="mt-14 rounded-3xl bg-primary/10 p-6 text-center md:p-12 dark:border dark:border-border dark:bg-card"
                 aria-label="Get started"
             >
                 <h2 class="text-2xl font-semibold md:text-3xl">

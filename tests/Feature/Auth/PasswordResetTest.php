@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,9 +38,51 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post(route('password.email'), ['email' => $user->email]);
+        $this->from(route('password.request'))->post(route('password.email'), ['email' => $user->email])
+            ->assertRedirect(route('password.request'))
+            ->assertSessionHas('status', trans(Password::RESET_LINK_SENT))
+            ->assertSessionHasNoErrors();
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_unknown_email_gets_the_same_reset_link_status_without_sending_a_notification(): void
+    {
+        Notification::fake();
+
+        $this->from(route('password.request'))->post(route('password.email'), ['email' => 'unknown@example.test'])
+            ->assertRedirect(route('password.request'))
+            ->assertSessionHas('status', trans(Password::RESET_LINK_SENT))
+            ->assertSessionHasNoErrors();
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_throttled_reset_link_gets_the_generic_status_without_sending_another_notification(): void
+    {
+        Notification::fake();
+        $this->freezeTime();
+        $user = User::factory()->create();
+        $this->from(route('password.request'))->post(route('password.email'), ['email' => $user->email])
+            ->assertSessionHasNoErrors();
+
+        $this->post(route('password.email'), ['email' => $user->email])
+            ->assertRedirect(route('password.request'))
+            ->assertSessionHas('status', trans(Password::RESET_LINK_SENT))
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentToTimes($user, ResetPassword::class, 1);
+    }
+
+    public function test_unknown_email_returns_200_with_the_generic_reset_link_message_as_json(): void
+    {
+        Notification::fake();
+
+        $this->postJson(route('password.email'), ['email' => 'unknown@example.test'])
+            ->assertOk()
+            ->assertExactJson(['message' => trans(Password::RESET_LINK_SENT)]);
+
+        Notification::assertNothingSent();
     }
 
     public function test_reset_password_screen_can_be_rendered()

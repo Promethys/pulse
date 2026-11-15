@@ -35,13 +35,13 @@ useCodeCopy(content, () => props.article.html);
         <Head :title="`${article.title} - Docs`"
             ><meta name="description" :content="article.summary"
         /></Head>
-        <div class="mx-auto max-w-6xl px-4 py-8 md:py-10">
+        <div class="mx-auto max-w-5xl px-4 py-8 md:py-10">
             <div class="mb-5 lg:hidden">
                 <DocsMenuButton :sections="sections" :current="current" />
             </div>
             <div class="flex gap-8">
                 <aside
-                    class="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-56 shrink-0 self-start overflow-y-auto pb-8 lg:block"
+                    class="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-48 shrink-0 self-start overflow-y-auto pb-8 lg:block"
                 >
                     <DocsNav :sections="sections" :current="current" />
                 </aside>

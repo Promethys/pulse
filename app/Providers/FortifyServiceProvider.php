@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Responses\FailedPasswordResetLinkRequestResponse;
+use App\Http\Responses\SuccessfulPasswordResetLinkRequestResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +16,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse as FailedPasswordResetLinkRequestResponseContract;
+use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse as SuccessfulPasswordResetLinkRequestResponseContract;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\IpUtils;
@@ -27,7 +31,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(FailedPasswordResetLinkRequestResponseContract::class, FailedPasswordResetLinkRequestResponse::class);
+        $this->app->bind(SuccessfulPasswordResetLinkRequestResponseContract::class, SuccessfulPasswordResetLinkRequestResponse::class);
     }
 
     /**
@@ -136,7 +141,7 @@ class FortifyServiceProvider extends ServiceProvider
             return [
                 ...$this->addressLimits($request),
                 Limit::perHour(5)->by('account:'.$account),
-                Limit::perDay(self::DAILY_MAIL_BUDGET)->by('mail')->after(fn () => $request->session()->has('status')),
+                Limit::perDay(self::DAILY_MAIL_BUDGET)->by('mail')->after(fn () => $request->attributes->get('password_reset_link_sent') === true),
             ];
         });
 

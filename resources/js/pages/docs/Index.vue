@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Search } from '@lucide/vue';
+import { Search, X } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import type { DocsSection } from '@/components/pulse/DocsNav.vue';
 import type { DocsHeading } from '@/components/pulse/OnThisPage.vue';
@@ -15,6 +15,11 @@ const props = defineProps<{
     searchIndex: (DocsEntry & { headings: DocsHeading[] })[];
 }>();
 const query = ref('');
+const searchBox = ref<HTMLElement>();
+function clearQuery() {
+    query.value = '';
+    searchBox.value?.querySelector('input')?.focus();
+}
 onMounted(() => {
     if (window.location.hash === '#search') {
         document.getElementById('search')?.focus();
@@ -47,7 +52,7 @@ const results = computed(() =>
                     Short guides for every part of Pulse, from choosing your
                     interests to reading your daily digest.
                 </p>
-                <div class="relative mt-5 max-w-md">
+                <div ref="searchBox" class="relative mt-5 max-w-md">
                     <Search
                         class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
                         aria-hidden="true"
@@ -58,8 +63,17 @@ const results = computed(() =>
                         type="search"
                         aria-label="Search the docs"
                         placeholder="Search the docs..."
-                        class="scroll-mt-24 pl-9"
+                        class="scroll-mt-24 pr-10 pl-9 [&::-webkit-search-cancel-button]:appearance-none"
                     />
+                    <button
+                        v-if="query"
+                        type="button"
+                        aria-label="Clear search"
+                        class="absolute top-1/2 right-3 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground focus-ring hover:bg-accent hover:text-accent-foreground"
+                        @click="clearQuery"
+                    >
+                        <X class="size-4" aria-hidden="true" />
+                    </button>
                 </div>
             </header>
             <template v-if="search">

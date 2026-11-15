@@ -283,3 +283,31 @@ it.each([true, false])(
         expect(screen.queryByText('Finish setting up')).not.toBeInTheDocument();
     },
 );
+
+it.each(['news', 'learning', 'both'] as const)(
+    'uses one banner for today with %s pending',
+    (pending) => {
+        const props = todayProps();
+        props.is_today = true;
+        if (pending !== 'learning') props.day!.news!.status = 'pending';
+        if (pending !== 'news') {
+            props.day!.learning = { status: 'pending', tip: null, topic: null };
+        }
+        renderPage(props);
+        expect(
+            screen.getAllByText(
+                'Your digest is being prepared. Refresh this page shortly.',
+            ),
+        ).toHaveLength(1);
+        expect(
+            screen.queryByText(
+                'Your learning is being prepared. Refresh this page shortly.',
+            ),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(
+                'Your news is being prepared. Refresh this page shortly.',
+            ),
+        ).not.toBeInTheDocument();
+    },
+);

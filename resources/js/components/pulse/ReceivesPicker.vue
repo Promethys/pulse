@@ -23,7 +23,9 @@ function toggle(kind: string, checked: boolean) {
 
 <template>
     <fieldset class="space-y-2">
-        <legend class="text-sm font-medium">Send to this destination</legend>
+        <legend class="text-sm leading-none font-medium">
+            Send to this destination
+        </legend>
         <p class="text-sm text-muted-foreground">
             Choose at least one.
             <template v-if="pauseHint">

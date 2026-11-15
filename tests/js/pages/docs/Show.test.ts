@@ -143,3 +143,11 @@ it('resets the copied state and clears its timer when unmounted', async () => {
     view.unmount();
     expect(vi.getTimerCount()).toBe(0);
 });
+
+it('uses the public content width with a shrinkable article column', () => {
+    page.props = { auth: { user: null }, canRegister: false };
+    const view = render(Show, { props });
+    const content = view.container.querySelector('article')!;
+    expect(content).toHaveClass('min-w-0', 'flex-1');
+    expect(content.parentElement?.parentElement).toHaveClass('max-w-5xl');
+});

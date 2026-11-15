@@ -41,7 +41,10 @@ const setCookie = (name: string, value: string, days = 365) => {
 };
 
 const mediaQuery = () => {
-    if (typeof window === 'undefined') {
+    if (
+        typeof window === 'undefined' ||
+        typeof window.matchMedia !== 'function'
+    ) {
         return null;
     }
 
@@ -56,15 +59,11 @@ const getStoredAppearance = () => {
     return localStorage.getItem('appearance') as Appearance | null;
 };
 
-const prefersDark = (): boolean => {
-    if (typeof window === 'undefined') {
-        return false;
-    }
+const systemPrefersDark = ref(mediaQuery()?.matches ?? false);
+let systemThemeQuery: MediaQueryList | null = null;
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-};
-
-const handleSystemThemeChange = () => {
+const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+    systemPrefersDark.value = event.matches;
     const currentAppearance = getStoredAppearance();
 
     updateTheme(currentAppearance || 'system');
@@ -79,8 +78,10 @@ export function initializeTheme(): void {
     const savedAppearance = getStoredAppearance();
     updateTheme(savedAppearance || 'system');
 
-    // Set up system theme change listener...
-    mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+    systemThemeQuery?.removeEventListener('change', handleSystemThemeChange);
+    systemThemeQuery = mediaQuery();
+    systemPrefersDark.value = systemThemeQuery?.matches ?? false;
+    systemThemeQuery?.addEventListener('change', handleSystemThemeChange);
 }
 
 const appearance = ref<Appearance>('system');
@@ -98,7 +99,7 @@ export function useAppearance(): UseAppearanceReturn {
 
     const resolvedAppearance = computed<ResolvedAppearance>(() => {
         if (appearance.value === 'system') {
-            return prefersDark() ? 'dark' : 'light';
+            return systemPrefersDark.value ? 'dark' : 'light';
         }
 
         return appearance.value;

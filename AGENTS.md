@@ -56,6 +56,8 @@ See `docs/04-architecture.md` for the details.
 - `app/Digest/TickScheduler.php` and `digest:tick`: decides what is due from each user's local time and the `posts` table.
 - `app/Reading/`, `app/Http/Resources/`: read layer for the web app. `app/Actions/`: write actions. `app/Filament/`: admin panel.
 - `app/Docs/`, `config/docs.php`, `resources/docs/`: public user documentation. Public pages use `PublicLayout`.
+- Google and GitHub sign-in: `app/Auth/SocialProviders.php` (a provider is enabled only when its id, secret and redirect are set), `app/Actions/SignInWithProvider.php`, `SocialLoginController`, `social_accounts` (provider and id only, no tokens or profile data). Passwords are nullable (`User::has_password`), and the `password.confirm` alias points to `RequirePasswordIfPresent`.
+- Signed-in app at `/dashboard`; `/` is always the public landing page.
 - Text formats: item title and summary are plain text (escaped when rendered), learning bodies are Markdown (not escaped), `posts.rendered` is a structured array holding the title, Discord Markdown messages and tags. The web app converts learning Markdown and strips raw HTML and unsafe links.
 
 ## Gotchas

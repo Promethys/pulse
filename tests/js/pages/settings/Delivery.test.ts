@@ -2,6 +2,7 @@ import { router } from '@inertiajs/vue3';
 import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vite-plus/test';
+import { nextTick } from 'vue';
 import Delivery from '@/pages/settings/Delivery.vue';
 import { http, page } from '../../support/inertia';
 import { deliveryProps, destinationProps } from '../../support/settingsProps';
@@ -352,3 +353,96 @@ it.each(['Add webhook', 'Add email'])(
         ).not.toBeInTheDocument();
     },
 );
+
+it('keeps save errors under their fields and scoped to each destination', async () => {
+    const props = deliveryProps();
+    props.email = {
+        ...destinationProps(),
+        id: 23,
+        type: 'email',
+        name: 'Email',
+        target: { address: 'destination@example.test' },
+    };
+    const view = renderPage(props);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    expect(name.parentElement).toHaveClass('min-w-0', 'w-56', 'max-w-full');
+    await view.user.click(name);
+    await view.user.tab();
+    view.put.mock.calls[0][2]?.onError?.({ name: 'Name rejected.' });
+    await nextTick();
+    expect(
+        within(name.parentElement!).getByText('Name rejected.'),
+    ).toBeVisible();
+    expect(screen.getByText('Name rejected.').parentElement).toHaveClass(
+        'break-words',
+    );
+
+    const address = screen.getByRole('textbox', { name: 'Email address' });
+    expect(address.parentElement).toHaveClass('min-w-0', 'w-full');
+    await view.user.click(address);
+    await view.user.tab();
+    view.put.mock.calls[1][2]?.onError?.({ address: 'Address rejected.' });
+    await nextTick();
+    expect(
+        within(address.parentElement!).getByText('Address rejected.'),
+    ).toBeVisible();
+    expect(screen.getByText('Address rejected.').parentElement).toHaveClass(
+        'break-words',
+    );
+    expect(
+        within(name.parentElement!).getByText('Name rejected.'),
+    ).toBeVisible();
+
+    const url = screen.getByLabelText('Replace webhook URL');
+    expect(url.parentElement).toHaveClass('min-w-0', 'w-56', 'max-w-full');
+    await view.user.type(url, 'https://example.test/rejected');
+    await view.user.tab();
+    const urlError = 'The webhook URL must be a Discord webhook URL.';
+    view.put.mock.calls[2][2]?.onError?.({ webhook_url: urlError });
+    await nextTick();
+    expect(within(url.parentElement!).getByText(urlError)).toBeVisible();
+    expect(screen.getByText(urlError).parentElement).toHaveClass('break-words');
+    expect(url.parentElement).toHaveClass('min-w-0', 'w-56', 'max-w-full');
+    expect(screen.queryByText('Name rejected.')).not.toBeInTheDocument();
+    expect(screen.getByText('Address rejected.')).toBeVisible();
+
+    await view.user.click(url);
+    await view.user.tab();
+    view.put.mock.calls[3][2]?.onSuccess?.({} as never);
+    await nextTick();
+    expect(screen.queryByText(urlError)).not.toBeInTheDocument();
+    expect(screen.getByText('Address rejected.')).toBeVisible();
+});
+
+it('shows forum and receive errors beside their controls', async () => {
+    const view = renderPage();
+    await view.user.click(
+        screen.getByRole('switch', { name: /Enable.*Digest forum/i }),
+    );
+    view.put.mock.calls[0][2]?.onError?.({
+        channel_id: 'Forum rejected.',
+        kinds: 'Choose a digest.',
+        enabled: 'Cannot enable.',
+    });
+    await nextTick();
+    const forum = screen.getByRole('combobox', {
+        name: 'Forum channel for Digest forum',
+    });
+    expect(
+        within(forum.parentElement!).getByText('Forum rejected.'),
+    ).toBeVisible();
+    const picker = screen.getAllByRole('group', {
+        name: 'Send to this destination',
+    })[0];
+    expect(
+        within(picker.parentElement!).getByText('Choose a digest.'),
+    ).toBeVisible();
+    expect(screen.getByText('Cannot enable.')).toBeVisible();
+});
+
+it('aligns the receive legend with the field labels', () => {
+    renderPage();
+    for (const legend of screen.getAllByText('Send to this destination')) {
+        expect(legend).toHaveClass('text-sm', 'font-medium', 'leading-none');
+    }
+});

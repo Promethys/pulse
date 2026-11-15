@@ -179,3 +179,27 @@ describe('Security settings', () => {
         );
     });
 });
+
+it.each([true, false])(
+    'describes the password action with hasPassword=%s',
+    (hasPassword) => {
+        page.props.auth = { user: { has_password: hasPassword } };
+        page.props.socialProviders = [];
+        render(Security, {
+            props: {
+                passwordRules: 'minlength: 8;',
+                passwordHint: 'Use at least 8 characters.',
+                connectedProviders: [],
+            },
+        });
+        const existing =
+            'Ensure your account is using a long, random password to stay secure';
+        const passwordless = 'Add a password to sign in with your email too.';
+        expect(
+            screen.getByText(hasPassword ? existing : passwordless),
+        ).toBeVisible();
+        expect(
+            screen.queryByText(hasPassword ? passwordless : existing),
+        ).not.toBeInTheDocument();
+    },
+);

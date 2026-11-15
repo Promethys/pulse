@@ -123,7 +123,7 @@ const sections = [
                     </FeatureSection>
                     <div
                         v-if="!page.props.auth.user && page.props.canRegister"
-                        class="mt-4 rounded-3xl bg-primary/25 p-6 text-center md:p-10 dark:border dark:border-border dark:bg-card"
+                        class="mt-4 rounded-3xl bg-primary/10 p-6 text-center md:p-10 dark:border dark:border-border dark:bg-card"
                     >
                         <h2 class="text-2xl font-semibold">
                             Ready for your first digest?

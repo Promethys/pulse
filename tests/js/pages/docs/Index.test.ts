@@ -57,3 +57,28 @@ describe('Docs index', () => {
         window.history.replaceState(null, '', '#');
     });
 });
+
+it('clears the docs query and refocuses the search box', async () => {
+    page.props = { auth: { user: null }, canRegister: false };
+    const user = userEvent.setup();
+    render(Index, { props: { sections, searchIndex } });
+    const input = screen.getByRole('searchbox', { name: 'Search the docs' });
+    expect(
+        screen.queryByRole('button', { name: 'Clear search' }),
+    ).not.toBeInTheDocument();
+    expect(input).toHaveClass(
+        'pr-10',
+        '[&::-webkit-search-cancel-button]:appearance-none',
+    );
+    await user.type(input, 'unfindable');
+    expect(screen.getByRole('status')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(
+        screen.queryByRole('button', { name: 'Clear search' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delivery' })).toBeVisible();
+    await user.type(input, ' ');
+    expect(screen.getByRole('button', { name: 'Clear search' })).toBeVisible();
+});

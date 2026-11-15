@@ -27,7 +27,7 @@ defineOptions({
 
     <div class="flex justify-center">
         <span
-            class="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground"
+            class="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground"
         >
             <ShieldCheck class="size-5" aria-hidden="true" />
         </span>

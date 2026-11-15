@@ -87,6 +87,7 @@ describe('useAppearance', () => {
 
     it('defaults to system and resolves it from the system preference', () => {
         mockMatchMedia(true);
+        initializeTheme();
         const { appearance, resolvedAppearance } = mountAppearance();
 
         expect(appearance.value).toBe('system');
@@ -127,4 +128,28 @@ describe('useAppearance', () => {
 
         expect(second.appearance.value).toBe('dark');
     });
+});
+
+it('updates shared resolved appearances on system changes with one listener', () => {
+    initializeTheme();
+    initializeTheme();
+    const first = mountAppearance();
+    const second = mountAppearance();
+    first.updateAppearance('system');
+    expect(systemThemeListenerCount()).toBe(1);
+    expect(first.resolvedAppearance.value).toBe('light');
+
+    changeSystemTheme(true);
+    expect(first.resolvedAppearance.value).toBe('dark');
+    expect(second.resolvedAppearance.value).toBe('dark');
+
+    first.updateAppearance('light');
+    changeSystemTheme(false);
+    changeSystemTheme(true);
+    expect(first.resolvedAppearance.value).toBe('light');
+
+    first.updateAppearance('system');
+    expect(first.resolvedAppearance.value).toBe('dark');
+    changeSystemTheme(false);
+    expect(first.resolvedAppearance.value).toBe('light');
 });

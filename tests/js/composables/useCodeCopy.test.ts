@@ -39,7 +39,7 @@ describe('useCodeCopy', () => {
         vi.useRealTimers();
     });
 
-    it('adds one labelled Copy button to every pre', () => {
+    it('adds one labelled icon button with a tooltip to every pre', () => {
         const view = renderHarness(
             '<p>Intro <code>inline</code></p><pre><code>one</code></pre><pre><code>two</code></pre>',
         );
@@ -49,7 +49,19 @@ describe('useCodeCopy', () => {
         for (const button of buttons) {
             expect(button).toHaveClass('code-copy');
             expect(button).toHaveAttribute('type', 'button');
-            expect(button).toHaveTextContent(/^Copy$/);
+            expect(button.textContent).toBe('');
+            expect(button).toHaveAttribute('data-tooltip', 'Copy code');
+            expect(button).not.toHaveAttribute('title');
+            const icon = button.querySelector('svg');
+            expect(icon).toHaveAttribute('viewBox', '0 0 24 24');
+            expect(icon).toHaveAttribute('aria-hidden', 'true');
+            expect(icon).toHaveAttribute('stroke', 'currentColor');
+            expect(icon).toHaveAttribute('fill', 'none');
+            expect(icon).toHaveAttribute('stroke-width', '2');
+            expect(icon).toHaveAttribute('stroke-linecap', 'round');
+            expect(icon).toHaveAttribute('stroke-linejoin', 'round');
+            expect(icon?.namespaceURI).toBe('http://www.w3.org/2000/svg');
+            expect(icon?.querySelector('rect')).not.toBeNull();
         }
         expectOneButtonPerPre(view.container);
         expect(view.container.querySelector('p .code-copy')).toBeNull();
@@ -107,24 +119,38 @@ describe('useCodeCopy', () => {
         expect(writeText).toHaveBeenCalledWith('plain text');
     });
 
-    it('shows Copied for 1.5 seconds, then goes back to Copy', async () => {
+    it('shows the check icon and Copied tooltip for 1.5 seconds, then resets', async () => {
         userEvent.setup();
         vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
         vi.useFakeTimers();
         renderHarness('<pre><code>hello</code></pre>');
 
-        screen.getByRole('button', { name: 'Copy code' }).click();
+        const button = screen.getByRole('button', { name: 'Copy code' });
+        const copyIcon = button.querySelector('svg')?.outerHTML;
+        button.click();
         await nextTick();
 
         const copied = screen.getByRole('button', { name: 'Copied' });
-        expect(copied).toHaveTextContent(/^Copied$/);
+        expect(copied.textContent).toBe('');
+        expect(copied).toHaveAttribute('data-tooltip', 'Copied');
+        expect(copied.querySelector('svg')).toHaveAttribute(
+            'aria-hidden',
+            'true',
+        );
+        expect(copied.querySelector('svg rect')).toBeNull();
+        expect(copied.querySelector('svg path')).toHaveAttribute(
+            'd',
+            'M20 6 9 17l-5-5',
+        );
 
         await vi.advanceTimersByTimeAsync(1499);
         expect(screen.getByRole('button', { name: 'Copied' })).toBe(copied);
 
         await vi.advanceTimersByTimeAsync(1);
         const copy = screen.getByRole('button', { name: 'Copy code' });
-        expect(copy).toHaveTextContent(/^Copy$/);
+        expect(copy.textContent).toBe('');
+        expect(copy).toHaveAttribute('data-tooltip', 'Copy code');
+        expect(copy.querySelector('svg')?.outerHTML).toBe(copyIcon);
         expect(vi.getTimerCount()).toBe(0);
     });
 
