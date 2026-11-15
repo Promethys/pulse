@@ -42,6 +42,33 @@ final class PublicUrl
         return $ips !== [];
     }
 
+    public function isPublicHost(string $host): bool
+    {
+        return $this->publicHostAddresses($host) !== [];
+    }
+
+    /** @return list<string> */
+    public function publicHostAddresses(string $host): array
+    {
+        if (strlen($host) > 253 || ! str_contains($host, '.')
+            || filter_var($host, FILTER_VALIDATE_IP) !== false
+            || filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false
+            || preg_match('/(?:^|\.)(?:localhost|local|internal|invalid|home|lan)\.?$/i', $host)
+            || preg_match('/^[0-9.]+$/', $host)) {
+            return [];
+        }
+
+        $ips = ($this->resolve)($host);
+
+        foreach ($ips as $ip) {
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE) === false) {
+                return [];
+            }
+        }
+
+        return $ips;
+    }
+
     public function get(PendingRequest $http, string $url, int $maxRedirects = 3): Response
     {
         return $this->follow($http, $url, $maxRedirects)[1];

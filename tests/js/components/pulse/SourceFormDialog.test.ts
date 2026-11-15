@@ -2,6 +2,7 @@ import { router } from '@inertiajs/vue3';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vite-plus/test';
+import type { ManagedSource } from '@/types';
 import SourceFormDialog from '@/components/pulse/SourceFormDialog.vue';
 import { http, page } from '../../support/inertia';
 import { onboardingProps } from '../../support/onboardingProps';
@@ -19,10 +20,7 @@ function customSource() {
     };
 }
 
-async function renderForm(
-    source: ReturnType<typeof customSource> | null = null,
-    errors = {},
-) {
+async function renderForm(source: ManagedSource | null = null, errors = {}) {
     const post = vi.spyOn(router, 'post').mockImplementation(() => {});
     const put = vi.spyOn(router, 'put').mockImplementation(() => {});
     page.props = { errors };
@@ -73,6 +71,10 @@ describe('SourceFormDialog', () => {
                 url: 'https://example.test/feed',
                 api_key: '',
                 address: '',
+                imap_host: 'imap.gmail.com',
+                imap_username: '',
+                imap_password: '',
+                imap_folder: 'INBOX',
                 interests: ['artificial-intelligence'],
             },
             expect.objectContaining({ preserveScroll: true }),
@@ -83,7 +85,7 @@ describe('SourceFormDialog', () => {
     it('switches to a masked newsletter key with its Resend hint and submits it', async () => {
         const view = await renderForm();
         await view.user.click(
-            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+            screen.getByRole('radio', { name: 'Resend inbox' }),
         );
         expect(
             screen.queryByRole('textbox', { name: /^Feed URL \(required\)$/ }),
@@ -121,7 +123,7 @@ describe('SourceFormDialog', () => {
         const view = await renderForm(source);
         expect(screen.getByRole('radio', { name: 'Feed URL' })).toBeDisabled();
         expect(
-            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+            screen.getByRole('radio', { name: 'Resend inbox' }),
         ).toBeDisabled();
         const key = screen.getByLabelText('Resend API key');
         expect(key).toHaveValue('');
@@ -160,7 +162,7 @@ describe('SourceFormDialog', () => {
             screen.queryByLabelText('Receiving address'),
         ).not.toBeInTheDocument();
         await view.user.click(
-            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+            screen.getByRole('radio', { name: 'Resend inbox' }),
         );
         const address = screen.getByLabelText('Receiving address');
         expect(address).toHaveAttribute('type', 'email');
@@ -227,7 +229,7 @@ describe('SourceFormDialog', () => {
             address: 'Use a valid email address.',
         });
         await view.user.click(
-            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+            screen.getByRole('radio', { name: 'Resend inbox' }),
         );
         expect(screen.getByLabelText('Receiving address')).toHaveAttribute(
             'aria-invalid',
@@ -418,7 +420,7 @@ describe('SourceFormDialog', () => {
     it('shows newsletter key validation errors', async () => {
         const view = await renderForm(null, { api_key: 'Key is required.' });
         await view.user.click(
-            screen.getByRole('radio', { name: 'Newsletter inbox' }),
+            screen.getByRole('radio', { name: 'Resend inbox' }),
         );
         expect(screen.getByText('Key is required.')).toBeVisible();
     });
@@ -491,7 +493,7 @@ describe('Getting started guidance', () => {
     it.each([
         'You can save up to 30 custom sources.',
         'Paste the site’s public RSS or Atom feed URL. Look for an RSS or Subscribe link on the site.',
-        'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+        'Enter a name, choose at least one interest, and add a feed URL, Resend key or email folder connection.',
     ])('explains %s', async (message) => {
         await renderForm();
         expect(screen.getByText(message)).toBeVisible();
@@ -551,7 +553,7 @@ describe('Source help conditions', () => {
         await fillFeed(view);
         expect(
             screen.queryByText(
-                'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+                'Enter a name, choose at least one interest, and add a feed URL, Resend key or email folder connection.',
             ),
         ).not.toBeInTheDocument();
     });
@@ -564,7 +566,7 @@ it('hides unmet requirements while saving', async () => {
     expect(screen.getByRole('button', { name: /^Add$/ })).toBeDisabled();
     expect(
         screen.queryByText(
-            'Enter a name, choose at least one interest, and add a feed URL or Resend key.',
+            'Enter a name, choose at least one interest, and add a feed URL, Resend key or email folder connection.',
         ),
     ).not.toBeInTheDocument();
 });
@@ -586,9 +588,7 @@ it('marks the source requirements before submission', async () => {
 
 it('identifies the key requirement for a new newsletter inbox', async () => {
     const view = await renderForm();
-    await view.user.click(
-        screen.getByRole('radio', { name: 'Newsletter inbox' }),
-    );
+    await view.user.click(screen.getByRole('radio', { name: 'Resend inbox' }));
     expect(
         screen.getByText('Required for a new newsletter inbox.'),
     ).toBeVisible();
@@ -603,3 +603,365 @@ it.each([false, true])(
         ).toHaveLength(editing ? 0 : 1);
     },
 );
+
+describe('IMAP email folders', () => {
+    async function selectImap() {
+        const view = await renderForm();
+        expect(
+            screen.queryByLabelText('Email or username'),
+        ).not.toBeInTheDocument();
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Resend inbox' }),
+        );
+        expect(
+            screen.queryByLabelText('Email or username'),
+        ).not.toBeInTheDocument();
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Email folder' }),
+        );
+        for (const label of [
+            'Resend API key',
+            'Receiving address',
+            'Feed URL (required)',
+        ]) {
+            expect(screen.queryByLabelText(label)).not.toBeInTheDocument();
+        }
+        return view;
+    }
+
+    async function chooseProvider(
+        view: Awaited<ReturnType<typeof renderForm>>,
+        name: string,
+    ) {
+        await view.user.click(
+            screen.getByRole('combobox', { name: 'Provider' }),
+        );
+        await view.user.click(await screen.findByRole('option', { name }));
+    }
+
+    function imapSource(host = 'imap.gmail.com'): ManagedSource {
+        return {
+            ...customSource(),
+            type: 'imap_inbox',
+            imap: {
+                host,
+                username: 'reader@example.com',
+                folder: 'Newsletters',
+            },
+        };
+    }
+
+    it('defaults a new email folder to Gmail and explains the IMAP connection', async () => {
+        await selectImap();
+        expect(
+            screen.getByRole('combobox', { name: 'Provider' }),
+        ).toHaveTextContent('Gmail');
+        expect(screen.queryByLabelText('Mail server')).not.toBeInTheDocument();
+        expect(
+            screen.getByText(
+                'Pulse reads this folder only over a secure IMAP connection, and leaves your emails unread. Use an app password, not your main password.',
+            ),
+        ).toBeVisible();
+    });
+
+    it('shows the Gmail label hint only for Gmail', async () => {
+        const view = await selectImap();
+        expect(
+            screen.getByLabelText('Folder or label'),
+        ).toHaveAccessibleDescription(
+            'For Gmail, use a label such as Newsletters.',
+        );
+        await chooseProvider(view, 'Fastmail');
+        expect(
+            screen.getByLabelText('Folder or label'),
+        ).toHaveAccessibleDescription('The folder to read, INBOX by default.');
+        expect(
+            screen.queryByText('For Gmail, use a label such as Newsletters.'),
+        ).not.toBeInTheDocument();
+    });
+
+    it('restores Gmail when reopening the dialog for a new source', async () => {
+        const view = await selectImap();
+        await chooseProvider(view, 'Other');
+        await view.user.type(
+            screen.getByLabelText('Mail server'),
+            'imap.example.com',
+        );
+        await view.view.rerender({ open: false });
+        await view.view.rerender({ open: true });
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Email folder' }),
+        );
+        expect(
+            screen.getByRole('combobox', { name: 'Provider' }),
+        ).toHaveTextContent('Gmail');
+        expect(screen.queryByLabelText('Mail server')).not.toBeInTheDocument();
+    });
+
+    it.each([
+        ['save', 'imap.example.com', 'Other'],
+        ['test', 'imap.example.com', 'Other'],
+        ['save', 'imap.gmail.com', 'Gmail'],
+        ['test', 'imap.gmail.com', 'Gmail'],
+    ])(
+        'assigns a %s host error only to the visible field for %s (%s)',
+        async (operation, host, provider) => {
+            const errors = { imap_host: 'Use a public mail server.' };
+            const view = await renderForm(
+                imapSource(host),
+                operation === 'save' ? errors : {},
+            );
+            if (operation === 'test') {
+                await view.user.type(
+                    screen.getByLabelText('App password'),
+                    'app-secret',
+                );
+                failTestValidation(errors);
+                await view.user.click(
+                    screen.getByRole('button', { name: 'Test now' }),
+                );
+                await screen.findByText(errors.imap_host);
+            }
+            const select = screen.getByRole('combobox', { name: 'Provider' });
+            const input = screen.queryByLabelText('Mail server');
+            const invalidField = provider === 'Other' ? input : select;
+            expect(invalidField).toHaveAttribute('aria-invalid', 'true');
+            expect(invalidField).toHaveAccessibleDescription(errors.imap_host);
+            expect(screen.getAllByText(errors.imap_host)).toHaveLength(1);
+            if (provider === 'Other') {
+                expect(select).not.toHaveAttribute('aria-invalid', 'true');
+                expect(select).not.toHaveAttribute('aria-describedby');
+            } else {
+                expect(input).not.toBeInTheDocument();
+            }
+        },
+    );
+
+    it.each([
+        ['Gmail', 'imap.gmail.com'],
+        ['iCloud', 'imap.mail.me.com'],
+        ['Yahoo', 'imap.mail.yahoo.com'],
+        ['Fastmail', 'imap.fastmail.com'],
+    ])(
+        'fills the host for %s and sends all IMAP fields on save and test',
+        async (provider, host) => {
+            const view = await selectImap();
+            await chooseProvider(view, provider);
+            expect(
+                screen.queryByLabelText('Mail server'),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: 'Test now' }),
+            ).toBeDisabled();
+            await view.user.type(
+                screen.getByLabelText('Email or username'),
+                'reader@example.com',
+            );
+            expect(
+                screen.getByRole('button', { name: 'Test now' }),
+            ).toBeDisabled();
+            const password = screen.getByLabelText('App password');
+            expect(password).toHaveAttribute('type', 'password');
+            await view.user.type(password, 'app-secret');
+            await view.user.click(screen.getByRole('button', { name: 'Show' }));
+            expect(password).toHaveAttribute('type', 'text');
+            await view.user.click(screen.getByRole('button', { name: 'Hide' }));
+            expect(password).toHaveAttribute('type', 'password');
+            expect(screen.getByLabelText('Folder or label')).toHaveAttribute(
+                'placeholder',
+                'INBOX',
+            );
+            await view.user.clear(screen.getByLabelText('Folder or label'));
+            await view.user.type(
+                screen.getByLabelText('Folder or label'),
+                'Newsletters',
+            );
+            expect(
+                screen.getByRole('button', { name: 'Test now' }),
+            ).toBeEnabled();
+            expect(
+                screen.getByRole('button', { name: /^Add$/ }),
+            ).toBeDisabled();
+            let payload: unknown;
+            http.submit.mockImplementationOnce(async () => {
+                payload = { ...http };
+                return {
+                    ok: true,
+                    message: 'Found a newsletter.',
+                    headlines: ['Latest issue'],
+                };
+            });
+            await view.user.click(
+                screen.getByRole('button', { name: 'Test now' }),
+            );
+            expect(await screen.findByText('Latest issue')).toBeVisible();
+            const fields = {
+                type: 'imap_inbox',
+                imap_host: host,
+                imap_username: 'reader@example.com',
+                imap_password: 'app-secret',
+                imap_folder: 'Newsletters',
+            };
+            expect(payload).toMatchObject(fields);
+            expect(http).toHaveProperty('imap_password', '');
+            await view.user.type(
+                screen.getByLabelText('Name (required)'),
+                'My newsletters',
+            );
+            expect(
+                screen.getByRole('button', { name: /^Add$/ }),
+            ).toBeDisabled();
+            await view.user.click(
+                screen.getByRole('checkbox', { name: 'Programming' }),
+            );
+            await view.user.click(
+                screen.getByRole('button', { name: /^Add$/ }),
+            );
+            expect(view.post).toHaveBeenCalledWith(
+                '/sources',
+                expect.objectContaining(fields),
+                expect.any(Object),
+            );
+            await view.user.type(
+                screen.getByLabelText('Folder or label'),
+                '/Other',
+            );
+            expect(screen.queryByText('Latest issue')).not.toBeInTheDocument();
+        },
+    );
+
+    it('requires a host when Other is selected', async () => {
+        const view = await selectImap();
+        await chooseProvider(view, 'Other');
+        expect(screen.getByLabelText('Mail server')).toHaveAttribute(
+            'placeholder',
+            'imap.example.com',
+        );
+        await view.user.type(
+            screen.getByLabelText('Email or username'),
+            'reader@example.com',
+        );
+        await view.user.type(
+            screen.getByLabelText('App password'),
+            'app-secret',
+        );
+        expect(screen.getByRole('button', { name: 'Test now' })).toBeDisabled();
+        await view.user.type(
+            screen.getByLabelText('Mail server'),
+            'imap.example.com',
+        );
+        expect(screen.getByRole('button', { name: 'Test now' })).toBeEnabled();
+    });
+
+    it.each([
+        ['imap.gmail.com', 'Gmail'],
+        ['imap.mail.me.com', 'iCloud'],
+        ['imap.mail.yahoo.com', 'Yahoo'],
+        ['imap.fastmail.com', 'Fastmail'],
+        ['mail.example.com', 'Other'],
+    ])(
+        'prefills %s as %s and preserves the stored password on edit',
+        async (host, provider) => {
+            const view = await renderForm(imapSource(host));
+            expect(
+                screen.getByRole('combobox', { name: 'Provider' }),
+            ).toHaveTextContent(provider);
+            if (provider === 'Other')
+                expect(screen.getByLabelText('Mail server')).toHaveValue(host);
+            expect(screen.getByLabelText('Email or username')).toHaveValue(
+                'reader@example.com',
+            );
+            expect(screen.getByLabelText('Folder or label')).toHaveValue(
+                'Newsletters',
+            );
+            expect(screen.getByLabelText('App password')).toHaveValue('');
+            expect(
+                screen.getByText('Leave blank to keep the saved password.'),
+            ).toBeVisible();
+            expect(
+                screen.getByRole('radio', { name: 'Email folder' }),
+            ).toBeDisabled();
+            expect(
+                screen.getByRole('button', { name: 'Test now' }),
+            ).toBeDisabled();
+            await view.user.click(
+                screen.getByRole('button', { name: /^Save$/ }),
+            );
+            expect(view.put).toHaveBeenCalledWith(
+                '/sources/21',
+                expect.objectContaining({
+                    imap_host: host,
+                    imap_username: 'reader@example.com',
+                    imap_password: '',
+                    imap_folder: 'Newsletters',
+                }),
+                expect.any(Object),
+            );
+            await view.user.clear(screen.getByLabelText('Email or username'));
+            expect(
+                screen.getByRole('button', { name: /^Save$/ }),
+            ).toBeDisabled();
+        },
+    );
+
+    it('requires a password when an edited source has no stored password', async () => {
+        const view = await renderForm({ ...imapSource(), has_key: false });
+        expect(screen.getByRole('button', { name: /^Save$/ })).toBeDisabled();
+        expect(
+            screen.queryByText('Leave blank to keep the saved password.'),
+        ).not.toBeInTheDocument();
+        await view.user.type(
+            screen.getByLabelText('App password'),
+            'new-secret',
+        );
+        expect(screen.getByRole('button', { name: /^Save$/ })).toBeEnabled();
+    });
+
+    it.each(['save', 'test'])(
+        'shows %s validation errors at each IMAP field and clears them on edit',
+        async (operation) => {
+            const errors = {
+                imap_host: 'Use a public mail server.',
+                imap_username: 'Enter a username.',
+                imap_password: 'Enter an app password.',
+                imap_folder: 'Choose a folder.',
+            };
+            const view = await renderForm(
+                imapSource('imap.example.com'),
+                operation === 'save' ? errors : {},
+            );
+            if (operation === 'test') {
+                await view.user.type(
+                    screen.getByLabelText('App password'),
+                    'app-secret',
+                );
+                failTestValidation(errors);
+                await view.user.click(
+                    screen.getByRole('button', { name: 'Test now' }),
+                );
+                await screen.findByText(errors.imap_host);
+            }
+            for (const [field, label] of [
+                ['imap_host', 'Mail server'],
+                ['imap_username', 'Email or username'],
+                ['imap_password', 'App password'],
+                ['imap_folder', 'Folder or label'],
+            ] as const) {
+                const input = screen.getByLabelText(label);
+                expect(input).toHaveAttribute('aria-invalid', 'true');
+                expect(input).toHaveAccessibleDescription(
+                    new RegExp(errors[field]),
+                );
+                await view.user.type(input, 'x');
+                if (operation === 'test')
+                    expect(
+                        screen.queryByText(errors[field]),
+                    ).not.toBeInTheDocument();
+                else
+                    expect(view.view.emitted().errors).toContainEqual([
+                        expect.not.objectContaining({ [field]: errors[field] }),
+                    ]);
+            }
+        },
+    );
+});

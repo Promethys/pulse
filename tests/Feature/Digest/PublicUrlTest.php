@@ -72,6 +72,37 @@ class PublicUrlTest extends TestCase
         ];
     }
 
+    /** @param list<string> $ips */
+    #[DataProvider('mailHosts')]
+    public function test_mail_hosts_require_a_domain_and_exclusively_global_addresses(string $host, array $ips, bool $expected): void
+    {
+        $publicUrl = new PublicUrl(fn (string $host) => $ips);
+
+        $this->assertSame($expected, $publicUrl->isPublicHost($host));
+        $this->assertSame($expected ? $ips : [], $publicUrl->publicHostAddresses($host));
+    }
+
+    public static function mailHosts(): array
+    {
+        return [
+            'public' => ['mail.example.test', ['93.184.216.34'], true],
+            'ipv6' => ['mail.example.test', ['2606:4700:4700::1111'], true],
+            'literal' => ['93.184.216.34', ['93.184.216.34'], false],
+            'ipv6 literal' => ['2606:4700:4700::1111', ['2606:4700:4700::1111'], false],
+            'localhost' => ['localhost', ['93.184.216.34'], false],
+            'localhost suffix' => ['mail.localhost', ['93.184.216.34'], false],
+            'local suffix' => ['mail.local', ['93.184.216.34'], false],
+            'single label' => ['mail', ['93.184.216.34'], false],
+            'url' => ['https://mail.example.test', ['93.184.216.34'], false],
+            'port' => ['mail.example.test:993', ['93.184.216.34'], false],
+            'loopback' => ['mail.example.test', ['127.0.0.1'], false],
+            'private' => ['mail.example.test', ['10.0.0.1'], false],
+            'link local' => ['mail.example.test', ['169.254.169.254'], false],
+            'mixed' => ['mail.example.test', ['93.184.216.34', 'fd00::1'], false],
+            'unresolved' => ['mail.example.test', [], false],
+        ];
+    }
+
     public function test_get_refuses_an_unsafe_initial_url_without_requesting_it(): void
     {
         Http::fake(['*' => Http::response('', 200)]);

@@ -85,3 +85,16 @@ describe('Retired source guidance', () => {
         else expect(message).not.toBeInTheDocument();
     });
 });
+
+it('labels an IMAP source as Email folder', () => {
+    render(SourceToggleRow, {
+        props: {
+            source: {
+                ...onboardingProps().sources[0].sources[0],
+                type: 'imap_inbox',
+            },
+            modelValue: true,
+        },
+    });
+    expect(screen.getByText('Email folder')).toBeVisible();
+});

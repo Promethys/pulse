@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Digest\Sources;
 
-use App\Digest\Support\Text;
 use App\Models\Source;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 /** Resend Receiving: the list has no body and no documented order, so read every page, filter by date, then GET each email. */
 final class ResendInboxFetcher implements SourceFetcher
@@ -23,10 +21,6 @@ final class ResendInboxFetcher implements SourceFetcher
     private const MAX_PAGES = 10;
 
     private const MAX_RETRIEVALS = 100;
-
-    private const EXCERPT_LENGTH = 3000;
-
-    private const EXCLUDED_LINK_PARTS = ['unsubscribe', '/open', 'list-manage.com/track'];
 
     public function fetch(Source $source, CarbonImmutable $since): array
     {
@@ -150,29 +144,12 @@ final class ResendInboxFetcher implements SourceFetcher
      */
     private function candidate(array $email): Candidate
     {
-        $html = (string) ($email['html'] ?? '');
-        $text = (string) ($email['text'] ?? '');
-
-        return new Candidate(
-            title: Text::plain((string) ($email['subject'] ?? '')) ?: '(no subject)',
-            url: 'resend://email/'.$email['id'],
-            excerpt: Str::limit(Text::plain($text !== '' ? $text : $html), self::EXCERPT_LENGTH - 1, '…'),
-            publishedAt: CarbonImmutable::parse($email['created_at']),
-            links: $this->links($html, $text),
+        return EmailCandidate::from(
+            (string) ($email['subject'] ?? ''),
+            (string) ($email['html'] ?? ''),
+            (string) ($email['text'] ?? ''),
+            CarbonImmutable::parse($email['created_at']),
+            'resend://email/'.$email['id'],
         );
-    }
-
-    /**
-     * @return list<string> anchors first, then bare URLs in the text
-     */
-    private function links(string $html, string $text): array
-    {
-        preg_match_all('/href\s*=\s*["\']([^"\']+)["\']/i', $html, $anchors);
-        preg_match_all('#https?://[^\s<>"\'()\[\]]+#i', $text.' '.Text::plain($html), $bare);
-
-        $links = array_map(fn (string $url) => rtrim(html_entity_decode($url), '.,;:!?'), [...$anchors[1], ...$bare[0]]);
-
-        return array_values(array_unique(array_filter($links, fn (string $url) => preg_match('#^https?://#i', $url)
-            && ! Str::contains(strtolower($url), self::EXCLUDED_LINK_PARTS))));
     }
 }

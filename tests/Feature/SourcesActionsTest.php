@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Digest\Sources\Imap\ImapMessage;
+use App\Digest\Sources\Imap\Mailbox;
 use App\Digest\Support\PublicUrl;
 use App\Enums\InterestStatus;
 use App\Enums\SourceType;
@@ -605,6 +607,218 @@ class SourcesActionsTest extends TestCase
         Http::assertSentCount(3);
         $this->assertDatabaseCount('sources', 0);
         $this->assertDatabaseCount('items', 0);
+    }
+
+    public function test_imap_source_stores_encrypted_credentials_and_exposes_settings_only_to_its_owner(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+
+        $this->actingAs($user)->from('/sources')->post('/sources', [
+            ...$this->imapPayload(), 'name' => 'Mail', 'interests' => [$interest->slug],
+        ])->assertRedirect('/sources')->assertSessionHasNoErrors();
+
+        $source = Source::query()->where('user_id', $user->id)->sole();
+        $this->assertSame(SourceType::ImapInbox, $source->type);
+        $this->assertNull($source->url);
+        $this->assertSame(20, $source->max_items);
+        $this->assertSame(['host' => 'mail.example.test', 'username' => 'reader@example.test', 'password' => 'app-secret', 'folder' => 'INBOX'], $source->credentials);
+        $this->assertStringNotContainsString('app-secret', $source->getRawOriginal('credentials'));
+        $this->assertStringNotContainsString('reader@example.test', $source->getRawOriginal('credentials'));
+        $this->assertSame([$interest->id], $source->interests()->pluck('interests.id')->all());
+        $this->assertDatabaseHas('source_subscriptions', ['source_id' => $source->id, 'user_id' => $user->id, 'enabled' => true]);
+        $this->get('/sources')->assertOk()->assertInertia(fn ($page) => $page
+            ->where('custom.0.imap', ['host' => 'mail.example.test', 'username' => 'reader@example.test', 'folder' => 'INBOX'])
+            ->where('custom.0.has_key', true)->missing('custom.0.imap.password')->missing('custom.0.credentials'));
+        $this->actingAs(User::factory()->onboarded()->create());
+        $this->assertNull((new SourceResource($source))->resolve(request())['imap']);
+    }
+
+    #[DataProvider('imapPasswords')]
+    public function test_imap_updates_settings_and_keeps_an_empty_password(?string $password): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $source = Source::factory()->for($user)->create(['type' => SourceType::ImapInbox, 'credentials' => [
+            'host' => 'old.example.test', 'username' => 'old', 'password' => 'stored-secret', 'folder' => 'INBOX',
+        ]]);
+
+        $this->actingAs($user)->from('/sources')->put('/sources/'.$source->id, [
+            ...$this->imapPayload(), 'name' => 'Renamed', 'interests' => [$interest->slug],
+            'imap_password' => $password, 'imap_folder' => 'Newsletters',
+        ])->assertRedirect('/sources')->assertSessionHasNoErrors();
+
+        $this->assertSame(['host' => 'mail.example.test', 'username' => 'reader@example.test',
+            'password' => $password ?: 'stored-secret', 'folder' => 'Newsletters'], $source->fresh()->credentials);
+        $this->assertSame('Renamed', $source->fresh()->name);
+    }
+
+    public static function imapPasswords(): array
+    {
+        return [[''], [null], ['replacement']];
+    }
+
+    public function test_imap_required_fields_have_readable_validation_messages(): void
+    {
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', ['type' => 'imap_inbox'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.imap_host.0', 'The mail server field is required when type is imap_inbox.')
+            ->assertJsonPath('errors.imap_username.0', 'The username field is required when type is imap_inbox.')
+            ->assertJsonPath('errors.imap_password.0', 'The app password field is required when type is imap_inbox.');
+
+        $this->assertDatabaseCount('sources', 0);
+    }
+
+    #[DataProvider('invalidImapFields')]
+    public function test_imap_fields_are_validated_on_create_update_and_test(string $field, mixed $value): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $payload = [...$this->imapPayload(), 'name' => 'Mail', 'interests' => [$interest->slug], $field => $value];
+        $this->actingAs($user)->postJson('/sources', $payload)->assertUnprocessable()->assertJsonValidationErrors($field);
+        $this->assertDatabaseCount('sources', 0);
+        $source = Source::factory()->for($user)->create(['type' => SourceType::ImapInbox]);
+        $before = $source->fresh()->getAttributes();
+
+        $this->putJson('/sources/'.$source->id, $payload)->assertUnprocessable()->assertJsonValidationErrors($field);
+        $this->postJson('/sources/test', $payload)->assertUnprocessable()->assertJsonValidationErrors($field);
+
+        $this->assertSame($before, $source->fresh()->getAttributes());
+    }
+
+    public static function invalidImapFields(): array
+    {
+        return [
+            ['imap_host', '93.184.216.34'], ['imap_host', 'localhost'], ['imap_host', []], ['imap_host', str_repeat('a', 254)],
+            ['imap_username', ''], ['imap_username', []], ['imap_username', str_repeat('a', 255)],
+            ['imap_password', []], ['imap_password', str_repeat('a', 201)],
+            ['imap_folder', []], ['imap_folder', str_repeat('a', 201)],
+        ];
+    }
+
+    public function test_imap_private_dns_is_rejected_with_a_readable_message(): void
+    {
+        $this->app->instance(PublicUrl::class, new PublicUrl(fn () => ['10.0.0.1']));
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', $this->imapPayload())
+            ->assertUnprocessable()->assertJsonPath('errors.imap_host.0', 'The mail server must be a public mail server name.');
+    }
+
+    public function test_imap_test_endpoint_reads_recent_headlines_without_storing_anything(): void
+    {
+        $this->freezeSecond();
+        $mailbox = $this->mock(Mailbox::class);
+        $mailbox->shouldReceive('messagesSince')->once()->with('mail.example.test', '93.184.216.34', 'reader@example.test', 'app-secret', 'INBOX',
+            \Mockery::on(fn ($since) => $since->equalTo(now()->subDays(30))), PHP_INT_MAX)
+            ->andReturn(array_map(fn ($index) => new ImapMessage(
+                'issue-'.$index, $index, 'Issue '.$index, '', '', now()->subMinutes($index), '42'), range(1, 6)));
+
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', $this->imapPayload())
+            ->assertOk()->assertJsonPath('ok', true)->assertJsonPath('message', 'Found 6 recent posts.')
+            ->assertJsonPath('headlines', ['Issue 1', 'Issue 2', 'Issue 3', 'Issue 4', 'Issue 5']);
+
+        $this->assertDatabaseCount('sources', 0);
+        $this->assertDatabaseCount('items', 0);
+    }
+
+    public function test_imap_failure_logs_do_not_expose_the_username_or_password(): void
+    {
+        Log::spy();
+        $this->mock(Mailbox::class)->shouldReceive('messagesSince')->once()
+            ->andThrow(new RuntimeException('reader@example.test app-secret'));
+
+        $response = $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources/test', $this->imapPayload())
+            ->assertOk()->assertJsonPath('ok', false);
+
+        $this->assertStringNotContainsString('reader@example.test', $response->getContent());
+        $this->assertStringNotContainsString('app-secret', $response->getContent());
+        Log::shouldHaveReceived('warning')->once()->with('Source test failed.', \Mockery::on(fn ($context) => ! str_contains($context['error'], 'reader@example.test') && ! str_contains($context['error'], 'app-secret')));
+    }
+
+    public function test_imap_sources_count_toward_the_custom_source_cap(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        Source::factory()->count(30)->for($user)->create(['type' => SourceType::ImapInbox]);
+
+        $this->actingAs($user)->postJson('/sources', [...$this->imapPayload(), 'name' => 'Mail', 'interests' => [$interest->slug]])
+            ->assertUnprocessable()->assertJsonPath('errors.name.0', 'You may save up to 30 custom sources.');
+
+        $this->assertSame(30, Source::query()->where('user_id', $user->id)->count());
+    }
+
+    public function test_imap_create_requires_mail_server_username_and_password(): void
+    {
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+
+        $this->actingAs(User::factory()->onboarded()->create())->postJson('/sources', [
+            'type' => 'imap_inbox', 'name' => 'Mail', 'interests' => [$interest->slug],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['imap_host', 'imap_username', 'imap_password']);
+
+        $this->assertDatabaseCount('sources', 0);
+    }
+
+    public function test_imap_updates_keep_an_omitted_password_and_default_an_empty_folder(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $source = Source::factory()->for($user)->create(['type' => SourceType::ImapInbox, 'credentials' => [
+            'host' => 'mail.example.test', 'username' => 'reader@example.test', 'password' => 'stored-secret', 'folder' => 'Newsletters',
+        ]]);
+        $payload = $this->imapPayload();
+        unset($payload['imap_password']);
+
+        $this->actingAs($user)->putJson('/sources/'.$source->id, [
+            ...$payload, 'name' => 'Mail', 'interests' => [$interest->slug], 'imap_folder' => '',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('stored-secret', $source->fresh()->credentials['password']);
+        $this->assertSame('INBOX', $source->fresh()->credentials['folder']);
+    }
+
+    public function test_other_source_types_exclude_imap_credentials(): void
+    {
+        $user = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+
+        $this->actingAs($user)->postJson('/sources', [
+            ...$this->payload($interest), 'imap_host' => 'localhost', 'imap_username' => [], 'imap_password' => [], 'imap_folder' => [],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertNull(Source::query()->where('user_id', $user->id)->sole()->credentials);
+    }
+
+    public function test_imap_sources_cannot_be_updated_by_another_reader(): void
+    {
+        $owner = User::factory()->onboarded()->create();
+        $interest = Interest::factory()->create(['status' => InterestStatus::Live]);
+        $source = Source::factory()->for($owner)->create(['type' => SourceType::ImapInbox]);
+        $before = $source->fresh()->getAttributes();
+
+        $this->actingAs(User::factory()->onboarded()->create())->putJson('/sources/'.$source->id, [
+            ...$this->imapPayload(), 'name' => 'Mail', 'interests' => [$interest->slug],
+        ])->assertForbidden();
+
+        $this->assertSame($before, $source->fresh()->getAttributes());
+    }
+
+    public function test_imap_settings_are_hidden_from_guests_and_missing_password_has_no_key(): void
+    {
+        $owner = User::factory()->create();
+        $source = Source::factory()->for($owner)->create(['type' => SourceType::ImapInbox, 'credentials' => [
+            'host' => 'mail.example.test', 'username' => 'reader@example.test', 'folder' => 'INBOX',
+        ]]);
+        $request = \Illuminate\Http\Request::create('/sources');
+
+        $resource = (new SourceResource($source))->resolve($request);
+
+        $this->assertNull($resource['imap']);
+        $this->assertFalse($resource['has_key']);
+        $this->assertArrayNotHasKey('credentials', $resource);
+    }
+
+    private function imapPayload(): array
+    {
+        return ['type' => 'imap_inbox', 'imap_host' => 'mail.example.test', 'imap_username' => 'reader@example.test', 'imap_password' => 'app-secret'];
     }
 
     private function payload(Interest $interest, string $type = 'feed'): array

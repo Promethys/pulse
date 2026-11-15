@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 final class UpdateCustomSource
 {
     /**
-     * @param  array{name: string, url?: string|null, api_key?: string|null, address?: string|null, interests: list<string>}  $data
+     * @param  array{name: string, url?: string|null, api_key?: string|null, address?: string|null, imap_host?: string|null, imap_username?: string|null, imap_password?: string|null, imap_folder?: string|null, interests: list<string>}  $data
      */
     public function handle(Source $source, array $data): void
     {
@@ -24,6 +24,15 @@ final class UpdateCustomSource
                 $source->credentials = [
                     'api_key' => $apiKey !== '' ? $apiKey : ($source->credentials['api_key'] ?? ''),
                     'address' => ($data['address'] ?? '') ?: null,
+                ];
+            }
+            if ($source->type === SourceType::ImapInbox) {
+                $password = $data['imap_password'] ?? '';
+                $source->credentials = [
+                    'host' => $data['imap_host'] ?? '',
+                    'username' => $data['imap_username'] ?? '',
+                    'password' => $password !== '' ? $password : ($source->credentials['password'] ?? ''),
+                    'folder' => ($data['imap_folder'] ?? '') ?: 'INBOX',
                 ];
             }
             $source->save();

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Mail } from '@lucide/vue';
 import { computed } from 'vue';
 import { Switch } from '@/components/ui/switch';
 import type { OnboardingSource } from '@/types/onboarding';
@@ -9,6 +10,7 @@ const typeLabels: Record<string, string> = {
     feed: 'RSS feed',
     github_trending: 'GitHub Trending',
     resend_inbox: 'Newsletter',
+    imap_inbox: 'Email folder',
 };
 const typeLabel = computed(
     () => typeLabels[props.source.type] ?? props.source.type,
@@ -22,9 +24,16 @@ const typeLabel = computed(
                 <span class="line-clamp-1 font-semibold" :title="source.name">{{
                     source.name
                 }}</span>
-                <span class="shrink-0 text-xs text-muted-foreground">{{
-                    typeLabel
-                }}</span>
+                <span
+                    class="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground"
+                >
+                    <Mail
+                        v-if="source.type === 'imap_inbox'"
+                        class="size-3"
+                        aria-hidden="true"
+                    />
+                    {{ typeLabel }}
+                </span>
             </div>
             <p v-if="source.retired" class="text-sm text-muted-foreground">
                 Retired: this source stopped working. Choose another source.
