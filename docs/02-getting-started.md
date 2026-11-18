@@ -88,6 +88,8 @@ For automatic runs, invoke Laravel's scheduler every 15 minutes and keep a queue
 php artisan queue:work
 ```
 
+In development, `compose.yaml` starts no queue worker: jobs queued by onboarding and the first-digest button wait until you run `docker compose exec app php artisan queue:work --stop-when-empty`.
+
 On a host that starts cron jobs late, run `php artisan digest:tick` from the cron instead. `schedule:run` only runs tasks due at the minute it starts, while `digest:tick` catches up on every digest whose time has passed today.
 
 Each digest job may run for 300 seconds, since one AI call can take up to 120. Keep `DB_QUEUE_RETRY_AFTER` (default 360) above that timeout, or a slow job runs twice.

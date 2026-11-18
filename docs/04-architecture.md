@@ -14,7 +14,8 @@ Pulse is a Laravel 13 app with a Vue 3, Inertia 3 and Tailwind CSS 4 web app for
 | `app/Digest/Delivery/` | Per-destination delivery drivers and `PostDeliverer` |
 | `app/Digest/Discord/` | Bot API client and forum tag matching |
 | `app/Digest/Support/` | Text, tags and public URL checks |
-| `app/Jobs/RunDigest.php` | Queued generation and delivery for one user, kind and date |
+| `app/Digest/Manual/` | Kind-generic eligibility rules for on-demand digest runs |
+| `app/Jobs/RunDigest.php`, `app/Jobs/CollectSources.php` | Queued generation and delivery for one user, kind and date; queued source collection for one user |
 | `app/Ai/Agents/` | `laravel/ai` agents (prompt + JSON schema) |
 | `app/Reading/` | Account-scoped day, archive, search, tag, learning and source queries |
 | `app/Http/Resources/` | Explicit field allowlists for Inertia props and rendered learning HTML |
@@ -58,9 +59,9 @@ Settings use the onboarding gate. Profile viewing and updating require authentic
 
 App logos return to the public landing page; signed-in visitors use **Open Pulse** on the public site to reach `/dashboard`. The desktop sidebar links Today, Archive, Search, Learning and Sources; the user menu opens Settings. Mobile uses bottom tabs with Settings, whose index also links to Sources. `resources/js/lib/navigation.ts` defines navigation and active states; `settingsSections.ts` defines the settings tabs. The app supports light, dark and system appearance through `useAppearance`. Calendar popovers use reka-ui and `@internationalized/date`; digest dates remain `Y-m-d` values without browser timezone shifts.
 
-Onboarding saves Interests, Sources, About you and AI key on Continue. At least one live interest is required, draft interests are disabled, and About you and AI key can be skipped. The final step offers optional email delivery alongside in-app delivery and sets `onboarded_at`. Completing onboarding without an AI key is allowed; the scheduler still requires personal keys or instance AI access.
+Onboarding saves Interests, Sources, About you and AI key on Continue. At least one live interest is required, draft interests are disabled, and About you and AI key can be skipped. The final step offers optional email delivery alongside in-app delivery and sets `onboarded_at`. Completing onboarding also dispatches a unique `CollectSources` job for the account, so the Today headline preview has content within minutes. Completing onboarding without an AI key is allowed; the scheduler still requires personal keys or instance AI access.
 
-Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a banner while today's news is being prepared, a resume banner while the account's digests are paused, a note when it falls back to an older day, and a checklist for interests, enabled subscriptions, AI access and an external destination. Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. On Today, the banner replaces the pending news line. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
+Today reads the account's local date and falls back to the latest saved day only when today has no post at all. It shows a banner while today's news is being prepared, a resume banner while the account's digests are paused, a note when it falls back to an older day, and a checklist for interests, enabled subscriptions, AI access and an external destination. With no saved day at all, the empty state adds the headline preview and, for eligible accounts, the **Generate my first digest now** action (both below). Day views distinguish pending, failed and quiet news, show available learning cards, and navigate between saved dates. On Today, the banner replaces the pending news line. Learning cards link to full entries; their tags filter Learning, while news tags open the news tag page.
 
 Archive, Search, Tag and Learning redirect pages beyond the last page to the last valid page. Search and Learning preserve their query filters in pagination links. A known tag without personal news renders an empty page; an unknown slug returns 404. Tag activity uses twelve consecutive seven-day windows ending on the account's local today, oldest first.
 
@@ -71,6 +72,8 @@ Articles are Markdown files at `resources/docs/{section}/{article}.md`. `config/
 ### Read layer and resources
 
 Every query in `app/Reading/` takes the account explicitly and scopes personal records through `posts.user_id`. `DayQuery` and the Discord news renderer share `NewsSections`: assign an item to its most frequent tag that day, break ties by slug, use `general` for untagged items, then order sections by size and name. Archive counts dates rather than posts; Tag counts personal selections rather than shared fetched items. Source relations expose only catalog sources and the account's own custom sources.
+
+`HeadlinePreview` fills the Today page before the first digest: `CandidateQuery` over the last 24 hours, sorted by the `HeadlineOrder` shared with the no-AI headlines fallback (source position, then newest first), capped at 10 items with title, URL and source name. It reads only and uses no AI. `TodayController` sends it as a deferred Inertia prop only when there is no day to show, and the `CollectSources` job dispatched by `CompleteOnboarding` (unique per user for 10 minutes) supplies its items right after setup.
 
 Controllers resolve `app/Http/Resources/` to plain arrays for Inertia props. Resources allowlist fields, format digest dates as `Y-m-d` and timestamps as ISO 8601, and serialize enum values. AI keys expose a suffix, sources expose `has_key`, and delivery destinations expose only their allowed target fields with a masked webhook suffix. Encrypted credentials and settings are never returned wholesale. Policies authorize model actions; custom source edits/deletes, AI key actions and delivery changes require ownership. In-app destination changes are explicitly rejected by the delivery request/controller.
 
@@ -234,6 +237,14 @@ Options behave as for news. `--force` keeps today's per-user topic usage, so the
 `RunDigest` re-checks the pause before running, so a job queued before the pause took effect skips itself and no AI call is made. The manual `digest:news` and `digest:learning` commands ignore the pause.
 
 The command exits with failure only when no digests were dispatched, delivery retries were attempted and every retried post had a delivery failure. Queued generation runs independently of this exit status.
+
+## First digest on demand
+
+The empty Today page offers **Generate my first digest now**. `POST /digest/run` (`digest.run`) takes a `kind`, sits behind authentication, verified email, the onboarding gate and the `digest-run` rate limiter (one attempt per user every 10 minutes, answered with a validation error), and redirects back.
+
+`RunEligibility::check($user, $kind)` is generic over the digest kind and returns null or the first failing reason: `not_onboarded`, `not_verified`, `no_ai` (no personal key and no instance access), `paused`, `unsupported_kind` (only `news` is accepted today), `kind_disabled` or `already_has_post`. Today exposes the same result as `can_run_first_digest`. A later on-demand feature reuses this check and adds rules instead of new plumbing.
+
+`RunDigestNow` creates the account's local-today post as `pending` (`firstOrCreate`, so double submits stay one post) and dispatches `RunDigest`, which generates and delivers to every enabled destination exactly like a scheduled run. The `(user_id, date, kind)` index and the rendered check keep that day's scheduled news run from producing a second digest; a later tick only finishes generation when the manual attempt failed below the attempt limit.
 
 ## Data model
 
