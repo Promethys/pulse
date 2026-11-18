@@ -9,7 +9,6 @@ use App\Enums\PostKind;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 final class DigestRunController extends Controller
 {
@@ -17,7 +16,6 @@ final class DigestRunController extends Controller
     {
         $validated = $request->validate(['kind' => ['required', Rule::enum(PostKind::class)]]);
         $action->handle($request->user(), PostKind::from($validated['kind']));
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Your digest is being prepared.')]);
 
         return back();
     }

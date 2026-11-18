@@ -444,7 +444,7 @@ describe('first digest action', () => {
                 }) !== null,
             ).toBe(eligible);
             const helper = screen.queryByText(
-                "Runs the AI once, replaces today's scheduled news, and sends it to your destinations.",
+                'Runs the AI once and sends the digest to your destinations now, instead of at the scheduled time.',
             );
             if (eligible) expect(helper).toBeVisible();
             else expect(helper).not.toBeInTheDocument();

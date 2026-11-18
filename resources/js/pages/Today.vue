@@ -112,8 +112,8 @@ const notice = computed(() =>
                     label="Generate my first digest now"
                 />
                 <p class="mt-3 max-w-sm text-sm text-muted-foreground">
-                    Runs the AI once, replaces today's scheduled news, and sends
-                    it to your destinations.
+                    Runs the AI once and sends the digest to your destinations
+                    now, instead of at the scheduled time.
                 </p>
             </template>
         </EmptyState>

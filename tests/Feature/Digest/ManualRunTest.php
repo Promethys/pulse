@@ -89,12 +89,12 @@ class ManualRunTest extends TestCase
         $this->actingAs($other)->post('/digest/run', ['kind' => 'invalid'])->assertSessionHasErrors('kind');
     }
 
-    public function test_endpoint_flashes_success_then_throttles(): void
+    public function test_endpoint_redirects_without_a_toast_then_throttles(): void
     {
         Queue::fake();
         $user = User::factory()->onboarded()->create(['uses_instance_ai' => true]);
         $this->actingAs($user)->from('/dashboard')->post('/digest/run', ['kind' => 'news'])
-            ->assertRedirect('/dashboard')->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Your digest is being prepared.']);
+            ->assertRedirect('/dashboard')->assertInertiaFlashMissing('toast');
         $this->from('/dashboard')->post('/digest/run', ['kind' => 'news'])
             ->assertRedirect('/dashboard')
             ->assertSessionHasErrors(['kind' => 'Please wait 10 minutes before trying again.']);
