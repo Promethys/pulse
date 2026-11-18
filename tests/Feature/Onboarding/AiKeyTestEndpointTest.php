@@ -72,7 +72,7 @@ class AiKeyTestEndpointTest extends TestCase
     }
 
     #[DataProvider('providerErrors')]
-    public function test_provider_errors_return_a_friendly_message_and_log_the_raw_one_without_the_key(Closure $error, string $message): void
+    public function test_provider_errors_return_a_friendly_message_and_log_the_raw_one_without_the_key(Closure $error, string $message, ?string $detail = null): void
     {
         Log::spy();
         HealthCheck::fake(function () use ($error) {
@@ -83,7 +83,7 @@ class AiKeyTestEndpointTest extends TestCase
 
         $this->actingAs($user)->postJson('/onboarding/ai-key/test', [
             'provider' => 'gemini', 'model' => 'custom-model', 'api_key' => 'fake-invalid-key',
-        ])->assertOk()->assertExactJson(['ok' => false, 'message' => $message]);
+        ])->assertOk()->assertExactJson(['ok' => false, 'message' => $message, ...($detail !== null ? ['detail' => $detail] : [])]);
 
         HealthCheck::assertPromptedTimes(1);
         $this->assertDatabaseCount('ai_keys', 0);
@@ -99,12 +99,15 @@ class AiKeyTestEndpointTest extends TestCase
         $http = fn (int $status) => fn () => new RequestException(new Response(new Psr7Response($status, [], '{"error":{"message":"raw detail fake-invalid-key"}}')));
 
         return [
-            'unauthorized' => [$http(401), 'The provider rejected this key.'],
-            'forbidden' => [$http(403), 'The provider rejected this key.'],
-            'bad request' => [$http(400), 'The provider rejected the request. Check the model name.'],
-            'unknown model' => [$http(404), 'The provider rejected the request. Check the model name.'],
-            'other status' => [$http(418), 'The key test failed (HTTP 418).'],
-            'wrapped status' => [fn () => new AiUnavailableException('x', previous: $http(401)()), 'The provider rejected this key.'],
+            'unauthorized' => [$http(401), 'Gemini rejected this API key.', 'raw detail [redacted]'],
+            'forbidden' => [$http(403), 'Gemini rejected this API key.', 'raw detail [redacted]'],
+            'bad request' => [$http(400), 'Gemini rejected the request. Check the model name.', 'raw detail [redacted]'],
+            'unknown model' => [$http(404), 'Gemini rejected the request. Check the model name.', 'raw detail [redacted]'],
+            'other status' => [$http(418), 'The key test failed (HTTP 418).', 'raw detail [redacted]'],
+            'wrapped status' => [fn () => new AiUnavailableException('x', previous: $http(401)()), 'Gemini rejected this API key.', 'raw detail [redacted]'],
+            'invalid gemini key' => [fn () => new RequestException(new Response(new Psr7Response(400, [], '{"error":{"message":"API key not valid. Please pass a valid API key.","details":[{"reason":"API_KEY_INVALID"}]}}'))), 'Gemini rejected this API key.', 'API key not valid. Please pass a valid API key.'],
+            'invalid gemini key array' => [fn () => new RequestException(new Response(new Psr7Response(400, [], '[{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_INVALID"}]}}]'))), 'Gemini rejected this API key.', 'API key not valid. Please pass a valid API key.'],
+            'non-json body' => [fn () => new RequestException(new Response(new Psr7Response(400, [], 'invalid'))), 'Gemini rejected the request. Check the model name.'],
             'rate limited' => [fn () => RateLimitedException::forProvider('gemini'), 'The provider is rate limiting this key, or its account has no balance left. Try again later.'],
             'no credits' => [fn () => InsufficientCreditsException::forProvider('gemini'), 'The provider account has no credit left.'],
             'overloaded' => [fn () => ProviderOverloadedException::forProvider('gemini'), 'The provider is overloaded right now. Try again in a minute.'],

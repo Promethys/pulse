@@ -21,7 +21,7 @@ use Throwable;
 final class TestAiKey
 {
     /**
-     * @return array{ok: bool, message: string}
+     * @return array{ok: bool, message: string, detail?: string}
      */
     public function handle(User $user, AiProvider $provider, string $model, string $apiKey): array
     {
@@ -43,11 +43,25 @@ final class TestAiKey
                 'error' => Str::limit(str_replace([$apiKey, rawurlencode($apiKey)], '[redacted]', $exception->getMessage()), 500),
             ]);
 
-            return ['ok' => false, 'message' => $this->explain($exception)];
+            $result = ['ok' => false, 'message' => $this->explain($exception, $provider)];
+            for ($error = $exception; $error !== null; $error = $error->getPrevious()) {
+                if ($error instanceof RequestException) {
+                    foreach (['error.message', 'message', '0.error.message'] as $path) {
+                        $detail = $error->response->json($path);
+                        if (is_string($detail) && $detail !== '') {
+                            $result['detail'] = Str::limit(str_replace([$apiKey, rawurlencode($apiKey)], '[redacted]', $detail), 300);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            return $result;
         }
     }
 
-    private function explain(Throwable $exception): string
+    private function explain(Throwable $exception, AiProvider $provider): string
     {
         for ($error = $exception; $error !== null; $error = $error->getPrevious()) {
             $message = match (true) {
@@ -56,8 +70,11 @@ final class TestAiKey
                 $error instanceof ProviderOverloadedException => __('The provider is overloaded right now. Try again in a minute.'),
                 $error instanceof ProviderConnectionException, $error instanceof ConnectionException => __('Pulse could not reach the provider. Try again.'),
                 $error instanceof RequestException => match ($error->response->status()) {
-                    401, 403 => __('The provider rejected this key.'),
-                    400, 404 => __('The provider rejected the request. Check the model name.'),
+                    401, 403 => __(':provider rejected this API key.', ['provider' => $provider->label()]),
+                    400 => str_contains($error->response->body(), 'API_KEY_INVALID')
+                        ? __(':provider rejected this API key.', ['provider' => $provider->label()])
+                        : __(':provider rejected the request. Check the model name.', ['provider' => $provider->label()]),
+                    404 => __(':provider rejected the request. Check the model name.', ['provider' => $provider->label()]),
                     default => __('The key test failed (HTTP :status).', ['status' => $error->response->status()]),
                 },
                 default => null,
