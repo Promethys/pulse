@@ -626,6 +626,37 @@ it.each([false, true])(
 );
 
 describe('IMAP email folders', () => {
+    it('shows mailbox access details and setup guidance only for email folders', async () => {
+        const view = await renderForm();
+        const explanation =
+            /Pulse signs in with an app password, never your main password, and reads only the folder you choose over a secure connection\. Emails stay unread and are never moved or deleted\. The password is stored encrypted\./;
+
+        expect(screen.queryByText(explanation)).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('link', { name: 'How to set it up' }),
+        ).not.toBeInTheDocument();
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Resend inbox' }),
+        );
+        expect(screen.queryByText(explanation)).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('link', { name: 'How to set it up' }),
+        ).not.toBeInTheDocument();
+        await view.user.click(
+            screen.getByRole('radio', { name: 'Email folder' }),
+        );
+        expect(screen.getByText(explanation)).toBeVisible();
+        expect(
+            screen.getByRole('link', { name: 'How to set it up' }),
+        ).toHaveAttribute(
+            'href',
+            '/docs/interests-and-sources/read-newsletters-from-your-mailbox',
+        );
+        expect(
+            screen.getByRole('link', { name: 'How to set it up' }),
+        ).toHaveClass('whitespace-nowrap');
+    });
+
     async function selectImap() {
         const view = await renderForm();
         expect(
@@ -672,17 +703,17 @@ describe('IMAP email folders', () => {
         };
     }
 
-    it('defaults a new email folder to Gmail and explains the IMAP connection', async () => {
+    it('defaults a new email folder to Gmail', async () => {
         await selectImap();
         expect(
             screen.getByRole('combobox', { name: 'Provider' }),
         ).toHaveTextContent('Gmail');
         expect(screen.queryByLabelText('Mail server')).not.toBeInTheDocument();
         expect(
-            screen.getByText(
-                'Pulse reads this folder only over a secure IMAP connection, and leaves your emails unread. Use an app password, not your main password.',
+            screen.queryByText(
+                /Pulse reads this folder only over a secure IMAP/,
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
     });
 
     it('shows the Gmail label hint only for Gmail', async () => {
