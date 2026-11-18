@@ -59,9 +59,20 @@ function refreshSources(groups: OnboardingSourceGroup[]) {
     );
 }
 watch(() => props.sources, refreshSources, { immediate: true });
+function browserTimezone(): string | null {
+    try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return props.timezones.includes(timezone) ? timezone : null;
+    } catch {
+        return null;
+    }
+}
 const aboutForm = useForm({
     profile: props.settings.profile ?? '',
-    timezone: props.settings.timezone,
+    timezone:
+        props.settings.timezone === 'UTC'
+            ? (browserTimezone() ?? props.settings.timezone)
+            : props.settings.timezone,
 });
 const keyForm = useForm<AiKeyInput>({
     provider: props.providers[0]?.value ?? '',
@@ -116,6 +127,24 @@ function toggle(slug: string) {
     interestForm.interests = interestForm.interests.includes(slug)
         ? interestForm.interests.filter((selected) => selected !== slug)
         : [...interestForm.interests, slug];
+}
+function skip() {
+    if (step.value === 2) {
+        aboutForm
+            .transform((data) => ({
+                ...data,
+                profile: props.settings.profile ?? '',
+            }))
+            .put(about.url(), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    step.value++;
+                },
+                onFinish: () => aboutForm.transform((data) => data),
+            });
+    } else {
+        step.value++;
+    }
 }
 function next() {
     if (!canContinue.value) return;
@@ -414,7 +443,7 @@ function next() {
                         v-if="step === 2 || step === 3"
                         variant="ghost"
                         :disabled="processing"
-                        @click="step++"
+                        @click="skip"
                         class="focus-ring hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground dark:active:bg-accent"
                         >Skip for now</Button
                     >

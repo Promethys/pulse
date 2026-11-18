@@ -40,10 +40,15 @@ async function saved(view: View, method: 'post' | 'put', url: string) {
 async function goToStep(view: View, step: number) {
     if (step >= 1) await saved(view, 'post', interests.url());
     if (step >= 2) await saved(view, 'put', sources.url());
-    if (step >= 3)
+    if (step >= 3) {
         await view.user.click(
             screen.getByRole('button', { name: 'Skip for now' }),
         );
+        view.put.mock.calls
+            .at(-1)?.[2]
+            ?.onSuccess?.({ props: view.props } as never);
+        await nextTick();
+    }
     if (step >= 4)
         await view.user.click(
             screen.getByRole('button', { name: 'Skip for now' }),
@@ -376,6 +381,57 @@ describe('Onboarding', () => {
         expect(view.put.mock.calls[0][1]).toEqual({ subscriptions: {} });
     });
 
+    it.each([
+        ['UTC', 'America/New_York', 'America/New_York'],
+        ['Europe/Paris', 'America/New_York', 'Europe/Paris'],
+        ['UTC', 'Unknown/Zone', 'UTC'],
+    ])(
+        'selects timezone for stored %s and browser %s',
+        async (stored, browser, expected) => {
+            const spy = vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
+                () =>
+                    ({
+                        resolvedOptions: () => ({ timeZone: browser }),
+                    }) as Intl.DateTimeFormat,
+            );
+            const props = onboardingProps();
+            props.settings.timezone = stored;
+            const view = renderPage(props);
+            spy.mockRestore();
+            await goToStep(view, 2);
+            const timezone = screen.getByRole('combobox', { name: 'Timezone' });
+            if (timezone instanceof HTMLSelectElement)
+                expect(timezone).toHaveValue(expected);
+            else expect(timezone).toHaveTextContent(expected);
+        },
+    );
+
+    it('saves the timezone and original profile when skipping about you', async () => {
+        const view = renderPage();
+        await goToStep(view, 2);
+        await view.user.clear(
+            screen.getByRole('textbox', { name: /Who are you/ }),
+        );
+        await view.user.click(
+            screen.getByRole('button', { name: 'Skip for now' }),
+        );
+        expect(view.put).toHaveBeenLastCalledWith(
+            about.url(),
+            {
+                profile: 'A curious reader',
+                timezone: 'Europe/Paris',
+            },
+            expect.any(Object),
+        );
+        view.put.mock.calls
+            .at(-1)?.[2]
+            ?.onSuccess?.({ props: view.props } as never);
+        await nextTick();
+        expect(
+            screen.getByRole('heading', { name: 'Your AI key' }),
+        ).toBeVisible();
+    });
+
     it('resumes profile and timezone, counts characters and saves edited values', async () => {
         const view = renderPage();
         await goToStep(view, 2);
@@ -439,35 +495,38 @@ describe('Onboarding', () => {
         });
     });
 
-    it.each([2, 3])(
-        'skips optional step %i without making a request',
-        async (step) => {
-            const view = renderPage();
-            await goToStep(view, step);
-            if (step === 2)
-                await view.user.type(
-                    screen.getByRole('textbox', {
-                        name: 'Who are you and what do you want from Pulse?',
-                    }),
-                    ' unsaved',
-                );
-            else
-                await view.user.type(
-                    screen.getByLabelText('Gemini API key'),
-                    'unsaved-key',
-                );
-            view.post.mockClear();
-            view.put.mockClear();
-            await view.user.click(
-                screen.getByRole('button', { name: 'Skip for now' }),
+    it.each([2, 3])('skips optional step %i', async (step) => {
+        const view = renderPage();
+        await goToStep(view, step);
+        if (step === 2)
+            await view.user.type(
+                screen.getByRole('textbox', {
+                    name: 'Who are you and what do you want from Pulse?',
+                }),
+                ' unsaved',
             );
-            expect(view.post).not.toHaveBeenCalled();
-            expect(view.put).not.toHaveBeenCalled();
-            expect(
-                screen.getByRole('listitem', { current: 'step' }),
-            ).toHaveTextContent(onboardingSteps[step + 1]);
-        },
-    );
+        else
+            await view.user.type(
+                screen.getByLabelText('Gemini API key'),
+                'unsaved-key',
+            );
+        view.post.mockClear();
+        view.put.mockClear();
+        await view.user.click(
+            screen.getByRole('button', { name: 'Skip for now' }),
+        );
+        expect(view.post).not.toHaveBeenCalled();
+        if (step === 2) {
+            expect(view.put).toHaveBeenCalledOnce();
+            view.put.mock.calls
+                .at(-1)?.[2]
+                ?.onSuccess?.({ props: view.props } as never);
+            await nextTick();
+        } else expect(view.put).not.toHaveBeenCalled();
+        expect(
+            screen.getByRole('listitem', { current: 'step' }),
+        ).toHaveTextContent(onboardingSteps[step + 1]);
+    });
 
     it('requires a key and consent before saving the default provider and model', async () => {
         const view = renderPage();
