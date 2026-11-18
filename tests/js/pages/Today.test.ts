@@ -429,3 +429,25 @@ describe('Headline preview', () => {
         expect(screen.queryByText('Preview headline')).not.toBeInTheDocument();
     });
 });
+
+describe('first digest action', () => {
+    it.each([true, false])(
+        'shows the action when eligible is %s',
+        (eligible) => {
+            const props = todayProps();
+            props.day = null;
+            props.can_run_first_digest = eligible;
+            renderPage(props);
+            expect(
+                screen.queryByRole('button', {
+                    name: 'Generate my first digest now',
+                }) !== null,
+            ).toBe(eligible);
+            const helper = screen.queryByText(
+                "Runs the AI once, replaces today's scheduled news, and sends it to your destinations.",
+            );
+            if (eligible) expect(helper).toBeVisible();
+            else expect(helper).not.toBeInTheDocument();
+        },
+    );
+});

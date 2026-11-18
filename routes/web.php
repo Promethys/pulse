@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\DayController;
+use App\Http\Controllers\DigestRunController;
 use App\Http\Controllers\Discord\DiscordInstallController;
 use App\Http\Controllers\DocsController;
 use App\Http\Controllers\InterestProposalController;
@@ -51,6 +52,7 @@ Route::get('docs/{section}/{article}', [DocsController::class, 'show'])
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', TodayController::class)->middleware('onboarded')->name('dashboard');
+    Route::post('digest/run', DigestRunController::class)->middleware(['onboarded', 'throttle:digest-run'])->name('digest.run');
     Route::get('days/{date}', DayController::class)->middleware('onboarded')->name('days.show');
     Route::get('archive', ArchiveController::class)->middleware('onboarded')->name('archive.index');
     Route::get('search', SearchController::class)->middleware('onboarded')->name('search.index');

@@ -1,3 +1,5 @@
+export type PostKind = 'news' | 'learning';
+
 export type DigestStatus = 'generated' | 'pending' | 'failed';
 
 export type DayTag = { id: number; slug: string; name: string };
@@ -69,6 +71,7 @@ export type SetupState = {
 };
 
 export type TodayProps = {
+    can_run_first_digest: boolean;
     preview?: { title: string; url: string; source: string | null }[];
     pause: { until: string | null } | null;
     day: Day | null;

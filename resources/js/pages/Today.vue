@@ -6,6 +6,7 @@ import DayView from '@/components/pulse/DayView.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
 import HeadlinePreview from '@/components/pulse/HeadlinePreview.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
+import RunDigestButton from '@/components/pulse/RunDigestButton.vue';
 import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/dates';
@@ -105,6 +106,16 @@ const notice = computed(() =>
             <template #icon
                 ><Sunrise class="size-5" aria-hidden="true"
             /></template>
+            <template v-if="can_run_first_digest" #actions>
+                <RunDigestButton
+                    kind="news"
+                    label="Generate my first digest now"
+                />
+                <p class="mt-3 max-w-sm text-sm text-muted-foreground">
+                    Runs the AI once, replaces today's scheduled news, and sends
+                    it to your destinations.
+                </p>
+            </template>
         </EmptyState>
         <HeadlinePreview v-if="preview" :items="preview" />
     </div>

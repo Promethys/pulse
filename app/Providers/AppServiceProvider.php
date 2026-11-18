@@ -40,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('digest-run', fn (Request $request) => Limit::perMinutes(10, 1)
+            ->by((string) $request->user()?->id)
+            ->response(fn () => back()->withErrors(['kind' => __('Please wait 10 minutes before trying again.')])));
         RateLimiter::for('suggestions', fn (Request $request) => Limit::perMinute(6)->by((string) $request->user()?->id));
         RateLimiter::for('delivery-test', fn (Request $request) => [
             Limit::perMinute(6)->by('minute:'.$request->user()?->id),
