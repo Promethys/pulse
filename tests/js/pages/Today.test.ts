@@ -10,6 +10,7 @@ import {
     vi,
 } from 'vite-plus/test';
 import Today from '@/pages/Today.vue';
+import type { TodayProps } from '@/types';
 import { todayProps as baseTodayProps } from '../support/dayProps';
 import { page } from '../support/inertia';
 
@@ -20,7 +21,7 @@ function todayProps() {
     };
 }
 
-function renderPage(props = todayProps()) {
+function renderPage(props: TodayProps = todayProps()) {
     page.url = '/dashboard';
     page.props = { ...props, errors: {} };
     return render(Today, { props });
@@ -374,6 +375,79 @@ describe('Paused digests on Today', () => {
                     /Pulse prepares your digest every day|Your first digest is on its way|Add an AI key in Settings to start receiving digests/,
                 ),
             ).not.toBeInTheDocument();
+        },
+    );
+});
+
+describe('Headline preview', () => {
+    it('shows source headlines as external links on an empty day', () => {
+        const props = {
+            ...todayProps(),
+            day: null,
+            preview: [
+                {
+                    title: '<Headline>',
+                    url: 'https://example.com/story',
+                    source: 'Example',
+                },
+            ],
+        };
+        renderPage(props);
+        const link = screen.getByRole('link', { name: '<Headline>' });
+        expect(link).toHaveAttribute('href', 'https://example.com/story');
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener');
+        expect(screen.getByText('Example')).toBeVisible();
+    });
+
+    it('shows the collecting message after an empty preview loads', () => {
+        renderPage({ ...todayProps(), day: null, preview: [] });
+        expect(
+            screen.getByText(
+                'Collecting headlines from your sources. Refresh in a minute.',
+            ),
+        ).toBeVisible();
+    });
+
+    it('does not show the preview while loading or when a day exists', () => {
+        const props = { ...todayProps(), day: null, preview: undefined };
+        const view = renderPage(props);
+        expect(
+            screen.queryByText('From your sources so far'),
+        ).not.toBeInTheDocument();
+        view.unmount();
+        renderPage({
+            ...todayProps(),
+            preview: [
+                {
+                    title: 'Preview headline',
+                    url: 'https://example.com',
+                    source: 'Example',
+                },
+            ],
+        });
+        expect(screen.queryByText('Preview headline')).not.toBeInTheDocument();
+    });
+});
+
+describe('first digest action', () => {
+    it.each([true, false])(
+        'shows the action when eligible is %s',
+        (eligible) => {
+            const props = todayProps();
+            props.day = null;
+            props.can_run_first_digest = eligible;
+            renderPage(props);
+            expect(
+                screen.queryByRole('button', {
+                    name: 'Generate my first digest now',
+                }) !== null,
+            ).toBe(eligible);
+            const helper = screen.queryByText(
+                'Runs the AI once and sends the digest to your destinations now, instead of at the scheduled time.',
+            );
+            if (eligible) expect(helper).toBeVisible();
+            else expect(helper).not.toBeInTheDocument();
         },
     );
 });

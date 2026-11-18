@@ -54,6 +54,19 @@ class TodayPageTest extends TestCase
                 ->where('setup', ['interests' => false, 'sources' => false, 'ai_key' => false, 'delivery' => false]));
     }
 
+    public function test_preview_is_deferred_only_when_there_is_no_day(): void
+    {
+        $user = User::factory()->onboarded()->create();
+
+        $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+            ->missing('preview')
+            ->loadDeferredProps(fn (Assert $reload) => $reload->where('preview', [])));
+
+        Post::factory()->for($user)->create(['date' => '2026-10-30']);
+        $response = $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page->missing('preview'));
+        $this->assertArrayNotHasKey('deferredProps', $response->viewData('page'));
+    }
+
     #[DataProvider('newsStates')]
     public function test_todays_news_controls_the_day_and_next_digest(PostStatus $status, bool $enabled): void
     {

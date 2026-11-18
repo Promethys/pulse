@@ -85,6 +85,7 @@ export function setupProps() {
 
 export function todayProps() {
     return {
+        can_run_first_digest: false,
         day: dayProps() as ReturnType<typeof dayProps> | null,
         is_today: false,
         today: '2026-10-30',

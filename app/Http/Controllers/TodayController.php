@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Digest\Manual\RunEligibility;
 use App\Enums\DeliveryChannelType;
+use App\Enums\PostKind;
 use App\Enums\PostStatus;
 use App\Http\Resources\DayResource;
 use App\Reading\DayQuery;
+use App\Reading\HeadlinePreview;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +18,7 @@ use Inertia\Response;
 
 final class TodayController extends Controller
 {
-    public function __construct(private readonly DayQuery $days) {}
+    public function __construct(private readonly DayQuery $days, private readonly HeadlinePreview $preview, private readonly RunEligibility $eligibility) {}
 
     public function __invoke(Request $request): Response
     {
@@ -37,9 +40,11 @@ final class TodayController extends Controller
         $newsGenerated = $todayDay !== null && $todayDay->news !== null && $todayDay->news['status'] === PostStatus::Generated;
 
         return Inertia::render('Today', [
+            ...($day === null ? ['preview' => Inertia::defer(fn () => $this->preview->for($user))] : []),
             'day' => $day === null ? null : (new DayResource($day))->resolve($request),
             'is_today' => $day !== null && $day->date === $today,
             'today' => $today,
+            'can_run_first_digest' => $this->eligibility->check($user, PostKind::News) === null,
             'pause' => $paused ? ['until' => $settings->paused_until?->toDateString()] : null,
             'next_digest' => $paused || ! $settings->news_enabled || $newsGenerated ? null : [
                 'time' => $settings->news_time,

@@ -22,4 +22,6 @@ A post being prepared asks you to refresh shortly. A failed post points you to A
 
 While your digests are paused, Today shows a banner with **Resume**, and paused days stay empty. See [Change times and limits](/docs/your-digest/change-times-and-limits).
 
-Before your first digest, Today shows setup guidance. Check your interests, sources and AI access, then review [When digests arrive](/docs/getting-started/when-digests-arrive).
+Before your first digest, Today shows setup guidance and **From your sources so far**: up to 10 headlines from your last 24 hours, with source names, fetched right after setup without AI. Until the first fetch finishes, it says collecting headlines is in progress and to refresh in a minute. See [Your first digest](/docs/getting-started/your-first-digest) and [When digests arrive](/docs/getting-started/when-digests-arrive).
+
+With an AI key or instance AI access, **Generate my first digest now** prepares today's news digest immediately and sends it to your destinations, instead of waiting for the scheduled time. The button appears only before your first news digest.

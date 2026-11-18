@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Enums\DeliveryChannelType;
 use App\Enums\PostKind;
+use App\Jobs\CollectSources;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -32,5 +33,7 @@ final class CompleteOnboarding
 
             $user->digestSettings()->firstOrCreate()->forceFill(['onboarded_at' => now()])->save();
         });
+
+        CollectSources::dispatch($user);
     }
 }

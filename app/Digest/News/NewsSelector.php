@@ -24,6 +24,7 @@ final class NewsSelector
     public function __construct(
         private readonly SelectionValidator $validator,
         private readonly TagResolver $tags,
+        private readonly HeadlineOrder $order,
     ) {}
 
     /**
@@ -66,10 +67,7 @@ final class NewsSelector
      */
     public function headlinesFor(User $user, Post $post, Collection $candidates): Collection
     {
-        $headlines = $candidates->sortBy([
-            fn (Item $a, Item $b) => ($a->sources->first()->position ?? PHP_INT_MAX) <=> ($b->sources->first()->position ?? PHP_INT_MAX),
-            fn (Item $a, Item $b) => ($b->published_at?->getTimestamp() ?? 0) <=> ($a->published_at?->getTimestamp() ?? 0),
-        ])->take($user->digestSettings->max_items ?? 20)->values();
+        $headlines = $this->order->sort($candidates)->take($user->digestSettings->max_items ?? 20)->values();
 
         return DB::transaction(function () use ($post, $headlines) {
             $post->postItems()->delete();
