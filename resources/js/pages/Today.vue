@@ -4,6 +4,7 @@ import { Sunrise } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import DayView from '@/components/pulse/DayView.vue';
 import EmptyState from '@/components/pulse/EmptyState.vue';
+import HeadlinePreview from '@/components/pulse/HeadlinePreview.vue';
 import PageHeader from '@/components/pulse/PageHeader.vue';
 import SetupChecklist from '@/components/pulse/SetupChecklist.vue';
 import { Button } from '@/components/ui/button';
@@ -105,5 +106,6 @@ const notice = computed(() =>
                 ><Sunrise class="size-5" aria-hidden="true"
             /></template>
         </EmptyState>
+        <HeadlinePreview v-if="preview" :items="preview" />
     </div>
 </template>
