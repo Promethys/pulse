@@ -4,6 +4,11 @@ One calm daily digest of the news you actually follow. Pulse reads your sources,
 
 Free and open source. You bring your own AI key. Try it at <https://pulse.promethys.dev>.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/images/shots/today-desktop-dark.webp">
+  <img src="public/images/shots/today-desktop.webp" alt="The Today page of Pulse, with the tip and topic of the day above the news grouped by topic">
+</picture>
+
 If you find Pulse useful, leave a star on GitHub. It helps other people find it.
 
 ## What it does

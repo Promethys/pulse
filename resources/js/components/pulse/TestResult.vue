@@ -12,5 +12,8 @@ defineProps<{ result?: KeyTestResult | null }>();
         :class="cn('text-xs', result.ok ? 'text-success' : 'text-destructive')"
     >
         {{ result.message }}
+        <span v-if="result.detail" class="block text-muted-foreground">
+            Provider says: {{ result.detail }}
+        </span>
     </p>
 </template>

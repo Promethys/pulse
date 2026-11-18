@@ -44,12 +44,12 @@ async function chooseModel(
 }
 
 describe('AiKeyForm', () => {
-    it('explains why a key is needed and links every provider without price or free-tier claims', () => {
+    it('explains why a key is needed and links every provider', () => {
         renderForm();
 
         expect(screen.getByText('Why your own key?')).toBeVisible();
         const providers = onboardingProps().providers;
-        expect(screen.getAllByRole('link')).toHaveLength(providers.length);
+        expect(screen.getAllByRole('link')).toHaveLength(providers.length + 1);
         providers.forEach((provider) => {
             expect(
                 screen.getByRole('link', {
@@ -57,11 +57,6 @@ describe('AiKeyForm', () => {
                 }),
             ).toHaveAttribute('href', provider.key_url);
         });
-        expect(
-            screen.queryByText(
-                /\btokens?\b|\bfree\b|\$\s*\d|€\s*\d|\d+\s*€|per month/i,
-            ),
-        ).not.toBeInTheDocument();
     });
 
     it.each(onboardingProps().providers)(
@@ -206,7 +201,7 @@ describe('AiKeyForm', () => {
     });
 
     it.each([true, false])(
-        'explains provider costs with explainer=%s',
+        'estimates provider costs and links the docs article with explainer=%s',
         (explainer) => {
             render(AiKeyForm, {
                 props: {
@@ -220,11 +215,15 @@ describe('AiKeyForm', () => {
                     explainer,
                 },
             });
+            const estimate =
+                /A typical day uses about 12,000 tokens: free on providers with a free tier, like Gemini, and usually a few cents a day on paid plans\. Key tests are real requests too\. Check your provider’s pricing and balance\./;
+            expect(screen.getByText(estimate)).toBeVisible();
             expect(
-                screen.getByText(
-                    'Your AI provider may charge your account for digest generation and key tests. Check your provider’s pricing and balance.',
-                ),
-            ).toBeVisible();
+                screen.getByRole('link', { name: 'What it costs' }),
+            ).toHaveAttribute('href', '/docs/ai-keys/what-it-costs');
+            expect(
+                screen.getByRole('link', { name: 'What it costs' }),
+            ).toHaveClass('whitespace-nowrap');
         },
     );
 

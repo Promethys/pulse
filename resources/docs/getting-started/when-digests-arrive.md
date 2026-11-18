@@ -2,7 +2,7 @@ News and learning have separate daily schedules, both using your account's selec
 
 ## Starting times
 
-New accounts start with news at **09:00**, learning at **09:30**, and **UTC** as the timezone. Choose your timezone during onboarding or in **Settings → Digest**.
+New accounts start with news at **09:00**, learning at **09:30**, and **UTC** as the timezone. Onboarding suggests your browser's timezone and saves it even if you skip the **About you** step. You can also choose your timezone in **Settings → Digest**.
 
 Pulse checks every 15 minutes. When a post is due, it starts preparing it; AI generation and delivery can take longer.
 

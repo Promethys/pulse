@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { show as docsArticle } from '@/routes/docs';
 import { test as testAiKey } from '@/routes/onboarding/ai-key';
 import type {
     AiKeyInput,
@@ -190,8 +191,22 @@ async function testKey(): Promise<KeyTestResult> {
             @update:model-value="update({ api_key: $event })"
         />
         <p class="text-sm text-muted-foreground">
-            Your AI provider may charge your account for digest generation and
-            key tests. Check your provider’s pricing and balance.
+            A typical day uses about 12,000 tokens: free on providers with a
+            free tier, like Gemini, and usually a few cents a day on paid plans.
+            Key tests are real requests too. Check your provider’s pricing and
+            balance.
+            <a
+                :href="
+                    docsArticle.url({
+                        section: 'ai-keys',
+                        article: 'what-it-costs',
+                    })
+                "
+                target="_blank"
+                rel="noopener"
+                class="whitespace-nowrap underline underline-offset-2 focus-ring hover:text-foreground active:text-foreground"
+                >What it costs</a
+            >
         </p>
         <p class="text-sm text-muted-foreground">
             Pulse sends your About you text, interests and source titles,

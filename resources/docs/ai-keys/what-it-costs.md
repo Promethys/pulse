@@ -1,5 +1,23 @@
 AI requests use your provider account. Some providers have free tiers, and yours may charge beyond them or require paid access for your chosen model.
 
+## How much a day uses
+
+A day makes two requests: one for news selection and one for learning. A typical day, with about 12 sources and 20 items, uses about 10,000 input tokens and 2,500 output tokens, so about 12,000 in total.
+
+Input grows with the number of sources and headlines, because Pulse sends them to the model for selection. Output is limited by **Max items per day**, so more items means more output.
+
+Approximate cost of a typical day on Gemini's paid tier, at **prices as of November 2026**. Gemini's free tier costs nothing.
+
+| Model                 | Per day | Per month |
+| --------------------- | ------- | --------- |
+| 3.8 Flash, 2026 price | $0.017  | $0.50     |
+| 3.8 Flash, 2027 price | $0.034  | $1        |
+| 3.1 Flash-Lite        | $0.006  | $0.20     |
+
+Check [Google's pricing page](https://aistudio.google.com/docs/pricing) for current prices. Prices change, and other providers price differently, so check your provider's page before adding a key.
+
+On Gemini's free tier, Google may use your requests, which include your About you text and source excerpts, to improve its products. Choose a paid tier if that matters to you.
+
 ## Check with your provider
 
 Review pricing, available models and your balance on your provider's own site. An API key does not by itself guarantee free usage or access to every model.

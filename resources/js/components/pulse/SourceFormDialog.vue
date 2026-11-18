@@ -31,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { show as docsArticle } from '@/routes/docs';
 import type {
     ManagedSource,
     OnboardingInterest,
@@ -384,6 +385,25 @@ function save() {
                     />
                 </div>
                 <template v-if="form.type === 'imap_inbox'">
+                    <p class="text-sm text-muted-foreground">
+                        Pulse signs in with an app password, never your main
+                        password, and reads only the folder you choose over a
+                        secure connection. Emails stay unread and are never
+                        moved or deleted. The password is stored encrypted.
+                        <a
+                            :href="
+                                docsArticle.url({
+                                    section: 'interests-and-sources',
+                                    article:
+                                        'read-newsletters-from-your-mailbox',
+                                })
+                            "
+                            target="_blank"
+                            rel="noopener"
+                            class="whitespace-nowrap underline underline-offset-2 focus-ring hover:text-foreground active:text-foreground"
+                            >How to set it up</a
+                        >
+                    </p>
                     <div class="space-y-1.5">
                         <Label for="source-imap-provider">Provider</Label>
                         <Select
@@ -546,11 +566,6 @@ function save() {
                             :message="fieldErrors.imap_folder"
                         />
                     </div>
-                    <p class="text-sm text-muted-foreground">
-                        Pulse reads this folder only over a secure IMAP
-                        connection, and leaves your emails unread. Use an app
-                        password, not your main password.
-                    </p>
                 </template>
                 <div class="space-y-1.5">
                     <Label for="source-name">Name (required)</Label>

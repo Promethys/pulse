@@ -50,7 +50,7 @@ export type AiKeyInput = {
     consent: boolean;
 };
 
-export type KeyTestResult = { ok: boolean; message: string };
+export type KeyTestResult = { ok: boolean; message: string; detail?: string };
 
 export type OnboardingProps = {
     interests: OnboardingInterest[];
