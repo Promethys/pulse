@@ -4,7 +4,7 @@ Your first digest depends on your interests, enabled sources, schedule and AI ac
 
 1. **Interests**: select at least one available interest, then choose **Continue**.
 2. **Sources**: turn off any default sources you do not want.
-3. **About you**: optionally describe what you want to read, and choose your timezone.
+3. **About you**: optionally describe what you want to read. The timezone is prefilled from your browser and kept if you use **Skip for now**.
 4. **AI key**: choose a provider and model, enter a key and give consent to save it. You can use **Test the key** first.
 5. **Delivery**: keep reading in the app, optionally enable email, then choose **Go to Today**.
 

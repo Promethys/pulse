@@ -2,14 +2,16 @@ Open **Settings → AI keys** and use **Test** beside the saved key. The result 
 
 ## Check the message
 
-| Result                        | What to check                                                           |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| Provider rejected this key    | Confirm the provider matches the key. Replace a revoked or invalid key. |
-| Provider rejected the request | Check the exact model name and whether your account can use it.         |
-| Rate limiting or no balance   | Check your provider's usage and billing pages, then try later.          |
-| No credit left                | Review your provider balance and billing settings.                      |
-| Provider overloaded           | Wait and try again.                                                     |
-| Could not reach the provider  | Try again after the connection recovers.                                |
+| Result                         | What to check                                                           |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Provider rejected this API key | Confirm the provider matches the key. Replace a revoked or invalid key. |
+| Provider rejected the request  | Check the exact model name and whether your account can use it.         |
+| Rate limiting or no balance    | Check your provider's usage and billing pages, then try later.          |
+| No credit left                 | Review your provider balance and billing settings.                      |
+| Provider overloaded            | Wait and try again.                                                     |
+| Could not reach the provider   | Try again after the connection recovers.                                |
+
+The result names the provider you tested. The provider's own message may appear under the result as **Provider says:** and helps tell a key problem from a model problem.
 
 To replace a key or model, choose **Add a key** and select the same provider. See [Add and order your keys](/docs/ai-keys/add-and-order-your-keys).
 
